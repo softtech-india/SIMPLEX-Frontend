@@ -1,0 +1,58 @@
+export interface PurchaseOrderItem {
+  tag: string;
+  dtlid: number;
+  productid: number;
+  qty1: number;
+  qty2: number;
+  rate: number;
+  value: number;
+  altunimethod: string;
+  altunitfactor: number;
+  alterunitfactortype: string;
+  rateon: number;
+}
+
+export interface PurchaseOrder {
+  compid: number;
+  branchid: number;
+  finid: number;
+  vnumid: number;
+  vnummethod: string;
+  orderdt: string; // date string
+  orderno: string;
+  vendorid: number;
+  enqno: string;
+  enqdt: string; // date string
+  quotno: string;
+  quotdt: string; // date string
+  delvplace: string;
+  transportmode: string;
+  paymentterms: string;
+  paymentmode: string;
+  delvdays: string;
+  rem1: string;
+  rem2: string;
+  qty1: number;
+  qty2: number;
+  totprodval: number;
+  afttax: number;
+  ordamt: number;
+  itemdtl: PurchaseOrderItem[];
+
+
+  id?: number;
+  entryby?: number;
+  entrydt?: string;
+  updateby?: number;
+  updatedt?: string;
+}
+
+export interface PurchaseOrderFormType extends Omit< PurchaseOrder, 'id' | 'entryby' | 'entrydt' | 'updateby' | 'updatedt'> {}
+
+export interface PurchaseOrderApiResponse {
+  success: boolean;
+  message: string;
+  data: PurchaseOrder[];
+}
+
+export type OperationMode = 'Add' | 'Edit' | 'Delete' | 'View' | 'Print';

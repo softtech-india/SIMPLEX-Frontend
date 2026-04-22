@@ -1,0 +1,37 @@
+import { z } from "zod";
+
+export const LedgerSchema = z.object({
+  ledgercode: z.string().optional(),
+  ledgername: z.string().min(1, "Ledger Name is required"),
+  ledgergroupid: z.number().positive("Ledger Group ID must be a positive number"),
+  // ledgergroupnm: z.string().min(1, "Ledger Group Name is required"),
+  ledgeraddr1: z.string().optional(),
+  ledgeraddr2: z.string().optional(),
+  ledgeraddr3: z.string().optional(),
+  ledgerphone: z.string().optional(),
+  ledgeremail: z.string().optional(),
+  ledgerwebsite: z.string().optional(),
+  ledgerpan: z.string().optional(),
+  intmethod: z.string().optional(),
+  intmethoddesc: z.string().optional(),
+  intpct: z.number().optional(),
+  closedtag: z.string().optional(),
+  status: z.string().optional(),
+  bankbranch: z.string().optional(),
+  taxnature: z.string().optional(),
+  taxnaturedesc: z.string().optional(),
+  stockeffect: z.string().optional(),
+  stockeffectdesc: z.string().optional(),
+  costcenterapplicable: z.string().optional(),
+  costcenterapplicabledesc: z.string().optional(),
+  allownegetive: z.string().optional(),
+  allownegetivedesc: z.string().optional(),
+  iscardewallet: z.string().optional(),
+  iscardewalletdesc: z.string().optional(),
+  salarydeducttype: z.string().optional(),
+  salarydeducttypedesc: z.string().optional(),
+  salarynarration: z.string().optional(),
+  grouptype: z.string().optional(),
+});
+
+export type LedgerFormSchema = z.infer<typeof LedgerSchema>;

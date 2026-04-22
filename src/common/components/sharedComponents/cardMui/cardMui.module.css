@@ -1,0 +1,21 @@
+.card {
+  border: 1px solid #e5e7eb; /* Tailwind gray-200 */
+  border-radius: 8px;
+  padding: 1rem;
+  background-color: white;
+  transition: all 0.2s ease;
+}
+
+.hover {
+  cursor: pointer;
+}
+
+.hover:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.title {
+  font-size: 1.125rem; /* 18px */
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}

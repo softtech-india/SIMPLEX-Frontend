@@ -1,0 +1,94 @@
+/* buttonDev.module.css */
+.buttonWrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px;
+}
+
+.primary {
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.danger {
+  background-color: #e53935 !important;
+  color: white !important;
+}
+
+.success {
+  background-color: #70e976 !important;
+  color: white !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+.buttonWrapper {
+  display: inline-block;
+}
+
+/* COMMON */
+.buttonWrapper :global(.dx-button) {
+  color: #fff;
+  font-weight: 500;
+  border: none;
+  transition: all 0.25s ease-in-out;
+}
+
+/* BLUE */
+.gradient_blue :global(.dx-button) {
+  background: linear-gradient(135deg, #2196f3, #1e88e5);
+}
+
+/* GREEN */
+.gradient_green :global(.dx-button) {
+  background: linear-gradient(135deg, #43a047, #2e7d32);
+}
+
+/* PURPLE */
+.gradient_purple :global(.dx-button) {
+  background: linear-gradient(135deg, #7b1fa2, #512da8);
+}
+
+/* ORANGE */
+.gradient_orange :global(.dx-button) {
+  background: linear-gradient(135deg, #fb8c00, #ef6c00);
+}
+
+/* PINK */
+.gradient_pink :global(.dx-button) {
+  background: linear-gradient(135deg, #ec407a, #d81b60);
+}
+
+/* RED */
+.gradient_red :global(.dx-button) {
+  background: linear-gradient(135deg, #e53935, #c62828);
+}
+
+/* HOVER */
+.buttonWrapper :global(.dx-button:hover) {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* ACTIVE */
+.buttonWrapper :global(.dx-button:active) {
+  transform: scale(0.97);
+}
+
+/* DISABLED */
+.buttonWrapper :global(.dx-state-disabled) {
+  opacity: 0.6;
+}
+.default {
+  background-color: #5c98f1 !important;
+  color: white !important;
+}

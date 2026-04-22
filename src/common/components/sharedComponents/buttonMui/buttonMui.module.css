@@ -1,0 +1,46 @@
+.button {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Variants */
+.contained {
+  color: white;
+}
+.outlined {
+  border-width: 2px;
+  border-style: solid;
+  background: transparent;
+}
+.text {
+  background: transparent;
+  border: none;
+}
+
+/* Colors */
+.primary {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+}
+.secondary {
+  background-color: #10b981;
+  border-color: #10b981;
+}
+.danger {
+  background-color: #ef4444;
+  border-color: #ef4444;
+}
+
+/* Hover effects */
+.button:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

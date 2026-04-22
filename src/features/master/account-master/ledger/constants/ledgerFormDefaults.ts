@@ -1,0 +1,28 @@
+import { LedgerFormSchema } from "../schemas/ledger.schema";
+
+export const ledgerFormDefaults: LedgerFormSchema = {
+  ledgercode: '',
+  ledgername: '',
+  ledgergroupid: 0,
+  // ledgergroupnm: '',
+  ledgeraddr1: '',
+  ledgeraddr2: '',
+  ledgeraddr3: '',
+  ledgerphone: '',
+  ledgeremail: '',
+  ledgerwebsite: '',
+  ledgerpan: '',
+  intmethod: 'N',
+  intmethoddesc: '',
+  intpct: 0,
+  closedtag: 'A',
+  bankbranch: '',
+  taxnature: 'NA',
+  stockeffect: 'N',
+  costcenterapplicable: 'N',
+  allownegetive: 'N',
+  iscardewallet: 'N',
+  salarydeducttype: 'NS',
+  salarynarration: '',
+  grouptype: '',
+};

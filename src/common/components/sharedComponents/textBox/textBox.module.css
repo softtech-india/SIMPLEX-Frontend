@@ -1,0 +1,34 @@
+.label {
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+  font-size: 14px;
+  color: "#333";
+}
+
+.textBox {
+  width: 100%;
+} 
+
+.container {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.25rem;
+}
+
+/* Default label style */
+.textBox .dx-texteditor-label {
+  color: #2c0202; /* Soft grey for normal state */
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+/* Floating label color when input is focused or has value */
+.textBox.dx-focused .dx-texteditor-label,
+.textBox.dx-texteditor-filled .dx-texteditor-label {
+  color: #d3125c; /* Deep blue - visually striking */
+}
+
+/* Optional: add subtle shadow or effect */
+.textBox.dx-focused .dx-texteditor-label {
+  text-shadow: 0 0 2px rgba(5, 5, 54, 0.7);
+}
