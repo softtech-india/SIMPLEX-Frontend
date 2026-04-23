@@ -5,19 +5,18 @@ import { Popup } from "devextreme-react/popup";
 import LoadPanel from "devextreme-react/load-panel";
 import { useQuery } from "@tanstack/react-query";
 import { usePurchaseOrderById, useCreatePurchaseOrder, useUpdatePurchaseOrder, useDeletePurchaseOrder } from "../hooks/usePurchaseOrder";
-import { fetchLedgerGroupList, fetchVendorList } from "@/api/master/ledger-api";
-import { companyStatus } from "@/common/utility/data";
+import { fetchVendorList } from "@/api/master/ledger-api";
 import { PurchaseOrderFormType, OperationMode } from "../types/purchaseOrder.types";
 import { PurchaseOrderFormSchema } from "../schemas/purchaseOrder.schema";
 import { pruchaseOrderFormDefaults } from "../constants/pruchaseOrderFormDefaults";
 import { usePurchaseOrderForm } from "../hooks/usePurchaseOrderForm";
-import { useAppStorage } from "@/hooks/useAuthStorage";
 import { useFieldArray } from "react-hook-form";
-import { Trash2 } from "lucide-react";
 import { fetchSeriesList } from "@/api/purchase/purchase-api";
 import useUserStore from "@/store/userStore";
 import { FormSelect } from "@/common/components/FormSelect";
-import { fetchProductList } from "@/api/master/product-api";
+import { fetchCategoryList } from "@/api/master/product-api";
+import { PurchaseOrderItems } from "./PurchaseOrderItems";
+import { useWatch } from "react-hook-form";
 
 
 interface PurchaseOrderFormProps {
@@ -27,12 +26,22 @@ interface PurchaseOrderFormProps {
   mode: OperationMode;
 }
 
+const formatDateForInput = (date?: string | Date | null): string => {
+  if (!date) return "";
+
+  const d = typeof date === "string" ? new Date(date) : date;
+  if (isNaN(d.getTime())) return "";
+
+  return d.toISOString().split("T")[0]; // ✅ yyyy-MM-dd
+};
+
 export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode }: PurchaseOrderFormProps) {
 
   const {
-    companyId,
     userId,
+    companyId,
     branchId,
+    finid,
   } = useUserStore();
 
   const isEditMode = mode === "Edit";
@@ -40,7 +49,15 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
   const isDeleteMode = mode === "Delete";
   const isReadOnly = mode === "View" || mode === "Print";
 
-  const { data: PurchaseOrder, isLoading: isLoadingPurchaseOrder } = usePurchaseOrderById(formPurchaseOrderId);
+  const { data: PurchaseOrder, isLoading: isLoadingPurchaseOrder } =
+    usePurchaseOrderById({
+      id: formPurchaseOrderId,
+      userid: Number(userId),
+      compid: Number(companyId),
+      branchid: branchId,
+      finid: Number(finid),
+    });
+
   const createMutation = useCreatePurchaseOrder();
   const updateMutation = useUpdatePurchaseOrder();
   const deleteMutation = useDeletePurchaseOrder();
@@ -63,17 +80,22 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
     name: "itemdtl",
   });
 
-  // for dynamic item value calculation
-  const watchedItems = watch("itemdtl");
+  // Calculate Total Quantity and Vlaue
+  const watchedItems = useWatch({
+    control,
+    name: "itemdtl",
+  });
 
-  useEffect(() => {
-    watchedItems?.forEach((item, index) => {
-      const qty = Number(item?.qty1) || 0;
-      const rate = Number(item?.rate) || 0;
+  const totalQty = (watchedItems || []).reduce((sum, item) => {
+    return sum + (Number(item?.qty1) || 0);
+  }, 0);
 
-      setValue(`itemdtl.${index}.value`, qty * rate);
-    });
-  }, [watchedItems]);
+  const totalValue = (watchedItems || []).reduce((sum, item) => {
+    const qty = Number(item?.qty1) || 0;
+    const rate = Number(item?.rate) || 0;
+
+    return sum + qty * rate;
+  }, 0);
 
   // Reset form 
   useEffect(() => {
@@ -90,27 +112,45 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
 
     if (PurchaseOrder) {
       reset({
+        ...pruchaseOrderFormDefaults,
+
         ...PurchaseOrder,
+
+        orderdt: formatDateForInput(PurchaseOrder.orderdt),
+        enqdt: formatDateForInput(PurchaseOrder.enqdt),
+        quotdt: formatDateForInput(PurchaseOrder.quotdt),
+
+
+        compid: Number(PurchaseOrder.compid ?? 0),
+        branchid: Number(PurchaseOrder.branchid ?? 0),
+        finid: Number(PurchaseOrder.finid ?? 0),
+        vnumid: Number(PurchaseOrder.vnumid ?? 0),
+        vendorid: Number(PurchaseOrder.vendorid ?? 0),
+
+        qty1: Number(PurchaseOrder.qty1 ?? 0),
+        qty2: Number(PurchaseOrder.qty2 ?? 0),
+        totprodval: Number(PurchaseOrder.totprodval ?? 0),
+        afttax: Number(PurchaseOrder.afttax ?? 0),
+        ordamt: Number(PurchaseOrder.ordamt ?? 0),
+
+        itemdtl:
+          PurchaseOrder.itemdtl?.map((item, index) => ({
+            tag: item.tag ?? "I",
+            dtlid: item.dtlid ?? index + 1,
+            productid: item.productid,
+            qty1: Number(item.qty1 ?? 0),
+            qty2: Number(item.qty2 ?? 0),
+            rate: Number(item.rate ?? 0),
+            value: Number(item.value ?? 0),
+            altunimethod: item.altunimethod ?? "A",
+            altunitfactor: Number(item.altunitfactor ?? 1),
+            alterunitfactortype:
+              item.alterunitfactortype ?? "M",
+            rateon: Number(item.rateon ?? 1),
+          })) ?? [],
       });
     }
   }, [PurchaseOrder, isAddMode, reset, visible, setFocus]);
-
-
-  // Fetch dropdown options
-  // const { data: PurchaseOrdergroupOptions = [] } = useQuery({
-  //   queryKey: ["PurchaseOrderGroupList", userId, companyId],
-  //   queryFn: () => fetchLedgerGroupList(userId, companyId),
-  //   staleTime: 0,
-  //   enabled: !!companyId,
-  //   retry: 1,
-  //   refetchOnWindowFocus: false,
-
-  //   select: (data) =>
-  //     (data ?? []).map((s: any) => ({
-  //       value: s.id,
-  //       label: s.ledgergroup,
-  //     })),
-  // });
 
   const numMethodOptions = [
     { label: "Auto", value: "A" },
@@ -119,7 +159,6 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
 
   // seriesNoOptions
   const voucherType = "PO";
-  const finid = 1;
 
   const { data: seriesNoOptions = [] } = useQuery({
     queryKey: ["fetchSeriesList", userId, companyId, branchId, voucherType],
@@ -170,29 +209,52 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
       })),
   });
 
-  // fetchProductList
-  const { data: ProductOptions = [] } = useQuery({
-    queryKey: ["ProductOptions", userId, companyId],
-    queryFn: () => fetchProductList(userId, companyId),
-    staleTime: 0,
+  // fetchCategoryList
+  const { data: CategoryOptions = [] } = useQuery({
+    queryKey: ["CategoryOptions", userId, companyId],
+    queryFn: () => fetchCategoryList(userId, companyId),
     enabled: !!userId && !!companyId && !!visible,
+    staleTime: 0,
     retry: 1,
     refetchOnWindowFocus: false,
+    refetchOnMount: "always",
 
     select: (data) =>
       (data ?? []).map((s: any) => ({
         value: s.id,
-        label: s.productname,
+        label: s.name,
       })),
   });
 
+  const calculateTotals = (items: any[] = []) => {
+    let qty1 = 0;
+    let totprodval = 0;
 
-  // useEffect(() => {
-  //   console.log({ userId, companyId, branchId });
-  //   console.log("ProductOptions data:", ProductOptions);
-  // }, [ProductOptions, visible]);
+    const itemdtl = items.map((item, index) => {
+      const qty = Number(item?.qty1) || 0;
+      const rate = Number(item?.rate) || 0;
+      const value = qty * rate;
 
-  ;
+      qty1 += qty;
+      totprodval += value;
+
+      return {
+        tag: item?.tag || "I",
+        dtlid: item?.dtlid || index + 1,
+        productid: Number(item.productid ?? 0),
+        qty1: Number(qty),
+        qty2: Number(item?.qty2) || qty,
+        rate: Number(rate),
+        value: value,
+        altunimethod: item?.altunimethod || "A",
+        altunitfactor: item?.altunitfactor || 1,
+        alterunitfactortype: item?.alterunitfactortype || "M",
+        rateon: item?.rateon || 1,
+      };
+    });
+
+    return { qty1, totprodval, itemdtl };
+  };
 
   // Submit handler
   const handleFormSubmit = async (data: PurchaseOrderFormSchema) => {
@@ -204,25 +266,37 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
         return;
       }
 
-      // const payload: PurchaseOrderFormType = {
-      //   ...pruchaseOrderFormDefaults,
-      //   ...data,
-      // };
+      const { qty1, totprodval, itemdtl } = calculateTotals(data.itemdtl || []);
 
-      // if (isAddMode) {
-      //   await createMutation.mutateAsync(payload);
-      //   reset(pruchaseOrderFormDefaults);
-      //   onClose();
-      //   return;
-      // }
+      const payload: PurchaseOrderFormType = {
+        ...data,
+        compid: companyId,
+        branchid: branchId,
+        qty1: Number(qty1),
+        qty2: Number(qty1),
+        totprodval: totprodval,
+        afttax: 0,
+        ordamt: totprodval,
+        itemdtl,
 
-      // if (isEditMode) {
-      //   await updateMutation.mutateAsync({
-      //     id: formPurchaseOrderId,
-      //     data: payload,
-      //   });
-      //   onClose();
-      // }
+      };
+
+      console.log("FINAL SUBMIT PAYLOAD:", JSON.stringify(payload, null, 2));
+
+      if (isAddMode) {
+        await createMutation.mutateAsync(payload);
+        reset(pruchaseOrderFormDefaults);
+        onClose();
+        return;
+      }
+
+      if (isEditMode) {
+        await updateMutation.mutateAsync({
+          id: formPurchaseOrderId,
+          data: payload,
+        });
+        onClose();
+      }
 
     } catch (error) {
       console.error("Submit error:", error);
@@ -285,7 +359,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                   type="date"
                   {...register("orderdt")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.orderdt ? "border-red-500" : "border-gray-300"}`}
+                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.orderdt ? "" : "border-gray-300"}`}
                 />
               </div>
 
@@ -297,7 +371,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                   disabled={isReadOnly || selectedSeries?.manualallow === "N"}
                   className={`
                     w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition 
-                    ${errors.orderno ? "border-red-500" : "border-gray-300"} 
+                    ${errors.orderno ? "" : "border-gray-300"} 
                     ${selectedSeries?.manualallow === "N" ? "bg-gray-100 cursor-not-allowed" : ""}
                   `}
                 />
@@ -324,7 +398,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                   {...register("enqno")}
                   disabled={isReadOnly}
                   placeholder="Enter enquiry no."
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.enqno ? "border-red-500" : "border-gray-300"}`}
+                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.enqno ? "" : "border-gray-300"}`}
                 />
               </div>
 
@@ -334,7 +408,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                   type="date"
                   {...register("enqdt")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.enqdt ? "border-red-500" : "border-gray-300"}`}
+                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.enqdt ? "" : "border-gray-300"}`}
                 />
               </div>
 
@@ -345,7 +419,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                   {...register("quotno")}
                   disabled={isReadOnly}
                   placeholder="Enter quotation no."
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.quotno ? "border-red-500" : "border-gray-300"}`}
+                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.quotno ? "" : "border-gray-300"}`}
                 />
               </div>
 
@@ -355,7 +429,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                   type="date"
                   {...register("quotdt")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.quotdt ? "border-red-500" : "border-gray-300"}`}
+                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.quotdt ? "" : "border-gray-300"}`}
                 />
               </div>
 
@@ -368,7 +442,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
               Delivery & Payment Details
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
               <div>
                 <label className="block text-gray-700 font-medium mb-1">Delivery Place</label>
                 <input
@@ -376,7 +450,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                   placeholder="Delivery Place"
                   {...register("delvplace")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.delvplace ? "border-red-500" : "border-gray-300"}`}
+                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.delvplace ? "" : "border-gray-300"}`}
                 />
               </div>
 
@@ -388,7 +462,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                   placeholder="Transport Mode"
                   {...register("transportmode")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.transportmode ? "border-red-500" : "border-gray-300"}`}
+                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.transportmode ? "" : "border-gray-300"}`}
                 />
               </div>
 
@@ -400,7 +474,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                   placeholder="Delivery Days"
                   {...register("delvdays")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.delvdays ? "border-red-500" : "border-gray-300"}`}
+                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.delvdays ? "" : "border-gray-300"}`}
                 />
               </div>
 
@@ -411,7 +485,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                   placeholder="Payment Terms"
                   {...register("paymentterms")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.paymentterms ? "border-red-500" : "border-gray-300"}`}
+                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.paymentterms ? "" : "border-gray-300"}`}
                 />
               </div>
 
@@ -422,7 +496,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                   placeholder="Payment Mode"
                   {...register("paymentmode")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.paymentmode ? "border-red-500" : "border-gray-300"}`}
+                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.paymentmode ? "" : "border-gray-300"}`}
                 />
               </div>
 
@@ -464,137 +538,54 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
 
             <div className="space-y-2">
               {fields.map((field, index) => (
-                <div
+                <PurchaseOrderItems
                   key={field.id}
-                  className="grid grid-cols-1 md:grid-cols-5 gap-2 items-center"
-                >
-                  {/* Product */}
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-1"> Product </label>
-                    <FormSelect
-                      name={`itemdtl.${index}.productid`}
-                      control={control}
-                      options={ProductOptions}
-                    />
-                  </div>
-
-                  {/* Qty */}
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-1"> Quantity </label>
-                    <input
-                      type="number"
-                      placeholder="Qty"
-                      {...register(`itemdtl.${index}.qty1`)}
-                      disabled={isReadOnly}
-                      className={`inputField ${errors.itemdtl?.[index]?.qty1 ? "border-red-500" : ""}`}
-                    />
-                  </div>
-
-                  {/* Rate */}
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-1"> Rate </label>
-                    <input
-                      type="number"
-                      placeholder="Rate"
-                      {...register(`itemdtl.${index}.rate`)}
-                      disabled={isReadOnly}
-                      className={`inputField ${errors.itemdtl?.[index]?.rate ? "border-red-500" : ""}`}
-                    />
-                  </div>
-
-                  {/* Value (Auto-calculated) */}
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-1"> Value </label>
-                    <input
-                      type="number"
-                      placeholder="Value"
-                      {...register(`itemdtl.${index}.value`)}
-                      readOnly
-                      className="inputField bg-gray-100"
-                    />
-                  </div>
-
-                  {/* Remove */}
-                  {!isReadOnly && (
-                    <button
-                      type="button"
-                      onClick={() => remove(index)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs w-20 flex items-center justify-center gap-1 transition-colors"
-                      aria-label="Remove item"
-                    >
-                      <Trash2 size={14} />
-                      Remove
-                    </button>
-                  )}
-                </div>
+                  index={index}
+                  field={field}
+                  control={control}
+                  CategoryOptions={CategoryOptions}
+                  register={register}
+                  remove={remove}
+                  watchedItems={watchedItems}
+                  userId={userId}
+                  companyId={companyId}
+                  visible={visible}
+                  isReadOnly={isReadOnly}
+                  fieldsLength={fields.length}
+                />
               ))}
             </div>
-          </section>
 
-          {/* Amount Details */}
-          <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
-              Amount Details
-            </h2>
+            <div className="flex gap-2">
+              {/* Total Quantity */}
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">
+                  Total Quantity
+                </label>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Total Product Value </label>
                 <input
                   type="number"
-                  placeholder="Total Product Value"
-                  {...register("totprodval")}
-                  disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.totprodval ? "border-red-500" : "border-gray-300"}`}
+                  value={totalQty}
+                  readOnly
+                  className="w-full border rounded-md p-2.5 bg-gray-100"
                 />
               </div>
 
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">After Tax </label>
+              {/* Total Value */}
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">
+                  Total Product Value
+                </label>
+
                 <input
                   type="number"
-                  placeholder="After Tax"
-                  {...register("afttax")}
-                  disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.afttax ? "border-red-500" : "border-gray-300"}`}
+                  value={totalValue}
+                  readOnly
+                  className="w-full border rounded-md p-2.5 bg-gray-100"
                 />
               </div>
-
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Order Amount </label>
-                <input
-                  type="number"
-                  placeholder="Order Amount"
-                  {...register("ordamt")}
-                  disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.ordamt ? "border-red-500" : "border-gray-300"}`}
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Quantity 1 </label>
-                <input
-                  type="number"
-                  placeholder="Qty1"
-                  {...register("qty1")}
-                  disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.qty1 ? "border-red-500" : "border-gray-300"}`}
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Quantity 2 </label>
-                <input
-                  type="number"
-                  placeholder="Qty2"
-                  {...register("qty2")}
-                  disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.qty2 ? "border-red-500" : "border-gray-300"}`}
-                />
-              </div>
-
             </div>
+
           </section>
 
           {/* Remarks */}
@@ -605,12 +596,12 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <div>
-                <label className="block text-gray-700 font-medium mb-1">Remark 2 </label>
+                <label className="block text-gray-700 font-medium mb-1">Remark 1 </label>
                 <input
                   {...register("rem1")}
                   placeholder="Remark 1"
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.rem1 ? "border-red-500" : "border-gray-300"}`}
+                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.rem1 ? "" : "border-gray-300"}`}
                 />
               </div>
               <div>
@@ -619,7 +610,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                   {...register("rem2")}
                   placeholder="Remark 2"
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.rem2 ? "border-red-500" : "border-gray-300"}`}
+                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.rem2 ? "" : "border-gray-300"}`}
                 />
               </div>
             </div>

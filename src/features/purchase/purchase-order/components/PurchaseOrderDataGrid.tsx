@@ -18,10 +18,10 @@ export const PurchaseOrderDataGrid = forwardRef<any, PurchaseOrderDataGridProps>
 
     const columns = [
       // Core Ledger Info
-      { dataField: "ledgername", caption: "Ledger", width: 180, headerFilter: true },
-      { dataField: "ledgergroupnm", caption: "Under Group", width: 150, headerFilter: true },
-      { dataField: "taxnaturedesc", caption: "Tax Type", width: 120, headerFilter: true },
-      { dataField: "status", caption: "Status", width: 100, headerFilter: true },
+      { dataField: "orderno", caption: "Order No.", width: 180, headerFilter: true },
+      { dataField: "vendor", caption: "Vendor", width: 150, headerFilter: true },
+      { dataField: "qty1", caption: "qty1", width: 120, headerFilter: true },
+      { dataField: "totprodval", caption: "totprodval", width: 100, headerFilter: true },
 
     ];
 

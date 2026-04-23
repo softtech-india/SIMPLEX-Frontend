@@ -33,9 +33,10 @@ export default function PurchaseOrderModule() {
   //  const { userId, companyId } = useAppStorage();
 
   const {
-    companyId,
     userId,
+    companyId,
     branchId,
+    finid
   } = useUserStore();
 
   // State 
@@ -47,13 +48,23 @@ export default function PurchaseOrderModule() {
   const [fromDate, setFromDate] = useState<Date | null>(null);
   const [toDate, setToDate] = useState<Date | null>(null);
 
-  // const { data: purchaseOrderList = [], isLoading, refetch } = usePurchaseOrderList();
+  const { data: purchaseOrderList = [], isLoading, refetch } =
+    usePurchaseOrderList({
+      userid: Number(userId),
+      compid: Number(companyId),
+      skip: 0,
+      take: 200,
+      branchid: Number(branchId),
+      finid: Number(finid),
+      startdt: "2025-04-01",
+      enddt: "2027-03-31",
+    });
 
-  useEffect(() => {
-    console.log('branch :', toolbarBranchId);
-    console.log('fromDate :', formatDate(fromDate));
-    console.log('toDate :', formatDate(toDate));
-  }, [toolbarBranchId, fromDate, toDate])
+  // useEffect(() => {
+  //   console.log('branch :', toolbarBranchId);
+  //   console.log('fromDate :', formatDate(fromDate));
+  //   console.log('toDate :', formatDate(toDate));
+  // }, [toolbarBranchId, fromDate, toDate])
 
   // Fetch dropdown options
   const { data: purchaseOrderOptions = [] } = useQuery({
@@ -109,29 +120,29 @@ export default function PurchaseOrderModule() {
   const handleViewClick = useCallback(() => openForm('View'), [openForm]);
   const handlePrintClick = useCallback(() => openForm('Print'), [openForm]);
 
-  // const handleRefresh = useCallback(() => {
-  //   refetch();
-  //   setFormPurchaseOrderId(0);
-  //   setselectedRow(null);
-  // }, [refetch]);
+  const handleRefresh = useCallback(() => {
+    refetch();
+    setFormPurchaseOrderId(0);
+    setselectedRow(null);
+  }, [refetch]);
 
-  // const handleExport = useCallback(() => {
-  //   if (!purchaseOrderList || purchaseOrderList.length === 0) return;
+  const handleExport = useCallback(() => {
+    if (!purchaseOrderList || purchaseOrderList.length === 0) return;
 
-  //   // Generate columns dynamically from first row keys
-  //   const columns: ExcelColumn[] = Object.keys(purchaseOrderList[0]).map((key) => ({
-  //     header: key.charAt(0).toUpperCase() + key.slice(1),
-  //     key,
-  //     width: 20,
-  //   }));
+    // Generate columns dynamically from first row keys
+    const columns: ExcelColumn[] = Object.keys(purchaseOrderList[0]).map((key) => ({
+      header: key.charAt(0).toUpperCase() + key.slice(1),
+      key,
+      width: 20,
+    }));
 
-  //   exportToExcel({
-  //     data: purchaseOrderList,
-  //     columns,
-  //     fileName: "purchase order List.xlsx",
-  //     sheetName: "purchase order",
-  //   });
-  // }, [purchaseOrderList]);
+    exportToExcel({
+      data: purchaseOrderList,
+      columns,
+      fileName: "purchase order List.xlsx",
+      sheetName: "purchase order",
+    });
+  }, [purchaseOrderList]);
 
 
   return (
@@ -187,19 +198,19 @@ export default function PurchaseOrderModule() {
 
         </div>
 
-        {/* {!isMobile && (
-        <div className="w-full px-2 sm:px-2 md:px-2 lg:px-2 max-w-full lg:max-w-355 bg-white rounded-xl shadow-sm border border-gray-200 p-2 overflow-x-auto my-4">
-          <PurchaseOrderDataGrid
-            dataSource={purchaseOrderList}
-            onSelectionChanged={handleSelectionChanged}
-            showFilterRow
-            showColumnChooser
-            selectionMode="single"
-            onExporting={handleExport}
-            height={500}
-          />
-        </div>
-      )} */}
+        {!isMobile && (
+          <div className="w-full px-2 sm:px-2 md:px-2 lg:px-2 max-w-full lg:max-w-355 bg-white rounded-xl shadow-sm border border-gray-200 p-2 overflow-x-auto my-4">
+            <PurchaseOrderDataGrid
+              dataSource={purchaseOrderList}
+              onSelectionChanged={handleSelectionChanged}
+              showFilterRow
+              showColumnChooser
+              selectionMode="single"
+              onExporting={handleExport}
+              height={500}
+            />
+          </div>
+        )}
 
 
         <PurchaseOrderForm

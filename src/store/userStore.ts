@@ -2,9 +2,10 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 interface UserState {
-  companyId: string;
   userId: string;
+  companyId: string;
   branchId: string;
+  finid: string;
   userName: string;
   userType: string;
   userSegment: string;
@@ -16,9 +17,10 @@ interface UserState {
 const useUserStore = create<UserState>()(
   persist(
     (set) => ({
-      companyId: "",
       userId: "",
+      companyId: "",
       branchId: "",
+      finid: "",
       userName: "",
       userType: "",
       userSegment: "",
@@ -31,9 +33,10 @@ const useUserStore = create<UserState>()(
 
       clearUserData: () =>
         set({
-          companyId: "",
           userId: "",
+          companyId: "",
           branchId: "",
+          finid: "",
           userName: "",
           userType: "",
           userSegment: "",

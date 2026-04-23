@@ -1,9 +1,38 @@
 import notify from "devextreme/ui/notify";
 import { apiCall } from "../../utils/apiClient";
 
-export const fetchProductList = async (
+
+export const fetchCategoryList = async (
   userId: string | number | null,
   companyId: string | number | null
+) => {
+  try {
+    const response: any = await apiCall.get(
+      `${process.env.NEXT_PUBLIC_PROJECT_API_ENDPOINT}category`,
+      {
+        userid: userId,
+        compid: companyId,
+      }
+    );
+
+    if (response?.error) {
+      notify(response.error, "error", 3000);
+      return [];
+    }
+
+    return response?.data ?? [];
+
+  } catch (error) {
+    console.error("fetchCategoryList error:", error);
+    return [];
+  }
+}
+
+
+export const fetchProductList = async (
+  userId: string | number | null,
+  companyId: string | number | null,
+  selectedCategoryId?: string | number | null
 ) => {
   try {
     const response: any = await apiCall.get(
@@ -11,6 +40,7 @@ export const fetchProductList = async (
       {
         userid: userId,
         compid: companyId,
+        brand: selectedCategoryId,
         skip: 0,
         take: 200,
       }
@@ -224,7 +254,7 @@ export const fetchProductClassList = async ({
         userid: userId,
         compid: companyId,
         brandid: brandId ?? 0,
-        segmentid: segmentId ?? 0,        
+        segmentid: segmentId ?? 0,
       }
     );
 
