@@ -24,7 +24,7 @@
       "@/api/*": ["api/*"],
       "@/common/*": ["common/*"],
       "@/features/*": ["features/*"],
-      "@/lib/*": ["common/lib/*"],
+      "@/lib/*": ["lib/*"],
       "@/components/*": ["common/components/*"],
       "@/modules/*": ["modules/*"],
       "@/hooks/*": ["hooks/*"],

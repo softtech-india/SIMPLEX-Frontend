@@ -17,6 +17,7 @@ import { FormSelect } from "@/common/components/FormSelect";
 import { fetchCategoryList } from "@/api/master/product-api";
 import { PurchaseOrderItems } from "./PurchaseOrderItems";
 import { useWatch } from "react-hook-form";
+import { formatDateForInput } from "@/lib/dateUtils";
 
 
 interface PurchaseOrderFormProps {
@@ -25,15 +26,6 @@ interface PurchaseOrderFormProps {
   formPurchaseOrderId: number;
   mode: OperationMode;
 }
-
-const formatDateForInput = (date?: string | Date | null): string => {
-  if (!date) return "";
-
-  const d = typeof date === "string" ? new Date(date) : date;
-  if (isNaN(d.getTime())) return "";
-
-  return d.toISOString().split("T")[0]; // ✅ yyyy-MM-dd
-};
 
 export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode }: PurchaseOrderFormProps) {
 
