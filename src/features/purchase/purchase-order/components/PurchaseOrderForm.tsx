@@ -17,7 +17,7 @@ import { FormSelect } from "@/common/components/FormSelect";
 import { fetchCategoryList } from "@/api/master/product-api";
 import { PurchaseOrderItems } from "./PurchaseOrderItems";
 import { useWatch } from "react-hook-form";
-import { formatDateForInput } from "@/lib/dateUtils";
+import { formatDateForInput } from "@/helpers/dateUtils";
 
 
 interface PurchaseOrderFormProps {
