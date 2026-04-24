@@ -12,32 +12,16 @@ import { usePrivileges } from '@/common/hooks/usePrivileges';
 import { exportToExcel, ExcelColumn } from '@/common/utility/exportToExcel';
 import { fetchBranchList } from "@/api/master/ledger-api";
 import { useQuery } from '@tanstack/react-query';
-import { useAppStorage } from '@/hooks/useAuthStorage';
 import useUserStore from '@/store/userStore';
+import { currentDate, formatDate } from '@/helpers/dateUtils';
 
-function formatDate(date: Date | null): string {
-  if (!date) return '';
-
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
-
-  return `${day}-${month}-${year}`;
-}
 
 export default function PurchaseOrderModule() {
 
   // Hooks
   const isMobile = useIsMobile()
   const permissions = usePrivileges();
-  //  const { userId, companyId } = useAppStorage();
-
-  const {
-    userId,
-    companyId,
-    branchId,
-    finid
-  } = useUserStore();
+  const { userId, companyId, branchId, finid, branchnm } = useUserStore();
 
   // State 
   const [selectedRow, setselectedRow] = useState<PurchaseOrder | null>(null);
@@ -45,8 +29,10 @@ export default function PurchaseOrderModule() {
   const [formMode, setFormMode] = useState<OperationMode>('Add');
   const [formPurchaseOrderId, setFormPurchaseOrderId] = useState(0);
   const [toolbarBranchId, setToolbarBranchId] = useState<string | null>(null);
-  const [fromDate, setFromDate] = useState<Date | null>(null);
-  const [toDate, setToDate] = useState<Date | null>(null);
+  const [formSelectedBranch, setFormSelectedBranch] = useState<string | null>(null);
+
+  const [fromDate, setFromDate] = useState<string | null>(currentDate);
+  const [toDate, setToDate] = useState<string | null>(currentDate);
 
   const { data: purchaseOrderList = [], isLoading, refetch } =
     usePurchaseOrderList({
@@ -54,21 +40,21 @@ export default function PurchaseOrderModule() {
       compid: Number(companyId),
       skip: 0,
       take: 200,
-      branchid: Number(branchId),
+      branchid: Number(toolbarBranchId) || Number(branchId),
       finid: Number(finid),
-      startdt: "2025-04-01",
-      enddt: "2027-03-31",
+      startdt: fromDate || "",
+      enddt: toDate || "",
     });
 
   // useEffect(() => {
   //   console.log('branch :', toolbarBranchId);
-  //   console.log('fromDate :', formatDate(fromDate));
-  //   console.log('toDate :', formatDate(toDate));
+  //   console.log('fromDate :', fromDate);
+  //   console.log('toDate :', toDate);
   // }, [toolbarBranchId, fromDate, toDate])
 
   // Fetch dropdown options
-  const { data: purchaseOrderOptions = [] } = useQuery({
-    queryKey: ["purchaseOrderList", userId, companyId],
+  const { data: BranchOrderOptions = [] } = useQuery({
+    queryKey: ["BranchOrderOptions", userId, companyId],
     queryFn: () => fetchBranchList(userId, companyId),
     staleTime: 0,
     enabled: !!companyId && !!userId,
@@ -124,6 +110,9 @@ export default function PurchaseOrderModule() {
     refetch();
     setFormPurchaseOrderId(0);
     setselectedRow(null);
+    setToolbarBranchId(null);
+    setFromDate(currentDate);
+    setToDate(currentDate);
   }, [refetch]);
 
   const handleExport = useCallback(() => {
@@ -158,27 +147,33 @@ export default function PurchaseOrderModule() {
             onAdd={handleAddClick}
             onEdit={handleEditClick}
             onDelete={handleDeleteClick}
+            onRefresh={handleRefresh}
             onView={handleViewClick}
             onPrint={handlePrintClick}
             selects={{
               name: "branch",
               label: "Branch",
               value: toolbarBranchId || branchId,
-              options: purchaseOrderOptions,
+              options: BranchOrderOptions,
               placeholder: "Select Branch",
               className: "w-48",
-              disabled: !!branchId,
-              onChange: (val) => setToolbarBranchId(val),
+              // onChange: (val) => setToolbarBranchId(val),
+              onChange: (val) => {
+                setToolbarBranchId(val);
+                const branch = BranchOrderOptions.find(
+                  (b: any) => b.value === val
+                );
+                console.log("branch :", branch);
+                setFormSelectedBranch(branch?.label || branchnm);
+              }
             }}
 
             selectFromDate={{
               name: "fromDate",
               label: "From Date",
               value: fromDate,
-              placeholder: "Select from date",
               className: "w-40",
               isClearable: true,
-              dateFormat: "dd-MM-yyyy",
               onChange: setFromDate,
             }}
 
@@ -186,10 +181,8 @@ export default function PurchaseOrderModule() {
               name: "toDate",
               label: "To Date",
               value: toDate,
-              placeholder: "Select to date",
               className: "w-40",
               isClearable: true,
-              dateFormat: "dd-MM-yyyy",
               onChange: setToDate,
             }}
 
@@ -217,8 +210,10 @@ export default function PurchaseOrderModule() {
           visible={isFormOpen}
           onClose={handleFormClose}
           formPurchaseOrderId={formPurchaseOrderId}
+          formSelectedBranch={formSelectedBranch || branchnm}
           mode={formMode}
         />
+
 
         {/* <LoadPanel
         shadingColor="rgba(0,0,0,0.4)"

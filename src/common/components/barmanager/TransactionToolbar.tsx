@@ -15,7 +15,6 @@ import { useState, useRef, useEffect } from "react";
 import { MenuItem } from "@/common/components/filter/MenuItem";
 import { Permissions } from "@/common/types/privilege.types";
 import { ToolbarSelect } from "./ToolbarSelect";
-import { ToolbarDateSelect } from "./ToolbarDateSelect";
 import InlineSelectField from "../InlineSelectField";
 
 
@@ -26,20 +25,20 @@ type ToolbarSelect = {
   value?: string | null;
   placeholder?: string;
   className?: string;
-  disabled?:boolean;
+  disabled?: boolean;
   onChange?: (value: string | null) => void;
 };
 
 type ToolbarDateSelectProps = {
   name: string;
   label?: string;
-  value?: Date | null;
+  value?: string | null;
   placeholder?: string;
   className?: string;
   isDisabled?: boolean;
   isClearable?: boolean;
   dateFormat?: string;
-  onChange?: (value: Date | null) => void; // ✅ FIXED
+  onChange?: (value: string | null) => void; 
 };
 interface TransactionToolbarProps {
   title: string;
@@ -57,7 +56,7 @@ interface TransactionToolbarProps {
   periodTitle?: string;
 
   selects?: ToolbarSelect;
-  disabled?:boolean;
+  disabled?: boolean;
   selectFromDate?: ToolbarDateSelectProps;
   selectToDate?: ToolbarDateSelectProps
 }
@@ -208,40 +207,35 @@ export function TransactionToolbar({
           )}
 
           {selectFromDate && (
-            <>
-              <InlineSelectField label="From Date">
-                <ToolbarDateSelect
-                  name={selectFromDate.name}
-                  label={selectFromDate.label}
-                  value={selectFromDate.value}
-                  placeholder={selectFromDate.placeholder}
-                  className={selectFromDate.className}
-                  isDisabled={selectFromDate.isDisabled}
-                  isClearable={selectFromDate.isClearable}
-                  dateFormat={selectFromDate.dateFormat}
-                  onChange={selectFromDate.onChange}
-                />
-              </InlineSelectField>
-            </>
-
+            <InlineSelectField label={selectFromDate.label || "From Date"}>
+              <input
+                type="date"
+                name={selectFromDate.name}
+                value={selectFromDate.value ?? ""}
+                onChange={(e) =>
+                  selectFromDate.onChange?.(e.target.value || null)
+                }
+                disabled={selectFromDate.isDisabled}
+                className={`w-full border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400 ${selectFromDate.className || ""
+                  }`}
+              />
+            </InlineSelectField>
           )}
 
           {selectToDate && (
-            <>
-              <InlineSelectField label="To Date">
-                <ToolbarDateSelect
-                  name={selectToDate.name}
-                  label={selectToDate.label}
-                  value={selectToDate.value}
-                  placeholder={selectToDate.placeholder}
-                  className={selectToDate.className}
-                  isDisabled={selectToDate.isDisabled}
-                  isClearable={selectToDate.isClearable}
-                  dateFormat={selectToDate.dateFormat}
-                  onChange={selectToDate.onChange}
-                />
-              </InlineSelectField>
-            </>
+            <InlineSelectField label={selectToDate.label || "To Date"}>
+              <input
+                type="date"
+                name={selectToDate.name}
+                value={selectToDate.value ?? ""}
+                onChange={(e) =>
+                  selectToDate.onChange?.(e.target.value || null)
+                }
+                disabled={selectToDate.isDisabled}
+                className={`w-full border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400 ${selectToDate.className || ""
+                  }`}
+              />
+            </InlineSelectField>
           )}
 
           {selects && (

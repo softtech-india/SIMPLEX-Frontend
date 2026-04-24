@@ -5,6 +5,7 @@ interface UserState {
   userId: string;
   companyId: string;
   branchId: string;
+  branchnm: string;
   finid: string;
   userName: string;
   userType: string;
@@ -20,6 +21,7 @@ const useUserStore = create<UserState>()(
       userId: "",
       companyId: "",
       branchId: "",
+      branchnm: "",
       finid: "",
       userName: "",
       userType: "",
@@ -36,6 +38,7 @@ const useUserStore = create<UserState>()(
           userId: "",
           companyId: "",
           branchId: "",
+          branchnm: "",
           finid: "",
           userName: "",
           userType: "",

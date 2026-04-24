@@ -41,6 +41,7 @@ interface LoginResponseSuccess {
       name: string;
       stateid: string;
       branchid: string;
+      branchnm: string;
       branch: string;
       finid: string;
       usertype: string;
@@ -120,6 +121,7 @@ export default function Login() {
         companyId: user.compid,
         branchId: user.branchid,
         finid: user.finid,
+        branchnm: user.branchnm,
         userName: user.username,
         userType: user.usertype || "",
         userSegment: user.usersegment || "",
