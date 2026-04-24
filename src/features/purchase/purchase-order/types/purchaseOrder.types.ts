@@ -1,7 +1,10 @@
 export interface PurchaseOrderItem {
   tag?: string;
   dtlid?: number;
+  pcategoryid?: number;
+  pcategorynm?: string;
   productid?: number;
+  productnm?: string;
   qty1?: number;
   qty2?: number;
   rate?: number;

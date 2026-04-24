@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef } from "react";
+import { useEffect } from "react";
 import { Popup } from "devextreme-react/popup";
 import LoadPanel from "devextreme-react/load-panel";
 import { useQuery } from "@tanstack/react-query";
@@ -14,7 +14,6 @@ import { useFieldArray } from "react-hook-form";
 import { fetchSeriesList } from "@/api/purchase/purchase-api";
 import useUserStore from "@/store/userStore";
 import { FormSelect } from "@/common/components/FormSelect";
-import { fetchCategoryList } from "@/api/master/product-api";
 import { PurchaseOrderItems } from "./PurchaseOrderItems";
 import { useWatch } from "react-hook-form";
 import { formatDateForInput } from "@/helpers/dateUtils";
@@ -94,7 +93,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
     if (!visible) return;
 
     setTimeout(() => {
-      setFocus("vnumid");
+      setFocus("orderdt");
     }, 1000);
 
     if (isAddMode) {
@@ -129,7 +128,10 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
           PurchaseOrder.itemdtl?.map((item, index) => ({
             tag: item.tag ?? "I",
             dtlid: item.dtlid ?? index + 1,
+            pcategoryid: item.pcategoryid,
+            pcategorynm: item.pcategorynm,
             productid: item.productid,
+            productnm: item.productnm,
             qty1: Number(item.qty1 ?? 0),
             qty2: Number(item.qty2 ?? 0),
             rate: Number(item.rate ?? 0),
@@ -149,9 +151,8 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
     { label: "Manual", value: "M" }
   ];
 
-  // seriesNoOptions
+  // Series No Options
   const voucherType = "PO";
-
   const { data: seriesNoOptions = [] } = useQuery({
     queryKey: ["fetchSeriesList", userId, companyId, branchId, voucherType],
     queryFn: () =>
@@ -193,23 +194,6 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
     enabled: !!userId && !!companyId && !!visible,
     retry: 1,
     refetchOnWindowFocus: false,
-
-    select: (data) =>
-      (data ?? []).map((s: any) => ({
-        value: s.id,
-        label: s.name,
-      })),
-  });
-
-  // fetchCategoryList
-  const { data: CategoryOptions = [] } = useQuery({
-    queryKey: ["CategoryOptions", userId, companyId],
-    queryFn: () => fetchCategoryList(userId, companyId),
-    enabled: !!userId && !!companyId && !!visible,
-    staleTime: 0,
-    retry: 1,
-    refetchOnWindowFocus: false,
-    refetchOnMount: "always",
 
     select: (data) =>
       (data ?? []).map((s: any) => ({
@@ -273,7 +257,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
 
       };
 
-      console.log("FINAL SUBMIT PAYLOAD:", JSON.stringify(payload, null, 2));
+      // console.log("FINAL SUBMIT PAYLOAD:", JSON.stringify(payload, null, 2));
 
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
@@ -319,14 +303,15 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
         <div className="flex-1 overflow-y-auto p-2 space-y-2">
 
           {/* Purchase Order Info */}
-          <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
+          <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
+
             <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
               Purchase Order Information
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div className="flex flex-wrap gap-4 items-end">
 
-              <div>
+              <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Series No.</label>
                 <FormSelect
                   name="vnumid"
@@ -335,7 +320,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                 />
               </div>
 
-              <div>
+              <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Num. Method</label>
                 <FormSelect
                   name="vnummethod"
@@ -345,83 +330,85 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                 />
               </div>
 
-              <div>
+              <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Order Date</label>
                 <input
                   type="date"
                   {...register("orderdt")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.orderdt ? "" : "border-gray-300"}`}
+                  className={`inputField ${errors.orderdt ? "text-red-500" : "border-gray-400"}`}
                 />
               </div>
 
-              <div>
+              <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Order No</label>
                 <input
                   type="text"
                   {...register("orderno")}
                   disabled={isReadOnly || selectedSeries?.manualallow === "N"}
                   className={`
-                    w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition 
-                    ${errors.orderno ? "" : "border-gray-300"} 
+                    inputField 
+                    ${errors.orderno ? "" : "border-gray-400"} 
                     ${selectedSeries?.manualallow === "N" ? "bg-gray-100 cursor-not-allowed" : ""}
                   `}
                 />
-                {selectedSeries?.manualallow === "N" && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    Order number is system generated for this series
+                {/* {selectedSeries?.manualallow === "N" && (
+                  <p className="text-xs text-gray-400 ">
+                    Order number is system generated 
                   </p>
-                )}
+                )} */}
               </div>
 
-              <div>
+              <div className="w-110">
                 <label className="block text-gray-700 font-medium mb-1">Vendor</label>
                 <FormSelect
                   name="vendorid"
                   control={control}
                   options={VendorspOptions}
+                  className={`${errors?.vendorid ? "border-red-500" : "border-gray-400" }`}
                 />
+          
               </div>
 
-              <div>
+              <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Enquiry No</label>
                 <input
                   type="text"
                   {...register("enqno")}
                   disabled={isReadOnly}
                   placeholder="Enter enquiry no."
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.enqno ? "" : "border-gray-300"}`}
+                  className={`inputField ${errors.enqno ? "" : "border-gray-400"}`}
                 />
               </div>
 
-              <div>
+              <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Enquiry Date</label>
                 <input
                   type="date"
                   {...register("enqdt")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.enqdt ? "" : "border-gray-300"}`}
+                  className={`inputField ${errors.enqdt ? "" : "border-gray-400"}`}
                 />
               </div>
 
-              <div>
+              <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Quotation No</label>
                 <input
                   type="text"
                   {...register("quotno")}
                   disabled={isReadOnly}
                   placeholder="Enter quotation no."
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.quotno ? "" : "border-gray-300"}`}
+                  className={`inputField ${errors.quotno ? "" : "border-gray-400"}`}
                 />
               </div>
 
-              <div>
+              <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Quotation Date</label>
                 <input
                   type="date"
                   {...register("quotdt")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.quotdt ? "" : "border-gray-300"}`}
+                  className={`inputField ${errors.quotdt ? "" : "border-gray-400"}`}
                 />
               </div>
 
@@ -442,10 +429,9 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                   placeholder="Delivery Place"
                   {...register("delvplace")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.delvplace ? "" : "border-gray-300"}`}
+                  className={`inputField ${errors.delvplace ? "" : "border-gray-400"}`}
                 />
               </div>
-
 
               <div>
                 <label className="block text-gray-700 font-medium mb-1">Transport Mode </label>
@@ -454,10 +440,9 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                   placeholder="Transport Mode"
                   {...register("transportmode")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.transportmode ? "" : "border-gray-300"}`}
+                  className={`inputField ${errors.transportmode ? "" : "border-gray-400"}`}
                 />
               </div>
-
 
               <div>
                 <label className="block text-gray-700 font-medium mb-1">Delivery Days </label>
@@ -466,7 +451,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                   placeholder="Delivery Days"
                   {...register("delvdays")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.delvdays ? "" : "border-gray-300"}`}
+                  className={`inputField ${errors.delvdays ? "" : "border-gray-400"}`}
                 />
               </div>
 
@@ -477,7 +462,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                   placeholder="Payment Terms"
                   {...register("paymentterms")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.paymentterms ? "" : "border-gray-300"}`}
+                  className={`inputField ${errors.paymentterms ? "" : "border-gray-400"}`}
                 />
               </div>
 
@@ -488,16 +473,16 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                   placeholder="Payment Mode"
                   {...register("paymentmode")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.paymentmode ? "" : "border-gray-300"}`}
+                  className={`inputField ${errors.paymentmode ? "" : "border-gray-400"}`}
                 />
               </div>
 
             </div>
           </section>
 
-
           {/* Item Details */}
-          <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
+          <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
+
             <div className="flex justify-between items-center">
               <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
                 Item Details
@@ -508,7 +493,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                   type="button"
                   onClick={() =>
                     append({
-                      productid: undefined,
+                      productid:0,
                       qty1: 0,
                       rate: 0,
                       value: 0,
@@ -535,8 +520,9 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                   index={index}
                   field={field}
                   control={control}
-                  CategoryOptions={CategoryOptions}
+                  setValue={setValue}
                   register={register}
+                  errors={errors}
                   remove={remove}
                   watchedItems={watchedItems}
                   userId={userId}
@@ -548,34 +534,40 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
               ))}
             </div>
 
-            <div className="flex gap-2">
-              {/* Total Quantity */}
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">
-                  Total Quantity
-                </label>
+            <div className="flex flex-wrap gap-4 items-center border-t pt-3">
 
+              <div className="w-68" />
+
+              <div className="w-120" />
+
+              <div className="w-28 relative">
+                <span className="absolute -left-20 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-700 whitespace-nowrap">
+                  Total Qty
+                </span>
                 <input
                   type="number"
                   value={totalQty}
                   readOnly
-                  className="w-full border rounded-md p-2.5 bg-gray-100"
+                  className="inputField w-full bg-gray-100"
                 />
               </div>
 
-              {/* Total Value */}
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">
-                  Total Product Value
-                </label>
+              <div className="w-28" />
 
+              <div className="w-28 relative">
+                <span className="absolute -left-24 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-700 whitespace-nowrap">
+                  Total Value
+                </span>
                 <input
                   type="number"
                   value={totalValue}
                   readOnly
-                  className="w-full border rounded-md p-2.5 bg-gray-100"
+                  className="inputField w-full bg-gray-100"
                 />
               </div>
+
+              <div className="w-12" />
+
             </div>
 
           </section>
@@ -593,7 +585,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                   {...register("rem1")}
                   placeholder="Remark 1"
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.rem1 ? "" : "border-gray-300"}`}
+                  className={`inputField ${errors.rem1 ? "" : "border-gray-400"}`}
                 />
               </div>
               <div>
@@ -602,7 +594,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                   {...register("rem2")}
                   placeholder="Remark 2"
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.rem2 ? "" : "border-gray-300"}`}
+                  className={`inputField ${errors.rem2 ? "" : "border-gray-400"}`}
                 />
               </div>
             </div>

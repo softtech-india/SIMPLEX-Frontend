@@ -2,7 +2,7 @@ import { apiCall } from "@/utils/apiClient";
 import notify from "devextreme/ui/notify";
 import { useEffect, useRef, useState } from "react";
 import Popup, { Position } from "devextreme-react/popup";
-import useIsMobile from "../hooks/useIsMobile";
+import useIsMobile from "@/common/hooks/useIsMobile";
 
 interface Column {
   key: string;
@@ -23,7 +23,7 @@ interface SearchModalProps {
   onSelect: (row: any) => void;
   pageSize?: number;
 
-  searchFields?: SearchField[]; // 👈 optional
+  searchFields?: SearchField[]; 
 }
 
 export default function SearchModal({
@@ -82,7 +82,7 @@ export default function SearchModal({
         skip: skipVal,
         take: pageSize,
         Searchtext: search,
-        ...(searchBy && { searchBy }) // 👈 only if dropdown exists
+        ...(searchBy && { searchBy }) 
       })
       .then((response: any) => {
         if (response?.error) {
@@ -104,172 +104,157 @@ export default function SearchModal({
     <Popup
       visible={open}
       onHiding={onClose}
-      showTitle={true}
+      showTitle
+      showCloseButton
       title="Search"
       width={isMobile ? "100%" : 900}
       height={isMobile ? "100%" : 550}
       dragEnabled={!isMobile}
-      onShown={() => {
-        setTimeout(() => {
-          inputRef.current?.focus();
-        }, 0);
-      }}
+      className="rounded-xl overflow-hidden"
+      onShown={() => setTimeout(() => inputRef.current?.focus(), 0)}
     >
       <Position at="center" my="center" of={window} />
 
-      {/* Search box */}
-      <div className="flex gap-2 mb-3">
-        {/* Search By Dropdown (only if provided) */}
-        {searchFields && searchFields.length > 0 && (
-          <select
-            className="border p-2"
-            value={searchBy}
-            onChange={(e) => setSearchBy(e.target.value)}
-          >
-            {searchFields.map((f) => (
-              <option key={f.value} value={f.value}>
-                {f.label}
-              </option>
-            ))}
-          </select>
-        )}
-
-        {/* Search Input */}
-        <input
-          ref={inputRef}
-          className="border p-2 flex-1"
-          placeholder="Search..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && fetchData(0)}
-        />
-
-        <button
-          onClick={() => {
-            setSkip(0);
-            fetchData(0);
-          }}
-          className="bg-blue-500 text-white px-4 rounded"
-        >
-          Search
-        </button>
-      </div>
-
-      <div className="max-h-[400px] overflow-auto border">
-        {!isMobile ? (
-          // 🖥️ DESKTOP TABLE VIEW
-          <table className="w-full border-collapse">
-            <thead className="bg-gray-100 sticky top-0">
-              <tr>
-                {columns.map((c) => (
-                  <th key={c.key} className="border p-2 text-left">
-                    {c.label}
-                  </th>
+      <div className="h-full flex flex-col bg-white">
+        {/* HEADER - Search */}
+        <div className="sticky top-0 z-10 bg-white border-b px-3 py-3">
+          <div className="flex gap-2 items-center">
+            {searchFields && searchFields.length > 0 && (
+              <select
+                className="border border-gray-300 rounded-md px-2 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-400"
+                value={searchBy}
+                onChange={(e) => setSearchBy(e.target.value)}
+              >
+                {searchFields.map((f) => (
+                  <option key={f.value} value={f.value}>
+                    {f.label}
+                  </option>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
+              </select>
+            )}
+
+            <input
+              ref={inputRef}
+              className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-blue-400"
+              placeholder="Search records..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && fetchData(0)}
+            />
+
+            <button
+              onClick={() => {
+                setSkip(0);
+                fetchData(0);
+              }}
+              className="primary-btn"
+            >
+              Search
+            </button>
+          </div>
+        </div>
+        {/* BODY - Results */}
+        <div className="flex-1 overflow-auto bg-gray-50">
+          {!isMobile ? (
+            /* DESKTOP TABLE */
+            <table className="w-full text-sm border-separate border-spacing-0">
+              <thead className="sticky top-0 bg-gray-100 z-10">
+                <tr>
+                  {columns.map((c) => (
+                    <th
+                      key={c.key}
+                      className="text-left px-3 py-2 text-gray-600 font-medium border-b"
+                    >
+                      {c.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+
+              <tbody>
+                {list.map((row, i) => (
+                  <tr
+                    key={i}
+                    onDoubleClick={() => {
+                      onSelect(row);
+                      onClose();
+                    }}
+                    className="bg-white hover:bg-blue-50 cursor-pointer transition border-b"
+                  >
+                    {columns.map((c) => (
+                      <td key={c.key} className="px-3 py-2 text-gray-700">
+                        {row[c.key]}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            /* MOBILE CARDS */
+            <div className="p-1 space-y-1">
               {list.map((row, i) => (
-                <tr
+                <div
                   key={i}
-                  className="hover:bg-blue-100 cursor-pointer"
-                  onDoubleClick={() => {
+                  onClick={() => {
                     onSelect(row);
                     onClose();
                   }}
+                  className="bg-white border border-gray-500 rounded shadow-sm p-1 transition"
                 >
-                  {columns.map((c) => (
-                    <td key={c.key} className="border p-2">
-                      {row[c.key]}
-                    </td>
+                  {columns.map((c, idx) => (
+                    <div
+                      key={c.key}
+                      className={`flex justify-between text-[12px] py-1 ${idx !== columns.length - 1
+                        ? "border-b border-gray-100"
+                        : ""
+                        }`}
+                    >
+                      <span className="text-gray-500">{c.label}</span>
+                      <span className="text-color max-w-[60%] text-right">
+                        {row[c.key]}
+                      </span>
+                    </div>
                   ))}
-                </tr>
+                </div>
               ))}
-            </tbody>
-          </table>
-        ) : (
-          // 📱 MOBILE CARD VIEW
-          <div className="space-y-2 p-2">
-            {list.map((row, i) => (
-              <div
-                key={i}
-                className="border rounded-lg p-3 shadow-sm bg-white active:bg-blue-50"
-                onClick={() => {
-                  onSelect(row);
-                  onClose();
-                }}
-              >
-                {columns.map((c) => (
-                  <div key={c.key} className="flex justify-between text-sm py-1">
-                    <span className="text-gray-500">{c.label}</span>
-                    <span className="font-medium text-right">
-                      {row[c.key]}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
+        {/* FOOTER - Pagination */}
+        <div className="shrink-0 flex items-center justify-between px-4 py-3 border-t bg-white text-sm">
+          <button
+            disabled={skip === 0}
+            onClick={() => setSkip(skip - pageSize)}
+            className="px-3 py-1 rounded-md border bg-gray-50 hover:bg-gray-100 disabled:opacity-40"
+          >
+            ◀ Prev
+          </button>
+
+          <span className="text-gray-600">
+            Showing{" "}
+            <span className="font-medium">{skip + 1}</span> -{" "}
+            <span className="font-medium">{skip + list.length}</span>
+          </span>
+
+          <button
+            disabled={list.length < pageSize}
+            onClick={() => setSkip(skip + pageSize)}
+            className="px-3 py-1 rounded-md border bg-gray-50 hover:bg-gray-100 disabled:opacity-40"
+          >
+            Next ▶
+          </button>
+        </div>
+
       </div>
-
-      {/* Grid */}
-      {/* <div className="max-h-[350px] overflow-auto border">
-        <table className="w-full border-collapse">
-          <thead className="bg-gray-100 sticky top-0">
-            <tr>
-              {columns.map((c) => (
-                <th key={c.key} className="border p-2 text-left">
-                  {c.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {list.map((row, i) => (
-              <tr
-                key={i}
-                className="hover:bg-blue-100 cursor-pointer"
-                onDoubleClick={() => {
-                  onSelect(row);
-                  onClose();
-                }}
-              >
-                {columns.map((c) => (
-                  <td key={c.key} className="border p-2">
-                    {row[c.key]}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div> */}
-
-      {/* Pagination */}
-      <div className="flex justify-between items-center mt-3">
-        <button
-          disabled={skip === 0}
-          onClick={() => setSkip(skip - pageSize)}
-          className="px-3 py-1 border rounded disabled:opacity-50"
-        >
-          ◀ Prev
-        </button>
-
-        <span>
-          Showing {skip + 1} - {skip + list.length}
-        </span>
-
-        <button
-          disabled={list.length < pageSize}
-          onClick={() => setSkip(skip + pageSize)}
-          className="px-3 py-1 border rounded disabled:opacity-50"
-        >
-          Next ▶
-        </button>
-      </div>
-
-      {loading && <div className="text-center mt-2">Loading...</div>}
+      {/* LOADING */}
+      {loading && (
+        <div className="absolute bottom-2 left-0 right-0 text-center text-sm text-gray-500">
+          Loading...
+        </div>
+      )}
     </Popup>
   );
+
 }
