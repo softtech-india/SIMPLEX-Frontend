@@ -3,10 +3,10 @@ import { PurchaseOrderFormSchema } from "../schemas/purchaseOrder.schema";
 const today = new Date().toISOString().split("T")[0];
 
 export const pruchaseOrderFormDefaults: PurchaseOrderFormSchema = {
-  compid: 1,
-  branchid: 1,
+  compid: 0,
+  branchid: 0,
   finid: 1,
-  vnumid: 0, 
+  vnumid: 0,
   vnummethod: "A",
 
   orderdt: today,
@@ -42,7 +42,7 @@ export const pruchaseOrderFormDefaults: PurchaseOrderFormSchema = {
     {
       tag: "I",
       dtlid: 1,
-      productid: undefined,
+      productid: 0,
       qty1: 0,
       qty2: 0,
       rate: 0,

@@ -3,44 +3,108 @@ import { purchaseOrderService } from '../services/purchaseOrderService';
 import { PurchaseOrderFormType } from '../types/purchaseOrder.types';
 import { toast } from 'sonner';
 
+export interface GetPurchaseOrderParams {
+  userid: number;
+  compid: number;
+  skip?: number;
+  take?: number;
+  branchid?: number;
+  finid?: number;
+  startdt?: string;
+  enddt?: string;
+}
 
-export const PURCHASE_ORDER_KEYS = {
-  all: ['ledgers'] as const,
-  lists: () => [...PURCHASE_ORDER_KEYS.all, 'list'] as const,
-  list: () => [...PURCHASE_ORDER_KEYS.lists()] as const,
-  details: () => [...PURCHASE_ORDER_KEYS.all, 'detail'] as const,
-  detail: (id: number) => [...PURCHASE_ORDER_KEYS.details(), id] as const,
+type UsePurchaseOrderByIdParams = {
+  id?: number;
+  userid: number;
+  compid: number;
+  branchid: number | string;
+  finid: number;
 };
 
-export function usePurchaseOrderList() {
+export const PURCHASE_ORDER_KEYS = {
+  all: ["purchase-order"] as const,
+
+  lists: () => [...PURCHASE_ORDER_KEYS.all, "list"] as const,
+
+  list: (params?: Record<string, any>) =>
+    [...PURCHASE_ORDER_KEYS.lists(), params ?? {}] as const,
+
+  details: () => [...PURCHASE_ORDER_KEYS.all, "detail"] as const,
+
+  detail: (id: number) =>
+    [...PURCHASE_ORDER_KEYS.details(), id] as const,
+};
+
+export function usePurchaseOrderList(params: GetPurchaseOrderParams) {
   return useQuery({
-    queryKey: PURCHASE_ORDER_KEYS.list(),
-    queryFn: () => purchaseOrderService.getAllPurchaseOrders(),
+    queryKey: PURCHASE_ORDER_KEYS.list(params),
+
+    queryFn: () =>
+      purchaseOrderService.getAllPurchaseOrders(params),
 
     staleTime: 0,
     gcTime: 0,
 
-    refetchOnMount: 'always',
+    refetchOnMount: "always",
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
   });
 }
 
-export function usePurchaseOrderById(id: number) {
-  return useQuery({
-    queryKey: PURCHASE_ORDER_KEYS.detail(id),
-    queryFn: () => purchaseOrderService.getPurchaseOrderById(id),
+// export function usePurchaseOrderList() {
+//   return useQuery({
+//     queryKey: PURCHASE_ORDER_KEYS.list(),
+//     queryFn: () => purchaseOrderService.getAllPurchaseOrders(),
 
-    enabled: !!id,
+//     staleTime: 0,
+//     gcTime: 0,
+
+//     refetchOnMount: 'always',
+//     refetchOnWindowFocus: true,
+//     refetchOnReconnect: true,
+//   });
+// }
+
+export function usePurchaseOrderById(params: UsePurchaseOrderByIdParams) {
+  return useQuery({
+    queryKey: PURCHASE_ORDER_KEYS.detail(params.id ?? 0),
+
+    queryFn: () =>
+      purchaseOrderService.getPurchaseOrderById({
+        id: params.id!,
+        userid: params.userid,
+        compid: params.compid,
+        branchid: params.branchid,
+        finid: params.finid,
+      }),
+
+    enabled: !!params.id, // only run when id exists
 
     staleTime: 0,
     gcTime: 0,
 
-    refetchOnMount: 'always',
+    refetchOnMount: "always",
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true
+    refetchOnReconnect: true,
   });
 }
+
+// export function usePurchaseOrderById(id: number) {
+//   return useQuery({
+//     queryKey: PURCHASE_ORDER_KEYS.detail(id),
+//     queryFn: () => purchaseOrderService.getPurchaseOrderById(id),
+
+//     enabled: !!id,
+
+//     staleTime: 0,
+//     gcTime: 0,
+
+//     refetchOnMount: 'always',
+//     refetchOnWindowFocus: true,
+//     refetchOnReconnect: true
+//   });
+// }
 
 export function useCreatePurchaseOrder() {
   const queryClient = useQueryClient();
@@ -96,7 +160,7 @@ export function useDeletePurchaseOrder() {
   return useMutation({
     mutationFn: (id: number) => purchaseOrderService.deletePurchaseOrder(id),
 
-    onSuccess: (data : any ) => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: PURCHASE_ORDER_KEYS.list() });
       toast.success(data.message);
     },

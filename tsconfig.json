@@ -25,6 +25,7 @@
       "@/common/*": ["common/*"],
       "@/features/*": ["features/*"],
       "@/lib/*": ["common/lib/*"],
+      "@/helpers/*": ["helpers/*"],
       "@/components/*": ["common/components/*"],
       "@/modules/*": ["modules/*"],
       "@/hooks/*": ["hooks/*"],

@@ -1,44 +1,57 @@
 export interface PurchaseOrderItem {
-  tag: string;
-  dtlid: number;
-  productid: number;
-  qty1: number;
-  qty2: number;
-  rate: number;
-  value: number;
-  altunimethod: string;
-  altunitfactor: number;
-  alterunitfactortype: string;
-  rateon: number;
+  tag?: string;
+  dtlid?: number;
+  pcategoryid?: number;
+  pcategorynm?: string;
+  productid?: number;
+  productnm?: string;
+  qty1?: number;
+  qty2?: number;
+  rate?: number;
+  value?: number;
+  altunimethod?: string;
+  altunitfactor?: number;
+  alterunitfactortype?: string;
+  rateon?: number;
 }
 
 export interface PurchaseOrder {
-  compid: number;
-  branchid: number;
-  finid: number;
-  vnumid: number;
-  vnummethod: string;
-  orderdt: string; // date string
-  orderno: string;
-  vendorid: number;
-  enqno: string;
-  enqdt: string; // date string
-  quotno: string;
-  quotdt: string; // date string
-  delvplace: string;
-  transportmode: string;
-  paymentterms: string;
-  paymentmode: string;
-  delvdays: string;
-  rem1: string;
-  rem2: string;
-  qty1: number;
-  qty2: number;
-  totprodval: number;
-  afttax: number;
-  ordamt: number;
-  itemdtl: PurchaseOrderItem[];
+  compid?: number | string;
+  branchid?: number | string;
+  finid?: number;
+  vnumid?: number;
+  vnummethod?: string;
 
+  orderdt?: string;
+  orderno?: string;
+
+  vendorid?: number;
+
+  enqno?: string;
+  enqdt?: string;
+
+  quotno?: string;
+  quotdt?: string;
+
+  delvplace?: string;
+  transportmode?: string;
+
+  paymentterms?: string;
+  paymentmode?: string;
+
+  delvdays?: string;
+
+  rem1?: string;
+  rem2?: string;
+
+  qty1?: number;
+  qty2?: number;
+
+  totprodval?: number;
+  afttax?: number;
+  ordamt?: number;
+
+  itemdtl?: PurchaseOrderItem[];
 
   id?: number;
   entryby?: number;
@@ -47,7 +60,13 @@ export interface PurchaseOrder {
   updatedt?: string;
 }
 
-export interface PurchaseOrderFormType extends Omit< PurchaseOrder, 'id' | 'entryby' | 'entrydt' | 'updateby' | 'updatedt'> {}
+export interface PurchaseOrderFormType
+  extends Partial<
+    Omit<
+      PurchaseOrder,
+      "id" | "entryby" | "entrydt" | "updateby" | "updatedt"
+    >
+  > {}
 
 export interface PurchaseOrderApiResponse {
   success: boolean;
@@ -55,4 +74,4 @@ export interface PurchaseOrderApiResponse {
   data: PurchaseOrder[];
 }
 
-export type OperationMode = 'Add' | 'Edit' | 'Delete' | 'View' | 'Print';
+export type OperationMode = "Add" | "Edit" | "Delete" | "View" | "Print";

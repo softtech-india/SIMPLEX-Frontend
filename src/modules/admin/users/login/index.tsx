@@ -104,7 +104,7 @@ export default function Login() {
       });
 
       useUserStore.getState().setUserData({
-        userId: user.userid,
+       // userId: user.userid,
         userName: user.username,
         userType: user.usertype,
         userSegment: user.usersegment,

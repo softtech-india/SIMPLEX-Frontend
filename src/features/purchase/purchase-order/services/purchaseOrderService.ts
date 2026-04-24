@@ -3,6 +3,17 @@ import { PurchaseOrder, PurchaseOrderFormType, PurchaseOrderApiResponse } from '
 import { toast } from "sonner";
 import { storageService } from "@/common/utility/storageService";
 
+export interface GetPurchaseOrderParams {
+  userid: number;
+  compid: number;
+  skip?: number;
+  take?: number;
+  branchid?: number;
+  finid?: number;
+  startdt?: string;
+  enddt?: string;
+}
+
 class PurchaseOrderService {
   private readonly baseUrl = process.env.NEXT_PUBLIC_PROJECT_API_ENDPOINT;
   private getFromStorage = (key: string): string => {
@@ -29,40 +40,69 @@ class PurchaseOrderService {
     return true;
   }
 
-  async getAllPurchaseOrders(): Promise<PurchaseOrder[]> {
+  async getAllPurchaseOrders(
+    params: GetPurchaseOrderParams
+  ): Promise<PurchaseOrder[]> {
     try {
       const response = await apiCall.get<PurchaseOrderApiResponse>(
         `${this.baseUrl}po`,
-        { userid: this.getUserId(), compid: this.getCompanyId() }
+        params
       );
 
       this.handleError(response);
       return response.data || [];
-
     } catch (error: any) {
-      console.error("Error fetching companies:", error);
-      toast.error(error.message || "Failed to fetch companies");
+      console.error("Error fetching purchase orders:", error);
+      toast.error(error.message || "Failed to fetch purchase orders");
       throw error;
     }
   }
 
-  async getPurchaseOrderById(id: number): Promise<PurchaseOrder> {
+  // async getAllPurchaseOrders(): Promise<PurchaseOrder[]> {
+  //   try {
+  //     const response = await apiCall.get<PurchaseOrderApiResponse>(
+  //       `${this.baseUrl}po`,
+  //       { userid: this.getUserId(), compid: this.getCompanyId() }
+  //     );
+
+  //     this.handleError(response);
+  //     return response.data || [];
+
+  //   } catch (error: any) {
+  //     console.error("Error fetching companies:", error);
+  //     toast.error(error.message || "Failed to fetch companies");
+  //     throw error;
+  //   }
+  // }
+
+  async getPurchaseOrderById(
+    params: {
+      id: number;
+      userid: number;
+      compid: number;
+      branchid: number |string;
+      finid: number
+    }
+  ): Promise<PurchaseOrder> {
     try {
+
       const response = await apiCall.get<PurchaseOrderApiResponse>(
         `${this.baseUrl}po/id`,
-        { userid: this.getUserId(), compid: this.getCompanyId(), id }
+        params
       );
 
       this.handleError(response);
 
       const purchaseOrder = response.data?.[0];
-      if (!purchaseOrder) throw new Error("purchaseOrder not found");
+      if (!purchaseOrder) throw new Error("Purchase order not found");
 
       return purchaseOrder;
 
     } catch (error: any) {
-      const message = error instanceof Error ? error.message : String(error);
-      toast.error(`Error fetching purchaseOrder with id ${id}: ${message}`);
+      const message =
+        error instanceof Error ? error.message : String(error);
+
+      toast.error(`Error fetching purchase order: ${message}`);
       throw new Error(message);
     }
   }

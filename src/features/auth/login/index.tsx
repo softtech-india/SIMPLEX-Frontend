@@ -111,14 +111,15 @@ export default function Login() {
       useCompanyStore.getState().setCompanyData({
         companyId: user.compid,
         branchId: user.branchid,
-        financialYearId: user.finid,
+       // financialYearId: user.finid,
       });
 
 
       useUserStore.getState().setUserData({
-        companyId: user.compid,
         userId: user.userid,
+        companyId: user.compid,
         branchId: user.branchid,
+        finid: user.finid,
         userName: user.username,
         userType: user.usertype || "",
         userSegment: user.usersegment || "",

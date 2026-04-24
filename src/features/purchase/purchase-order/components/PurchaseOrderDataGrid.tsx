@@ -17,12 +17,16 @@ export const PurchaseOrderDataGrid = forwardRef<any, PurchaseOrderDataGridProps>
   ({ dataSource, onSelectionChanged, onExporting, height = 600 }, ref) => {
 
     const columns = [
-      // Core Ledger Info
-      { dataField: "ledgername", caption: "Ledger", width: 180, headerFilter: true },
-      { dataField: "ledgergroupnm", caption: "Under Group", width: 150, headerFilter: true },
-      { dataField: "taxnaturedesc", caption: "Tax Type", width: 120, headerFilter: true },
-      { dataField: "status", caption: "Status", width: 100, headerFilter: true },
-
+      { dataField: "orderno", caption: "Order No.", width: 120, headerFilter: true },
+      { dataField: "orderdt", caption: "Order date", width: 120, headerFilter: true },
+      { dataField: "vendor", caption: "Vendor", width: 200, headerFilter: true },
+      { dataField: "qty1", caption: "Quantity", width: 80, headerFilter: true },
+      { dataField: "totprodval", caption: "Total Value", width: 100, headerFilter: true },
+      { dataField: "rem1", caption: "Remarks", width: 200, headerFilter: true },
+      { dataField: 'entryby', caption: 'Entry User', width: 80 },
+      { dataField: 'entrydt', caption: 'Entry Date', width: 120, dataType: 'date' },
+      { dataField: 'updateby', caption: 'Update User', width: 80 },
+      { dataField: 'updatedt', caption: 'Update Date', width: 120, dataType: 'date' },
     ];
 
     return (
