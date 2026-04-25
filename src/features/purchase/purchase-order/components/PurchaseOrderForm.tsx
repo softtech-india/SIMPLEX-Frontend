@@ -24,9 +24,10 @@ interface PurchaseOrderFormProps {
   onClose: () => void;
   formPurchaseOrderId: number;
   mode: OperationMode;
+  formSelectedBranch: string;
 }
 
-export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode }: PurchaseOrderFormProps) {
+export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode, formSelectedBranch }: PurchaseOrderFormProps) {
 
   const {
     userId,
@@ -306,7 +307,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
           <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
 
             <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
-              Purchase Order Information
+              Purchase Order Information - {formSelectedBranch}
             </h2>
 
             <div className="flex flex-wrap gap-4 items-end">
@@ -365,9 +366,9 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                   name="vendorid"
                   control={control}
                   options={VendorspOptions}
-                  className={`${errors?.vendorid ? "border-red-500" : "border-gray-400" }`}
+                  className={`${errors?.vendorid ? "border-red-500" : "border-gray-400"}`}
                 />
-          
+
               </div>
 
               <div className="w-48">
@@ -409,6 +410,15 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                   {...register("quotdt")}
                   disabled={isReadOnly}
                   className={`inputField ${errors.quotdt ? "" : "border-gray-400"}`}
+                />
+              </div>
+
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">Branch </label>
+                 <input
+                  type="text"
+                  value={formSelectedBranch}
+                  className={`inputField border-gray-400 `}
                 />
               </div>
 
@@ -493,7 +503,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode 
                   type="button"
                   onClick={() =>
                     append({
-                      productid:0,
+                      productid: 0,
                       qty1: 0,
                       rate: 0,
                       value: 0,
