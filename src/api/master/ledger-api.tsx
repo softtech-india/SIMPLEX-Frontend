@@ -85,6 +85,33 @@ export const fetchVendorList = async (
   }
 }
 
+export const fetchGodownList = async (
+  userId: string | number | null,
+  companyId: string | number | null
+) => {
+  try {
+    const response: any = await apiCall.get(
+      `${process.env.NEXT_PUBLIC_PROJECT_API_ENDPOINT}godown`,
+      {
+        userid: userId,
+        compid: companyId,
+        // skip: 0,
+        // take: 200,
+      }
+    );
+
+    if (response?.error) {
+      notify(response.error, "error", 3000);
+      return [];
+    }
+
+    return response?.data ?? [];
+
+  } catch (error) {
+    console.error("fetchGodownList error:", error);
+    return [];
+  }
+}
 
 export const fetchPurLedgerList = async (userId: string | number | null, skip: string | number | null,
   take: string | number | null, groupid: string | number | null,
