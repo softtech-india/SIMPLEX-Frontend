@@ -915,3 +915,76 @@ export const taxNature = [
         name: "NA"
     }
 ];
+
+export const isMainLedger = [
+    {
+        id: 'N',
+        name: 'No',
+    },
+    {
+        id: 'Y',
+        name: 'Yes',
+    }
+];
+
+export const gstregType = [
+    {
+        id: 'U',
+        name: 'Unregistered',
+    },
+    {
+        id: 'R',
+        name: 'Registered',
+    },
+    {
+        id: 'C',
+        name: 'Composition',
+    },
+    {
+        id: 'S',
+        name: 'SEZ',
+    }
+];
+
+export const maintainBillwise = [
+    {
+        id: 'N',
+        name: 'No',
+    },
+    {
+        id: 'Y',
+        name: 'Yes',
+    }
+];
+
+export const isTdsApplicable = [
+    {
+        id: 'N',
+        name: 'No'
+    },
+    {
+        id: 'Y',
+        name: "Yes"
+    }
+]
+
+export const futuredateallowType = [
+    {
+        id: 'Y',
+        name: 'Yes',
+    },
+    {
+        id: 'N',
+        name: 'No',
+    }
+];
+export const manualallowType = [
+    {
+        id: 'Y',
+        name: 'Yes',
+    },
+    {
+        id: 'N',
+        name: 'No',
+    }
+];
