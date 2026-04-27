@@ -14,6 +14,9 @@ export interface GoodReceivedNoteItem {
   rate?: number;
   value?: number;
 
+  unit: string;
+  balanceqty1: number;
+
   altunimethod?: string;
   altunitfactor?: number;
   alterunitfactortype?: string;
@@ -24,6 +27,8 @@ export interface GoodReceivedNoteItem {
 }
 
 export interface GoodReceivedNote {
+  id?: number;
+  
   compid?: number | string;
   branchid?: number | string;
   finid?: number;
@@ -56,7 +61,7 @@ export interface GoodReceivedNote {
 
   itemdtl?: GoodReceivedNoteItem[];
 
-  id?: number;
+  
   entryby?: number;
   entrydt?: string;
   updateby?: number;

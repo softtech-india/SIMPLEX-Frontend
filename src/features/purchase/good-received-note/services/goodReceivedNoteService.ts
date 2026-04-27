@@ -49,11 +49,11 @@ class GoodReceivedNoteService {
         params
       );
 
-    //  this.handleError(response);
+      //  this.handleError(response);
       return response.data || [];
     } catch (error: any) {
       console.error("Error fetching Good Received Notes:", error);
-     toast.error(error.message || "Failed to fetch Good Received Notes");
+      toast.error(error.message || "Failed to fetch Good Received Notes");
       throw error;
     }
   }
@@ -63,7 +63,7 @@ class GoodReceivedNoteService {
       id: number;
       userid: number;
       compid: number;
-      branchid: number |string;
+      branchid: number | string;
       finid: number
     }
   ): Promise<GoodReceivedNote> {
@@ -114,7 +114,7 @@ class GoodReceivedNoteService {
       const response = await apiCall.put<GoodReceivedNoteApiResponse>(
         `${this.baseUrl}grn`,
         { ...data, id },
-        { userid: this.getUserId(), compid: this.getCompanyId() }
+        { userid: this.getUserId() }
       );
 
       this.handleError(response);
@@ -130,21 +130,39 @@ class GoodReceivedNoteService {
     }
   }
 
-  async deleteGoodReceivedNote(id: number): Promise<void> {
+  async deleteGoodReceivedNote(
+    params: {
+      id: number;
+      userid: number;
+      compid: number;
+      branchid: number | string;
+      finid: number
+    }
+  ): Promise<void> {
     try {
+
+      const { id, userid, compid, branchid, finid } = params;
+
       const response = await apiCall.delete<GoodReceivedNoteApiResponse>(
         `${this.baseUrl}grn`,
-        { userid: this.getUserId(), compid: this.getCompanyId(), id }
+        {
+          id,
+          userid,
+          compid,
+          branchid,
+          finid,
+        }
       );
 
       this.handleError(response);
 
     } catch (error: any) {
-      console.error(`Error deleting Good Received Note with id ${id}:`, error);
+      console.error(`Error deleting Good Received Note:`, error);
       toast.error(error.message || "Failed to delete Good Received Note");
       throw error;
     }
   }
+
 }
 
 export const goodReceivedNoteService = new GoodReceivedNoteService();

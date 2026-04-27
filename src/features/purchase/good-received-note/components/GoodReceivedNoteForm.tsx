@@ -18,6 +18,7 @@ import { GoodReceivedNoteItems } from "./GoodReceivedNoteItems";
 import { useWatch } from "react-hook-form";
 import { formatDate, formatDateForInput } from "@/helpers/dateUtils";
 import SearchModal from "@/common/components/SearchModal";
+import { useConfirm } from "@/common/hooks/useConfirm";
 
 
 interface GoodReceivedNoteProps {
@@ -36,12 +37,14 @@ type GrnPendingRow = {
 
 export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId, mode, formSelectedBranch }: GoodReceivedNoteProps) {
 
+  // hooks
   const {
     userId,
     companyId,
     branchId,
     finid,
   } = useUserStore();
+  const confirm = useConfirm();
 
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
@@ -124,7 +127,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
 
         compid: Number(GoodReceivedNote.compid ?? 0),
         branchid: Number(GoodReceivedNote.branchid ?? 0),
-        finid: Number(GoodReceivedNote.finid ?? 0),
+        finid: Number(finid ?? 0),
         vnumid: Number(GoodReceivedNote.vnumid ?? 0),
         vendorid: Number(GoodReceivedNote.vendorid ?? 0),
 
@@ -157,10 +160,11 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
             qty2: Number(item.qty2 ?? 0),
             rate: Number(item.rate ?? 0),
             value: Number(item.value ?? 0),
+            unit: item.unit,
+            balanceqty1: item?.balanceqty1,
             altunimethod: item.altunimethod ?? "A",
             altunitfactor: Number(item.altunitfactor ?? 1),
-            alterunitfactortype:
-              item.alterunitfactortype ?? "M",
+            alterunitfactortype: item.alterunitfactortype ?? "M",
             rateon: Number(item.rateon ?? 1),
             orderdtlid: item.orderdtlid || 0,
           })) ?? [],
@@ -206,7 +210,6 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
   const selectedSeries = seriesNoOptions.find(
     (s: any) => s.value === watch("vnumid")
   );
-
 
   // Vendor
   const { data: VendorspOptions = [] } = useQuery({
@@ -287,10 +290,13 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
         qty2: Number(item?.qty2) || qty,
         rate: Number(rate),
         value: value,
+        unit: item?.unit,
+        balanceqty1: item?.balanceqty1,
         altunimethod: item?.altunimethod || "A",
         altunitfactor: item?.altunitfactor || 1,
         alterunitfactortype: item?.alterunitfactortype || "M",
         rateon: item?.rateon || 1,
+        orderdtlid: item?.orderdtlid || 0,
       };
     });
 
@@ -300,9 +306,36 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
   // Submit handler
   const handleFormSubmit = async (data: GoodReceivedNoteFormSchema) => {
     try {
+      // if (isDeleteMode) {
+      //   if (!window.confirm("Delete this Good Received Note?")) return;
+
+      //   await deleteMutation.mutateAsync({
+      //     id: formGoodReceivedNoteId,
+      //     userid: Number(userId),
+      //     compid: Number(companyId),
+      //     branchid: Number(branchId),
+      //     finid: Number(finid),
+      //   });
+
+      //   onClose();
+      //   return;
+      // }
+
       if (isDeleteMode) {
-        if (!window.confirm("Delete this GoodReceivedNote?")) return;
-        await deleteMutation.mutateAsync(formGoodReceivedNoteId);
+        const ok = await confirm({
+          title: "Delete Good Received Note",
+          message: "Are you sure you want to delete this GRN?",
+        });
+
+        if (!ok) return;
+
+        await deleteMutation.mutateAsync({
+          id: formGoodReceivedNoteId,
+          userid: Number(userId),
+          compid: Number(companyId),
+          branchid: Number(branchId),
+          finid: Number(finid),
+        });
         onClose();
         return;
       }
@@ -320,7 +353,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
 
       };
 
-      // console.log("FINAL SUBMIT PAYLOAD:", JSON.stringify(payload, null, 2));
+      console.log("FINAL SUBMIT PAYLOAD for GRN:", JSON.stringify(data, null, 2));
 
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
@@ -341,6 +374,14 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
       console.error("Submit error:", error);
     }
   };
+
+  const selectedProductIds = watchedItems
+    ?.map((item: any) => item?.productid)
+    ?.filter(Boolean);
+
+  // useEffect(() => {
+  //   console.log('selectedProductIds :', selectedProductIds);
+  // }, [selectedProductIds])
 
   // Debug validation issues 
   const onError = (err: any) => {
@@ -438,7 +479,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
               </div>
 
               <div className="w-68">
-                <label className="block text-gray-700 font-medium mb-1">GRN Pending <span className="text-red-500">*</span> </label>
+                <label className="block text-gray-700 font-medium mb-1">PO Pending <span className="text-red-500">*</span> </label>
                 <input
                   type="text"
                   readOnly
@@ -496,17 +537,18 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   type="button"
                   onClick={() =>
                     append({
-                      productid: 0,
-                      qty1: 0,
-                      rate: 0,
-                      value: 0,
-                      qty2: 0,
                       tag: "I",
                       dtlid: fields.length + 1,
+                      productid: 0,
+                      qty1: 0,
+                      qty2: 0,
+                      rate: 0,
+                      value: 0,
                       altunimethod: "A",
                       altunitfactor: 1,
                       alterunitfactortype: "M",
                       rateon: 1,
+                      orderdtlid: 0,
                     })
                   }
                   className="primary-btn text-xs px-3 py-1"
@@ -536,6 +578,9 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   visible={visible}
                   isReadOnly={isReadOnly}
                   fieldsLength={fields.length}
+
+                  excludeIds={selectedProductIds}
+                  currentId={watchedItems?.[index]?.productid}
                 />
               ))}
             </div>
@@ -633,6 +678,8 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
         columns={searchGrnPendingColumns}
         searchFields={searchGrnPendingFields}
         onSelect={handleGrnPendingSelect}
+        excludeIds={selectedProductIds}
+
       />
 
     </Popup>

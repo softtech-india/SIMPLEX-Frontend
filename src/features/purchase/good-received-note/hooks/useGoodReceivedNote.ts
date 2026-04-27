@@ -131,14 +131,23 @@ export function useDeleteGoodReceivedNote() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => goodReceivedNoteService.deleteGoodReceivedNote(id),
+    mutationFn: (params: {
+      id: number;
+      userid: number;
+      compid: number;
+      branchid: number | string;
+      finid: number;
+    }) => goodReceivedNoteService.deleteGoodReceivedNote(params),
 
     onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: GOOD_RECEIVED_NOTE_KEY.list() });
-      toast.success(data.message);
+      queryClient.invalidateQueries({
+        queryKey: GOOD_RECEIVED_NOTE_KEY.list(),
+      });
+
+      toast.success(data?.message || "Deleted successfully");
     },
 
-    onError: (err: Error) => {
+    onError: (err: any) => {
       toast.error(err.message || "Failed to delete Good Received Note");
     },
   });

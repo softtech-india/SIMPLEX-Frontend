@@ -34,23 +34,23 @@ export default function PurchaseOrderModule() {
   const [fromDate, setFromDate] = useState<string | null>(currentDate);
   const [toDate, setToDate] = useState<string | null>(currentDate);
 
-  const { data: purchaseOrderList = [], isLoading, refetch } =
-    useGoodReceivedNoteList({
-      userid: Number(userId),
-      compid: Number(companyId),
-      skip: 0,
-      take: 200,
-      branchid: Number(toolbarBranchId) || Number(branchId),
-      finid: Number(finid),
-      startdt: fromDate || "",
-      enddt: toDate || "",
-    });
+  const { data: goodReceivedNotelist = [], isLoading, refetch } = useGoodReceivedNoteList({
+    userid: Number(userId),
+    compid: Number(companyId),
+    skip: 0,
+    take: 200,
+    branchid: Number(toolbarBranchId) || Number(branchId),
+    finid: Number(finid),
+    startdt: fromDate || "",
+    enddt: toDate || "",
+  });
 
-  // useEffect(() => {
-  //   console.log('branch :', toolbarBranchId);
-  //   console.log('fromDate :', fromDate);
-  //   console.log('toDate :', toDate);
-  // }, [toolbarBranchId, fromDate, toDate])
+  useEffect(() => {
+    console.log('goodReceivedNotelist :', goodReceivedNotelist);
+    console.log('branch :', toolbarBranchId);
+    console.log('fromDate :', fromDate);
+    console.log('toDate :', toDate);
+  }, [goodReceivedNotelist, toolbarBranchId, fromDate, toDate])
 
   // Fetch dropdown options
   const { data: BranchOrderOptions = [] } = useQuery({
@@ -116,22 +116,22 @@ export default function PurchaseOrderModule() {
   }, [refetch]);
 
   const handleExport = useCallback(() => {
-    if (!purchaseOrderList || purchaseOrderList.length === 0) return;
+    if (!goodReceivedNotelist || goodReceivedNotelist.length === 0) return;
 
     // Generate columns dynamically from first row keys
-    const columns: ExcelColumn[] = Object.keys(purchaseOrderList[0]).map((key) => ({
+    const columns: ExcelColumn[] = Object.keys(goodReceivedNotelist[0]).map((key) => ({
       header: key.charAt(0).toUpperCase() + key.slice(1),
       key,
       width: 20,
     }));
 
     exportToExcel({
-      data: purchaseOrderList,
+      data: goodReceivedNotelist,
       columns,
       fileName: "Good Received Note List.xlsx",
       sheetName: "Good Received Note",
     });
-  }, [purchaseOrderList]);
+  }, [goodReceivedNotelist]);
 
 
   return (
@@ -194,7 +194,7 @@ export default function PurchaseOrderModule() {
         {!isMobile && (
           <div className="w-full px-2 sm:px-2 md:px-2 lg:px-2 max-w-full lg:max-w-355 bg-white rounded-xl shadow-sm border border-gray-200 p-2 overflow-x-auto my-4">
             <GoodReceivedNoteDataGrid
-              dataSource={purchaseOrderList}
+              dataSource={goodReceivedNotelist}
               onSelectionChanged={handleSelectionChanged}
               showFilterRow
               showColumnChooser
