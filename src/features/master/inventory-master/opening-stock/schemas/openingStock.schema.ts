@@ -17,8 +17,6 @@ export const OpeningStockSchema = z.object({
   branchid: z.coerce.number().optional(),
   finid: z.coerce.number().optional(),
   productid: z.coerce.number(' This field is required'),
-
-
   qty1: z.coerce.number().optional(),
   qty2: z.coerce.number().optional(),
   rate: z.coerce.number().optional(),

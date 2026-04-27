@@ -51,4 +51,4 @@ export const OpeningStockDataGrid = forwardRef<any, OpeningStockDataGridProps>(
   }
 );
 
-PurchaseOrderDataGrid.displayName = 'PurchaseOrderDataGrid';
+OpeningStockDataGrid.displayName = 'OpeningStockDataGrid';

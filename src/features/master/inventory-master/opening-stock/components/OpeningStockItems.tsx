@@ -1,9 +1,8 @@
+import SearchModal from "@/common/components/SearchModal";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
-import SearchModal from "../../../../common/components/SearchModal";
 
-
-type PurchaseOrderItemsProps = {
+type OpeningStockItemsProps = {
   index: number;
   field: { id: string };
   control: any;
@@ -19,7 +18,7 @@ type PurchaseOrderItemsProps = {
   fieldsLength: number;
 };
 
-export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
+export const OpeningStockItems: React.FC<OpeningStockItemsProps> = ({
   index,
   field,
   control,

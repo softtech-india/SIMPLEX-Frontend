@@ -2,10 +2,10 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import LoadPanel from 'devextreme-react/load-panel';
-import { PurchaseOrderDataGrid } from './components/PurchaseOrderDataGrid';
-import { PurchaseOrderForm } from './components/OpeningStockForm';
-import { usePurchaseOrderList } from './hooks/useOpeningStock';
-import { PurchaseOrder, OperationMode } from './types/openingStock';
+import { OpeningStockDataGrid } from './components/OpeningStockDataGrid';
+import { OpeningStockForm } from './components/OpeningStockForm';
+import { useOpeningStockList } from './hooks/useOpeningStock';
+import { OpeningStock, OperationMode } from './types/openingStock';
 import useIsMobile from "@/common/hooks/useIsMobile";
 import { TransactionToolbar } from '@/common/components/barmanager/TransactionToolbar';
 import { usePrivileges } from '@/common/hooks/usePrivileges';
@@ -16,7 +16,7 @@ import useUserStore from '@/store/userStore';
 import { currentDate, formatDate } from '@/helpers/dateUtils';
 
 
-export default function PurchaseOrderModule() {
+export default function OpeningStockModule() {
 
   // Hooks
   const isMobile = useIsMobile()
@@ -24,10 +24,10 @@ export default function PurchaseOrderModule() {
   const { userId, companyId, branchId, finid, branchnm } = useUserStore();
 
   // State 
-  const [selectedRow, setselectedRow] = useState<PurchaseOrder | null>(null);
+  const [selectedRow, setselectedRow] = useState<OpeningStock | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formMode, setFormMode] = useState<OperationMode>('Add');
-  const [formPurchaseOrderId, setFormPurchaseOrderId] = useState(0);
+  const [formOpeningStockId, setFormOpeningStockId] = useState(0);
   const [toolbarBranchId, setToolbarBranchId] = useState<string | null>(null);
   const [formSelectedBranch, setFormSelectedBranch] = useState<string | null>(null);
 
@@ -35,15 +35,11 @@ export default function PurchaseOrderModule() {
   const [toDate, setToDate] = useState<string | null>(currentDate);
 
   const { data: purchaseOrderList = [], isLoading, refetch } =
-    usePurchaseOrderList({
+    useOpeningStockList({
       userid: Number(userId),
       compid: Number(companyId),
-      skip: 0,
-      take: 200,
       branchid: Number(toolbarBranchId) || Number(branchId),
       finid: Number(finid),
-      startdt: fromDate || "",
-      enddt: toDate || "",
     });
 
   // useEffect(() => {
@@ -81,10 +77,10 @@ export default function PurchaseOrderModule() {
     if (mode !== 'Add' && !selectedRow) return;
 
     if (mode === 'Add') {
-      setFormPurchaseOrderId(0);
+      setFormOpeningStockId(0);
       setselectedRow(null);
     } else {
-      setFormPurchaseOrderId(selectedRow?.id ?? 0);
+      setFormOpeningStockId(selectedRow?.id ?? 0);
     }
 
     setFormMode(mode);
@@ -93,7 +89,7 @@ export default function PurchaseOrderModule() {
 
   const handleFormClose = useCallback(() => {
     setIsFormOpen(false);
-    setFormPurchaseOrderId(0);
+    setFormOpeningStockId(0);
   }, []);
 
   // Toolbar handlers
@@ -108,7 +104,7 @@ export default function PurchaseOrderModule() {
 
   const handleRefresh = useCallback(() => {
     refetch();
-    setFormPurchaseOrderId(0);
+    setFormOpeningStockId(0);
     setselectedRow(null);
     setToolbarBranchId(null);
     setFromDate(currentDate);
@@ -193,7 +189,7 @@ export default function PurchaseOrderModule() {
 
         {!isMobile && (
           <div className="w-full px-2 sm:px-2 md:px-2 lg:px-2 max-w-full lg:max-w-355 bg-white rounded-xl shadow-sm border border-gray-200 p-2 overflow-x-auto my-4">
-            <PurchaseOrderDataGrid
+            <OpeningStockDataGrid
               dataSource={purchaseOrderList}
               onSelectionChanged={handleSelectionChanged}
               showFilterRow
@@ -206,10 +202,10 @@ export default function PurchaseOrderModule() {
         )}
 
 
-        <PurchaseOrderForm
+        <OpeningStockForm
           visible={isFormOpen}
           onClose={handleFormClose}
-          formPurchaseOrderId={formPurchaseOrderId}
+          formOpeningStockId={formOpeningStockId}
           formSelectedBranch={formSelectedBranch || branchnm}
           mode={formMode}
         />
