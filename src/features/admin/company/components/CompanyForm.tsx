@@ -341,17 +341,17 @@ export function CompanyForm({ visible, onClose, companyId, mode }: CompanyFormPr
               </div>
 
               <div>
-                <label className="block text-gray-700 font-medium mb-1">Mobile</label>
+                <label className="block text-gray-700 font-medium mb-1">Phone</label>
                 <input
                   type="text"
                   {...register("phone")}
-                  maxLength={10} // prevents typing more than 10 chars
+                  maxLength={11} // prevents typing more than 10 chars
                   onInput={(e) => {
                     e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ""); // remove non-digits
                   }}
                   disabled={isReadOnly}
                   className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.phone ? "border-red-500" : "border-gray-300"}`}
-                  placeholder="Enter mobile number"
+                  placeholder="Enter Phone number"
                 />
                 {errors.phone && <p className="text-red-500 mt-1 text-sm">{errors.phone.message}</p>}
               </div>

@@ -16,6 +16,7 @@ export const userSchema = z.object({
   contactno: z.string().optional(),
   email: z.string().optional(),
   remarks: z.string().optional(),
+  status: z.string().optional(),
 
 }).superRefine(({ pwd, confirmPwd }, ctx) => {
   if (pwd !== confirmPwd) {

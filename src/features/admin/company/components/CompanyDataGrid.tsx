@@ -17,8 +17,8 @@ export const CompanyDataGrid = forwardRef<any, CompanyDataGridProps>(
   ({ dataSource, onSelectionChanged, onExporting, height = 600 }, ref) => {
 
     const columns = [
-      { dataField: 'name', caption: 'Name', width: 150, headerFilter: true },
-      { dataField: 'add1', caption: 'Address', width: 300, headerFilter: true },
+      { dataField: 'name', caption: 'Name', width: 250, headerFilter: true },
+      { dataField: 'add1', caption: 'Address', width: 200, headerFilter: true },
       { dataField: 'phone', caption: 'Phone', width: 100, headerFilter: true },
       { dataField: 'email', caption: 'Email', width: 100, headerFilter: true },
       { dataField: 'gstin', caption: 'GST No', width: 100, headerFilter: true },
