@@ -7,10 +7,11 @@ import LoadPanel from "devextreme-react/load-panel";
 import { useFinyear } from "../hooks/useFinyear";
 import { useCreateFinyear, useUpdateFinyear, useDeleteFinyear } from "../hooks/useFinyear";
 import { getStorageItem } from "@/common/utility/storage";
-import { FinyearFormData, OperationMode } from "../types/finyear.types";
+import { FinYearFormType, OperationMode } from "../types/finyear.types";
 import { finyearSchema, finyearFormSchema } from "../schemas/finyear.schema";
 import { finyearDefaultValues } from "../constants/finyearFormDefaults"
 import { useConfirm } from "@/common/hooks/useConfirm";
+import { formatDateForInput } from "@/helpers/dateUtils";
 
 interface FinyearFormProps {
   visible: boolean;
@@ -62,6 +63,10 @@ export function FinyearForm({ visible, onClose, FinyearId, mode }: FinyearFormPr
     if (Finyear) {
       reset({
         ...Finyear,
+
+        finstdt: formatDateForInput(Finyear.finstdt),
+        finenddt: formatDateForInput(Finyear.finenddt),
+
       });
     }
   }, [Finyear, mode, visible, reset, setFocus]);
@@ -73,38 +78,38 @@ export function FinyearForm({ visible, onClose, FinyearId, mode }: FinyearFormPr
 
       console.log("from date: ", data);
 
-      // if (isDeleteMode) {
-      //   const ok = await confirm({
-      //     title: "Delete Finyear",
-      //     message: "Are you sure you want to delete this Finyear?",
-      //   });
+      if (isDeleteMode) {
+        const ok = await confirm({
+          title: "Delete Finyear",
+          message: "Are you sure you want to delete this Finyear?",
+        });
 
-      //   if (!ok) return;
+        if (!ok) return;
 
-      //   await deleteMutation.mutateAsync(FinyearId);
-      //   onClose();
-      //   return;
-      // }
+        await deleteMutation.mutateAsync(FinyearId);
+        onClose();
+        return;
+      }
 
-      // const payload: FinyearFormData = {
-      //   ...data,
-      // };
+      const payload: FinYearFormType = {
+        ...data,
+      };
 
-      // if (isAddMode) {
-      //   await createMutation.mutateAsync(payload);
-      //   reset({});
-      //   onClose();
-      //   defaultFocusRef.current?.focus();
-      //   return;
-      // }
+      if (isAddMode) {
+        await createMutation.mutateAsync(payload);
+        reset({});
+        onClose();
+        defaultFocusRef.current?.focus();
+        return;
+      }
 
-      // if (isEditMode) {
-      //   await updateMutation.mutateAsync({
-      //     id: FinyearId,
-      //     data: payload,
-      //   });
-      //   onClose();
-      // }
+      if (isEditMode) {
+        await updateMutation.mutateAsync({
+          id: FinyearId,
+          data: payload,
+        });
+        onClose();
+      }
     } catch (error) {
       console.error("Submit error:", error);
     }
@@ -121,7 +126,7 @@ export function FinyearForm({ visible, onClose, FinyearId, mode }: FinyearFormPr
       visible={visible}
       onHiding={onClose}
       title={`${mode} Financial Year`}
-      width="70vw"
+      width="35vw"
       height="auto"
       dragEnabled
       showTitle
