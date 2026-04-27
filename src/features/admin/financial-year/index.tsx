@@ -98,7 +98,7 @@ export default function FinyearModule() {
         //  hasSelection={!!selectedRow}
           onAdd={handleAddClick}
           onEdit={handleEditClick}
-          onDelete={handleDeleteClick}
+          // onDelete={handleDeleteClick}
           onRefresh={handleRefresh}
           onView={handleViewClick}
           onPrint={handlePrintClick}

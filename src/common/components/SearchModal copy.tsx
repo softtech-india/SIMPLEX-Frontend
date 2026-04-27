@@ -41,7 +41,7 @@ export default function SearchModal({
   excludeIds,
   currentId,
 }: SearchModalProps) {
-
+  
   const [list, setList] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [skip, setSkip] = useState(0);
@@ -96,18 +96,7 @@ export default function SearchModal({
           setLoading(false);
           return;
         }
-        //setList(response.data || []);
-
-        const rawData = response.data || [];
-
-        const filteredData = rawData.filter((row: any) => {
-          if (row.productid === currentId) return true;
-
-          return !(excludeIds ?? []).includes(row.productid);
-        });
-
-        setList(filteredData);
-
+        setList(response.data || []);
         setLoading(false);
       })
       .catch((e) => {

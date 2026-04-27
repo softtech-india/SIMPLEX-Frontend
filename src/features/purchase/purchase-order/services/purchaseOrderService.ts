@@ -49,7 +49,7 @@ class PurchaseOrderService {
         params
       );
 
-      this.handleError(response);
+   //   this.handleError(response);
       return response.data || [];
     } catch (error: any) {
       console.error("Error fetching purchase orders:", error);
@@ -57,23 +57,6 @@ class PurchaseOrderService {
       throw error;
     }
   }
-
-  // async getAllPurchaseOrders(): Promise<PurchaseOrder[]> {
-  //   try {
-  //     const response = await apiCall.get<PurchaseOrderApiResponse>(
-  //       `${this.baseUrl}po`,
-  //       { userid: this.getUserId(), compid: this.getCompanyId() }
-  //     );
-
-  //     this.handleError(response);
-  //     return response.data || [];
-
-  //   } catch (error: any) {
-  //     console.error("Error fetching companies:", error);
-  //     toast.error(error.message || "Failed to fetch companies");
-  //     throw error;
-  //   }
-  // }
 
   async getPurchaseOrderById(
     params: {

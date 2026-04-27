@@ -18,8 +18,8 @@ export const FinyearDataGrid = forwardRef<any, FinyearDataGridProps>(
 
     const columns = useMemo(() => [
       { dataField: 'findesc', caption: 'Finaancial year', width: 200, headerFilter: true },
-      { dataField: 'finstdt', caption: 'Financial year start', width: 200, headerFilter: true },
-      { dataField: 'finenddt', caption: 'Financial year end', width: 200, headerFilter: true },
+      { dataField: "finstdt", caption: "Start Date", dataType: "date", format: "dd-MM-yyyy", width: 200 },
+      { dataField: "finenddt", caption: "End Date", dataType: "date", format: "dd-MM-yyyy", width: 200 },
       { dataField: 'status', caption: 'Status', width: 150, headerFilter: true },
       { dataField: 'entryby', caption: 'Entry User', width: 120 },
       { dataField: 'entrydt', caption: 'Entry Date', width: 130, dataType: 'date' },

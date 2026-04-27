@@ -17,11 +17,11 @@ export const UserDataGrid = forwardRef<any, UserDataGridProps>(
   ({ dataSource, onSelectionChanged, onExporting, height = 600 }, ref) => {
 
     const columns = useMemo(() => [
-      { dataField: 'name', caption: 'Name', width: 150, headerFilter: true },
-      { dataField: 'code', caption: 'Username', width: 150, headerFilter: true },
-      { dataField: 'pwd', caption: 'Password', width: 150, headerFilter: true },
-      { dataField: 'typedesc', caption: 'User type', width: 100, headerFilter: true },
-      { dataField: 'group', caption: 'User Group', width: 100, headerFilter: true },
+      { dataField: 'name', caption: 'Name', width: 200, headerFilter: true },
+      { dataField: 'code', caption: 'Username', width: 200, headerFilter: true },
+      // { dataField: 'pwd', caption: 'Password', width: 150, headerFilter: true },
+      { dataField: 'typedesc', caption: 'User type', width: 200, headerFilter: true },
+      { dataField: 'group', caption: 'User Group', width: 300, headerFilter: true },
     ], []);
 
     return (

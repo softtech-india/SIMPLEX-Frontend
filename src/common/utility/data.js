@@ -393,6 +393,15 @@ export const StateDispalytype = [{
 }
 ];
 
+export const BackdateEntrytype = [{
+    id: 'N',
+    name: 'No',
+}, {
+    id: 'Y',
+    name: 'Yes',
+}
+];
+
 export const Statustype = [
     {
         id: 'A',

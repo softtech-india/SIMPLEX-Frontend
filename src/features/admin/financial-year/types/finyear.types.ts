@@ -12,7 +12,14 @@ export interface Finyear {
   updatedt?: string;
 }
 
-export interface FinyearFormData extends Omit<Finyear, 'id' | 'entryby' | 'entrydt' | 'updateby' | 'updatedt'> { }
+
+export interface FinYearFormType
+  extends Partial<
+    Omit<
+      Finyear,
+      "id" | "entryby" | "entrydt" | "updateby" | "updatedt"
+    >
+  > { }
 
 export interface FinyearApiResponse {
   success: boolean;

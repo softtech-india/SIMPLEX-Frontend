@@ -16,10 +16,7 @@ export const companySchema = z.object({
   pin: z.string().optional(),
   phone: z
     .string()
-    .trim()
-    .min(10, "Phone number must be 10 digits")
-    .max(10, "Phone number must be 10 digits")
-    .regex(/^\d+$/, "Phone number must contain only digits"),
+    .optional(),
 
   email: z.string().optional(),
   website: z.string().optional(),

@@ -1,0 +1,689 @@
+'use client';
+
+import { useEffect, useState } from "react";
+import { Popup } from "devextreme-react/popup";
+import LoadPanel from "devextreme-react/load-panel";
+import { useQuery } from "@tanstack/react-query";
+import { useGoodReceivedNoteById, useCreateGoodReceivedNote, useUpdateGoodReceivedNote, useDeleteGoodReceivedNote } from "../hooks/useGoodReceivedNote";
+import { fetchGodownList, fetchVendorList } from "@/api/master/ledger-api";
+import { GoodReceivedNoteFormType, OperationMode } from "../types/goodReceivedNote.types";
+import { GoodReceivedNoteFormSchema } from "../schemas/goodReceivedNote.schema";
+import { goodReceivedNoteFormDefaults } from "../constants/goodReceivedNoteFormDefaults";
+import { useGoodReceivedNoteForm } from "../hooks/useGoodReceivedNoteForm";
+import { useFieldArray } from "react-hook-form";
+import { fetchSeriesList } from "@/api/purchase/purchase-api";
+import useUserStore from "@/store/userStore";
+import { FormSelect } from "@/common/components/FormSelect";
+import { GoodReceivedNoteItems } from "./GoodReceivedNoteItems";
+import { useWatch } from "react-hook-form";
+import { formatDate, formatDateForInput } from "@/helpers/dateUtils";
+import SearchModal from "@/common/components/SearchModal";
+import { useConfirm } from "@/common/hooks/useConfirm";
+
+
+interface GoodReceivedNoteProps {
+  visible: boolean;
+  onClose: () => void;
+  formGoodReceivedNoteId: number;
+  mode: OperationMode;
+  formSelectedBranch: string;
+}
+
+type GrnPendingRow = {
+  id: number;
+  orderno: string;
+  orderdt: string;
+};
+
+export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId, mode, formSelectedBranch }: GoodReceivedNoteProps) {
+
+  // hooks
+  const {
+    userId,
+    companyId,
+    branchId,
+    finid,
+  } = useUserStore();
+  const confirm = useConfirm();
+
+  const isEditMode = mode === "Edit";
+  const isAddMode = mode === "Add";
+  const isDeleteMode = mode === "Delete";
+  const isReadOnly = mode === "View" || mode === "Print";
+
+  const [grnPendingModalOpen, setGrnPendingModalOpen] = useState(false);
+
+  const { data: GoodReceivedNote, isLoading: isLoadingGoodReceivedNote } =
+    useGoodReceivedNoteById({
+      id: formGoodReceivedNoteId,
+      userid: Number(userId),
+      compid: Number(companyId),
+      branchid: branchId,
+      finid: Number(finid),
+    });
+
+  const createMutation = useCreateGoodReceivedNote();
+  const updateMutation = useUpdateGoodReceivedNote();
+  const deleteMutation = useDeleteGoodReceivedNote();
+
+  const isSubmitting = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
+
+  const {
+    control,
+    register,
+    handleSubmit,
+    setFocus,
+    reset,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useGoodReceivedNoteForm();
+
+  const orderid = watch("orderid");
+  const orderno = watch("orderno");
+  const orderdt = watch("orderdt");
+  const vendorid = watch("vendorid");
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "itemdtl",
+  });
+
+  // Calculate Total Quantity and Vlaue
+  const watchedItems = useWatch({
+    control,
+    name: "itemdtl",
+  });
+
+  const totalQty = (watchedItems || []).reduce((sum, item) => {
+    return sum + (Number(item?.qty1) || 0);
+  }, 0);
+
+  const totalValue = (watchedItems || []).reduce((sum, item) => {
+    const qty = Number(item?.qty1) || 0;
+    const rate = Number(item?.rate) || 0;
+
+    return sum + qty * rate;
+  }, 0);
+
+  // Reset form 
+  useEffect(() => {
+    if (!visible) return;
+
+    setTimeout(() => {
+      setFocus("orderdt");
+    }, 1000);
+
+    if (isAddMode) {
+      reset(goodReceivedNoteFormDefaults);
+      return;
+    }
+
+    if (GoodReceivedNote) {
+      reset({
+        ...goodReceivedNoteFormDefaults,
+
+        ...GoodReceivedNote,
+
+        compid: Number(GoodReceivedNote.compid ?? 0),
+        branchid: Number(GoodReceivedNote.branchid ?? 0),
+        finid: Number(finid ?? 0),
+        vnumid: Number(GoodReceivedNote.vnumid ?? 0),
+        vendorid: Number(GoodReceivedNote.vendorid ?? 0),
+
+        qty1: Number(GoodReceivedNote.qty1 ?? 0),
+        qty2: Number(GoodReceivedNote.qty2 ?? 0),
+        totprodval: Number(GoodReceivedNote.totprodval ?? 0),
+
+        grndt: formatDateForInput(GoodReceivedNote.grndt),
+        grnno: GoodReceivedNote.grnno ?? "",
+
+        partyrefno: GoodReceivedNote.partyrefno ?? "",
+        partyrefdt: formatDateForInput(GoodReceivedNote.partyrefdt),
+
+        godownid: Number(GoodReceivedNote.godownid ?? 0),
+
+        ordertype: GoodReceivedNote.ordertype ?? "",
+        orderid: Number(GoodReceivedNote.orderid ?? 0),
+
+        narration: GoodReceivedNote.narration ?? "",
+
+        itemdtl:
+          GoodReceivedNote.itemdtl?.map((item, index) => ({
+            tag: item.tag ?? "I",
+            dtlid: item.dtlid ?? index + 1,
+            pcategoryid: item.pcategoryid,
+            pcategorynm: item.pcategorynm,
+            productid: item.productid,
+            productnm: item.productnm,
+            qty1: Number(item.qty1 ?? 0),
+            qty2: Number(item.qty2 ?? 0),
+            rate: Number(item.rate ?? 0),
+            value: Number(item.value ?? 0),
+            unit: item.unit,
+            balanceqty1: item?.balanceqty1,
+            altunimethod: item.altunimethod ?? "A",
+            altunitfactor: Number(item.altunitfactor ?? 1),
+            alterunitfactortype: item.alterunitfactortype ?? "M",
+            rateon: Number(item.rateon ?? 1),
+            orderdtlid: item.orderdtlid || 0,
+          })) ?? [],
+      });
+    }
+  }, [GoodReceivedNote, isAddMode, reset, visible, setFocus]);
+
+  const numMethodOptions = [
+    { label: "Auto", value: "A" },
+    { label: "Manual", value: "M" }
+  ];
+
+  // Series No Options
+  const voucherType = "GRN";
+  const { data: seriesNoOptions = [] } = useQuery({
+    queryKey: ["fetchSeriesList", userId, companyId, branchId, voucherType],
+    queryFn: () =>
+      fetchSeriesList(userId, companyId, branchId, voucherType, finid),
+    staleTime: 0,
+    enabled: !!companyId && !!branchId && !!userId && !!visible,
+    retry: 1,
+    refetchOnWindowFocus: true,
+
+    select: (data) => {
+      const options =
+        (data ?? []).map((s: any) => ({
+          value: s.id,
+          label: s.name,
+          manualallow: s.manualallow,
+        })) || [];
+
+      // auto-set first option safely
+      setTimeout(() => {
+        if (options.length > 0) {
+          setValue("vnumid", options[0].value);
+        }
+      }, 0);
+
+      return options;
+    },
+  });
+
+  const selectedSeries = seriesNoOptions.find(
+    (s: any) => s.value === watch("vnumid")
+  );
+
+  // Vendor
+  const { data: VendorspOptions = [] } = useQuery({
+    queryKey: ["VendorspOptions", userId, companyId],
+    queryFn: () => fetchVendorList(userId, companyId),
+    staleTime: 0,
+    enabled: !!userId && !!companyId && !!visible,
+    retry: 1,
+    refetchOnWindowFocus: false,
+
+    select: (data) =>
+      (data ?? []).map((s: any) => ({
+        value: s.id,
+        label: s.name,
+      })),
+  });
+
+  // Godown
+  const { data: GodownOptions = [] } = useQuery({
+    queryKey: ["GodownOptions", userId, companyId],
+    queryFn: () => fetchGodownList(userId, companyId),
+    staleTime: 0,
+    enabled: !!userId && !!companyId && !!visible,
+    retry: 1,
+    refetchOnWindowFocus: false,
+
+    select: (data) =>
+      (data ?? []).map((s: any) => ({
+        value: s.id,
+        label: s.name,
+      })),
+  });
+
+  // GRN Pending List
+  // Model Search GrnPending Modal Handlers
+  const baseGrnPendingParams = {
+    userid: userId,
+    compid: companyId,
+    branchid: branchId,
+    finid: finid,
+    vendorid: vendorid,
+  };
+
+  const searchGrnPendingColumns = [
+    { key: "orderno", label: "Order No." },
+    { key: "orderdt", label: "Order Date." },
+  ];
+
+  const searchGrnPendingFields = [
+    { value: "name", label: "Name" },
+  ];
+
+  const handleGrnPendingSelect = (row: GrnPendingRow) => {
+    setValue("orderid", row.id);
+    setValue(`orderno`, row.orderno);
+    setValue(`orderdt`, row.orderdt);
+    setGrnPendingModalOpen(false);
+  };
+
+
+  const calculateTotals = (items: any[] = []) => {
+    let qty1 = 0;
+    let totprodval = 0;
+
+    const itemdtl = items.map((item, index) => {
+      const qty = Number(item?.qty1) || 0;
+      const rate = Number(item?.rate) || 0;
+      const value = qty * rate;
+
+      qty1 += qty;
+      totprodval += value;
+
+      return {
+        tag: item?.tag || "I",
+        dtlid: item?.dtlid || index + 1,
+        productid: Number(item.productid ?? 0),
+        qty1: Number(qty),
+        qty2: Number(item?.qty2) || qty,
+        rate: Number(rate),
+        value: value,
+        unit: item?.unit,
+        balanceqty1: item?.balanceqty1,
+        altunimethod: item?.altunimethod || "A",
+        altunitfactor: item?.altunitfactor || 1,
+        alterunitfactortype: item?.alterunitfactortype || "M",
+        rateon: item?.rateon || 1,
+        orderdtlid: item?.orderdtlid || 0,
+      };
+    });
+
+    return { qty1, totprodval, itemdtl };
+  };
+
+  // Submit handler
+  const handleFormSubmit = async (data: GoodReceivedNoteFormSchema) => {
+    try {
+      // if (isDeleteMode) {
+      //   if (!window.confirm("Delete this Good Received Note?")) return;
+
+      //   await deleteMutation.mutateAsync({
+      //     id: formGoodReceivedNoteId,
+      //     userid: Number(userId),
+      //     compid: Number(companyId),
+      //     branchid: Number(branchId),
+      //     finid: Number(finid),
+      //   });
+
+      //   onClose();
+      //   return;
+      // }
+
+      if (isDeleteMode) {
+        const ok = await confirm({
+          title: "Delete Good Received Note",
+          message: "Are you sure you want to delete this GRN?",
+        });
+
+        if (!ok) return;
+
+        await deleteMutation.mutateAsync({
+          id: formGoodReceivedNoteId,
+          userid: Number(userId),
+          compid: Number(companyId),
+          branchid: Number(branchId),
+          finid: Number(finid),
+        });
+        onClose();
+        return;
+      }
+
+      const { qty1, totprodval, itemdtl } = calculateTotals(data.itemdtl || []);
+
+      const payload: GoodReceivedNoteFormType = {
+        ...data,
+        compid: companyId,
+        branchid: branchId,
+        qty1: Number(qty1),
+        qty2: Number(qty1),
+        totprodval: totprodval,
+        itemdtl,
+
+      };
+
+      console.log("FINAL SUBMIT PAYLOAD for GRN:", JSON.stringify(data, null, 2));
+
+      if (isAddMode) {
+        await createMutation.mutateAsync(payload);
+        reset(goodReceivedNoteFormDefaults);
+        onClose();
+        return;
+      }
+
+      if (isEditMode) {
+        await updateMutation.mutateAsync({
+          id: formGoodReceivedNoteId,
+          data: payload,
+        });
+        onClose();
+      }
+
+    } catch (error) {
+      console.error("Submit error:", error);
+    }
+  };
+
+  const selectedProductIds = watchedItems
+    ?.map((item: any) => item?.productid)
+    ?.filter(Boolean);
+
+  // useEffect(() => {
+  //   console.log('selectedProductIds :', selectedProductIds);
+  // }, [selectedProductIds])
+
+  // Debug validation issues 
+  const onError = (err: any) => {
+    console.error("Validation errors:", err);
+  };
+
+
+  return (
+    <Popup
+      visible={visible}
+      onHiding={onClose}
+      title={`${mode} GoodReceivedNote`}
+      width="90vw"
+      height="90vh"
+      dragEnabled
+      showTitle
+      showCloseButton={false}
+    >
+      <form
+        onSubmit={handleSubmit(handleFormSubmit, onError)}
+        className="flex flex-col h-full"
+      >
+        <div className="flex-1 overflow-y-auto p-2 space-y-2">
+
+          {/* Good Received Note Info */}
+          <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
+
+            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
+              Good Received Note Information
+            </h2>
+
+            <div className="flex flex-wrap gap-4 items-end">
+
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">Series No.</label>
+                <FormSelect
+                  name="vnumid"
+                  control={control}
+                  options={seriesNoOptions}
+                />
+              </div>
+
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">Num. Method</label>
+                <FormSelect
+                  name="vnummethod"
+                  control={control}
+                  options={numMethodOptions}
+                  isDisabled={selectedSeries?.manualallow === "N"}
+                />
+              </div>
+
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">GRN Date</label>
+                <input
+                  type="date"
+                  {...register("grndt")}
+                  disabled={isReadOnly}
+                  className={`inputField ${errors.grndt ? "text-red-500" : "border-gray-400"}`}
+                />
+              </div>
+
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">GRN No</label>
+                <input
+                  type="text"
+                  {...register("grnno")}
+                  disabled={isReadOnly || selectedSeries?.manualallow === "N"}
+                  className={`
+                    inputField 
+                    ${errors.grnno ? "border-red-500" : "border-gray-400"} 
+                    ${selectedSeries?.manualallow === "N" ? "bg-gray-100 cursor-not-allowed" : ""}
+                  `}
+                />
+              </div>
+
+              <div className="w-110">
+                <label className="block text-gray-700 font-medium mb-1">Vendor <span className="text-red-500">*</span> </label>
+                <FormSelect
+                  name="vendorid"
+                  control={control}
+                  options={VendorspOptions}
+                  className={`${errors?.vendorid ? "border-red-500" : "border-gray-400"}`}
+                />
+              </div>
+
+              <div className="w-80">
+                <label className="block text-gray-700 font-medium mb-1">Godown</label>
+                <FormSelect
+                  name="godownid"
+                  control={control}
+                  options={GodownOptions}
+                  className={`${errors?.godownid ? "border-red-500" : "border-gray-400"}`}
+                />
+              </div>
+
+              <div className="w-68">
+                <label className="block text-gray-700 font-medium mb-1">PO Pending <span className="text-red-500">*</span> </label>
+                <input
+                  type="text"
+                  readOnly
+                  value={orderno ? `${orderno} - ${formatDate(orderdt)}` : ""}
+                  onClick={() => setGrnPendingModalOpen(true)}
+                  className="inputField w-full cursor-pointer border border-gray-400"
+                  placeholder="Select GRN Pending"
+                />
+              </div>
+
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">Party Ref. No</label>
+                <input
+                  type="text"
+                  {...register("partyrefno")}
+                  disabled={isReadOnly}
+                  placeholder="Enter party ref. no."
+                  className={`inputField ${errors.partyrefno ? "" : "border-gray-400"}`}
+                />
+              </div>
+
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">Party Ref. Date</label>
+                <input
+                  type="date"
+                  {...register("partyrefdt")}
+                  disabled={isReadOnly}
+                  className={`inputField ${errors.partyrefdt ? "text-red-500" : "border-gray-400"}`}
+                />
+              </div>
+
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">Branch </label>
+                <input
+                  type="text"
+                  value={formSelectedBranch}
+                  disabled={isReadOnly}
+                  className={`inputField border-gray-400 `}
+                />
+              </div>
+
+            </div>
+          </section>
+
+          {/* Item Details */}
+          <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
+
+            <div className="flex justify-between items-center">
+              <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
+                Item Details
+              </h2>
+
+              {!isReadOnly && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    append({
+                      tag: "I",
+                      dtlid: fields.length + 1,
+                      productid: 0,
+                      qty1: 0,
+                      qty2: 0,
+                      rate: 0,
+                      value: 0,
+                      altunimethod: "A",
+                      altunitfactor: 1,
+                      alterunitfactortype: "M",
+                      rateon: 1,
+                      orderdtlid: 0,
+                    })
+                  }
+                  className="primary-btn text-xs px-3 py-1"
+                >
+                  + Add Item
+                </button>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              {fields.map((field, index) => (
+                <GoodReceivedNoteItems
+                  key={field.id}
+                  index={index}
+                  field={field}
+                  control={control}
+                  setValue={setValue}
+                  register={register}
+                  errors={errors}
+                  remove={remove}
+                  watchedItems={watchedItems}
+                  userId={userId}
+                  companyId={companyId}
+                  branchId={branchId}
+                  finid={finid}
+                  orderid={orderid || 0}
+                  visible={visible}
+                  isReadOnly={isReadOnly}
+                  fieldsLength={fields.length}
+
+                  excludeIds={selectedProductIds}
+                  currentId={watchedItems?.[index]?.productid}
+                />
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-4 items-center border-t pt-3">
+
+              <div className="w-68" />
+
+              <div className="w-120" />
+
+              <div className="w-28 relative">
+                <span className="absolute -left-20 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-700 whitespace-nowrap">
+                  Total Qty
+                </span>
+                <input
+                  type="number"
+                  value={totalQty}
+                  readOnly
+                  className="inputField w-full bg-gray-100"
+                />
+              </div>
+
+              <div className="w-28" />
+
+              <div className="w-28 relative">
+                <span className="absolute -left-24 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-700 whitespace-nowrap">
+                  Total Value
+                </span>
+                <input
+                  type="number"
+                  value={totalValue}
+                  readOnly
+                  className="inputField w-full bg-gray-100"
+                />
+              </div>
+
+              <div className="w-12" />
+
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">Narration </label>
+                <input
+                  {...register("narration")}
+                  placeholder="Narration"
+                  disabled={isReadOnly}
+                  className={`inputField ${errors.narration ? "" : "border-gray-400"}`}
+                />
+              </div>
+
+            </div>
+
+          </section>
+
+
+        </div>
+
+        {/* Footer */}
+        <div className="border-t p-2 flex justify-end gap-4 bg-gray-50">
+          {(mode !== "View" && mode !== "Print") && (
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="primary-btn disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting
+                ? isDeleteMode ? "Deleting..." : "Saving..."
+                : isDeleteMode ? "Delete" : "Save"}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isSubmitting}
+            className="secondary-btn disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Exit
+          </button>
+        </div>
+
+        <LoadPanel
+          shadingColor="rgba(0,0,0,0.4)"
+          visible={isSubmitting || isLoadingGoodReceivedNote}
+          showIndicator
+        />
+      </form>
+
+
+      <SearchModal
+        open={grnPendingModalOpen}
+        onClose={() => setGrnPendingModalOpen(false)}
+        endpoint="po/pendinglist"
+        baseParams={baseGrnPendingParams}
+        columns={searchGrnPendingColumns}
+        searchFields={searchGrnPendingFields}
+        onSelect={handleGrnPendingSelect}
+        excludeIds={selectedProductIds}
+
+      />
+
+    </Popup>
+  );
+
+
+}

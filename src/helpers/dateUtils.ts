@@ -1,9 +1,17 @@
 export const currentDate = new Date().toISOString().split("T")[0];
 
-export function formatDate(date: string | null): string {
+
+export function formatDate(date: string | null | undefined): string {
   if (!date) return "";
 
-  const [year, month, day] = date.split("-");
+  const d = new Date(date);
+
+  if (isNaN(d.getTime())) return "";
+
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+
   return `${day}-${month}-${year}`;
 }
 

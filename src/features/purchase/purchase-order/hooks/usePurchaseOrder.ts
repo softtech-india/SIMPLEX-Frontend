@@ -52,20 +52,6 @@ export function usePurchaseOrderList(params: GetPurchaseOrderParams) {
   });
 }
 
-// export function usePurchaseOrderList() {
-//   return useQuery({
-//     queryKey: PURCHASE_ORDER_KEYS.list(),
-//     queryFn: () => purchaseOrderService.getAllPurchaseOrders(),
-
-//     staleTime: 0,
-//     gcTime: 0,
-
-//     refetchOnMount: 'always',
-//     refetchOnWindowFocus: true,
-//     refetchOnReconnect: true,
-//   });
-// }
-
 export function usePurchaseOrderById(params: UsePurchaseOrderByIdParams) {
   return useQuery({
     queryKey: PURCHASE_ORDER_KEYS.detail(params.id ?? 0),
@@ -89,22 +75,6 @@ export function usePurchaseOrderById(params: UsePurchaseOrderByIdParams) {
     refetchOnReconnect: true,
   });
 }
-
-// export function usePurchaseOrderById(id: number) {
-//   return useQuery({
-//     queryKey: PURCHASE_ORDER_KEYS.detail(id),
-//     queryFn: () => purchaseOrderService.getPurchaseOrderById(id),
-
-//     enabled: !!id,
-
-//     staleTime: 0,
-//     gcTime: 0,
-
-//     refetchOnMount: 'always',
-//     refetchOnWindowFocus: true,
-//     refetchOnReconnect: true
-//   });
-// }
 
 export function useCreatePurchaseOrder() {
   const queryClient = useQueryClient();

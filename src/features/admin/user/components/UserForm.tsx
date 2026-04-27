@@ -7,7 +7,7 @@ import { userFormSchema } from "../schemas/user.schema";
 import { userDefaultValues } from "../constants/userFormDefaults"
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { useUserForm } from "../hooks/useUserForm";
-import { Usertype, StateDispalytype } from "@/common/utility/data"
+import { Usertype, StateDispalytype, BackdateEntrytype, Statustype } from "@/common/utility/data"
 import { FormSelect } from "@/common/components/FormSelect";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUserGroupList } from "@/api/master/ledger-api";
@@ -98,6 +98,17 @@ export function UserForm({ visible, onClose, formUserId, mode }: UserFormProps) 
     () => StateDispalytype.map((s) => ({ value: s.id, label: s.name })),
     []
   );
+
+  const backDateEntryOptions: Option[] = useMemo(
+    () => BackdateEntrytype.map((s) => ({ value: s.id, label: s.name })),
+    []
+  );
+
+    const statusOptions: Option[] = useMemo(
+    () => Statustype.map((s) => ({ value: s.id, label: s.name })),
+    []
+  );
+
   const userGroupOptions: Option[] = useMemo(
     () =>
       userGroupList.map((s: any) => ({
@@ -265,12 +276,12 @@ export function UserForm({ visible, onClose, formUserId, mode }: UserFormProps) 
 
               <div>
                 <label className="block text-gray-700 font-medium mb-1">Back Date Entry </label>
-                <input
-                  type="text"
-                  {...register("backdtentry")}
-                  disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.backdtentry ? "border-red-500" : "border-gray-300"}`}
-                  placeholder="Enter Back Date Entry"
+                <FormSelect<userFormSchema>
+                  name="backdtentry"
+                  control={control}
+                  options={backDateEntryOptions}
+                  placeholder="Back Date Entry"
+                  isDisabled={isReadOnly}
                 />
                 {errors.backdtentry && <p className="text-red-500 mt-1 text-sm">{errors.backdtentry.message}</p>}
               </div>
@@ -310,6 +321,18 @@ export function UserForm({ visible, onClose, formUserId, mode }: UserFormProps) 
                 />
                 {errors.remarks && <p className="text-red-500 mt-1 text-sm">{errors.remarks.message}</p>}
               </div>
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">Status </label>
+                <FormSelect<userFormSchema>
+                  name="status"
+                  control={control}
+                  options={statusOptions}
+                  placeholder="Status"
+                  isDisabled={isReadOnly}
+                />
+                {errors.status && <p className="text-red-500 mt-1 text-sm">{errors.status.message}</p>}
+              </div>              
 
 
             </div>
