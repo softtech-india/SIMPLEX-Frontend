@@ -13,6 +13,7 @@ type OpeningStockItemsProps = {
   watchedItems: any;
   userId: number | string;
   companyId: number | string;
+  branchId: number | string;
   visible: boolean;
   isReadOnly: boolean;
   fieldsLength: number;
@@ -29,6 +30,7 @@ export const OpeningStockItems: React.FC<OpeningStockItemsProps> = ({
   watchedItems,
   userId,
   companyId,
+  branchId,
   visible,
   isReadOnly,
   fieldsLength,
@@ -38,120 +40,64 @@ export const OpeningStockItems: React.FC<OpeningStockItemsProps> = ({
   const rate = Number(item?.rate) || 0;
   const value = qty * rate;
 
-  const [brandModalOpen, setBrandModalOpen] = useState(false);
-  const [productModalOpen, setProductModalOpen] = useState(false);
+  const [godownModalOpen, setGodownModalOpen] = useState(false);
 
-  // Model Search Brand Modal Handlers
-  const baseBrandParams = {
+  // Model Search Godown Modal Handlers
+  const baseGodownParams = {
     userid: userId,
     compid: companyId,
+    branchid: branchId,
   };
 
-  const searchBrandColumns = [
-    { key: "name", label: "Brand Name" },
+  const searchGodownColumns = [
+    { key: "name", label: "Godown Name" },
   ];
 
-  const searchBrandFields = [
+  const searchGodownFields = [
     { value: "name", label: "Name" },
+    { value: "addr1", label: "Address" },
   ];
 
-  const handleBrandSelect = (row: any) => {
-    setValue(`itemdtl.${index}.pcategoryid`, row.id);
-    setValue(`itemdtl.${index}.pcategorynm`, row.name);
-    setValue(`itemdtl.${index}.productid`, null);
-    setValue(`itemdtl.${index}.productnm`, "");
-    setBrandModalOpen(false);
+  const handleGodownSelect = (row: any) => {
+    setValue(`itemdtl.${index}.godownid`, row.id);
+    setValue(`itemdtl.${index}.godownnm`, row.name);
+    setGodownModalOpen(false);
   };
-
-  // Model Search product Modal Handlers
-  const baseProductParams = {
-    userid: userId,
-    compid: companyId,
-    brand: item?.pcategoryid,
-  };
-
-  const searchProductFields = [
-    { value: "productname", label: "Name" },
-    { value: "pclsname", label: "Class" },
-    { value: "group", label: "Group" },
-  ];
-
-  const searchProductColumns = [
-    { key: "productname", label: "Product" },
-    { key: "classnm", label: "Class" },
-    { key: "subclassnm", label: "Sub Class" },
-    { key: "unit", label: "Unit" },
-    { key: "mrp", label: "Mrp" },
-  ];
-
-  const handleProductSelect = (row: any) => {
-    setValue(`itemdtl.${index}.productid`, row.id);
-    setValue(`itemdtl.${index}.productnm`, row.productname);
-    setProductModalOpen(false);
-  };
-
 
   return (
     <div className="flex flex-wrap gap-4 items-end">
 
       <div className="w-68">
         <label className="block text-gray-700 text-sm font-medium mb-1">
-          Brand
+          Godown <span className="text-red-500">*</span>
         </label>
 
         <input
           type="text"
           readOnly
-          value={item?.pcategorynm || ""}
-          onClick={() => setBrandModalOpen(true)}
-          className="inputField w-full cursor-pointer border border-gray-400"
-          placeholder="Select Brand"
+          value={item?.godownnm || ""}
+          onClick={() => setGodownModalOpen(true)}
+          className={`inputField cursor-pointer ${errors?.itemdtl?.[index]?.godownnm ? "border-red-500" : "border-gray-400"}`}
+          placeholder="Select Godown"
         />
-      </div>
-
-      <div className="w-120">
-        <label className="block text-gray-700 text-sm font-medium mb-1">
-          Product
-        </label>
-
-        <input
-          type="text"
-          readOnly
-          value={item?.productnm || ""}
-          onClick={() => {
-            if (!item?.pcategoryid) return;
-            setProductModalOpen(true);
-          }}
-          className={`inputField w-full cursor-pointer ${errors?.itemdtl?.[index]?.productid
-            ? "border-red-500"
-            : "border-gray-400"
-            }`}
-          placeholder="Select Product"
-        />
-        {errors?.itemdtl?.[index]?.productid && (
-          <p className="text-xs text-red-500 mt-1">
-            {errors.itemdtl[index].productid.message}
-          </p>
+        {errors?.itemdtl?.[index]?.godownnm && (
+          <p className="text-xs text-red-500 mt-1"> {errors.itemdtl[index].godownnm.message} </p>
         )}
       </div>
 
+
       <div className="w-28">
         <label className="block text-gray-700 text-sm font-medium mb-1">
-          Quantity
+          Quantity <span className="text-red-500">*</span>
         </label>
         <input
           type="number"
           {...register(`itemdtl.${index}.qty1`)}
           disabled={isReadOnly}
-          className={`inputField ${errors?.itemdtl?.[index]?.qty1
-            ? "border-red-500"
-            : "border-gray-400"
-            }`}
+          className={`inputField ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-400"}`}
         />
         {errors?.itemdtl?.[index]?.qty1 && (
-          <p className="text-xs text-red-500 mt-1">
-            {errors.itemdtl[index].qty1.message}
-          </p>
+          <p className="text-xs text-red-500 mt-1"> {errors.itemdtl[index].qty1.message} </p>
         )}
       </div>
 
@@ -189,10 +135,7 @@ export const OpeningStockItems: React.FC<OpeningStockItemsProps> = ({
             onClick={() => remove(index)}
             disabled={fieldsLength === 1}
             className={`px-2 py-2 rounded flex items-center justify-center
-            ${fieldsLength === 1
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-red-400 hover:bg-red-600 text-white"
-              }`}
+            ${fieldsLength === 1 ? "bg-gray-400 cursor-not-allowed" : "bg-red-400 hover:bg-red-600 text-white"}`}
           >
             <Trash2 size={16} />
           </button>
@@ -201,24 +144,15 @@ export const OpeningStockItems: React.FC<OpeningStockItemsProps> = ({
 
       {/* MODALS */}
       <SearchModal
-        open={brandModalOpen}
-        onClose={() => setBrandModalOpen(false)}
-        endpoint="category"
-        baseParams={baseBrandParams}
-        columns={searchBrandColumns}
-        searchFields={searchBrandFields}
-        onSelect={handleBrandSelect}
+        open={godownModalOpen}
+        onClose={() => setGodownModalOpen(false)}
+        endpoint="godown"
+        baseParams={baseGodownParams}
+        columns={searchGodownColumns}
+        searchFields={searchGodownFields}
+        onSelect={handleGodownSelect}
       />
 
-      <SearchModal
-        open={productModalOpen}
-        onClose={() => setProductModalOpen(false)}
-        endpoint="product"
-        baseParams={baseProductParams}
-        columns={searchProductColumns}
-        searchFields={searchProductFields}
-        onSelect={handleProductSelect}
-      />
     </div>
   );
 

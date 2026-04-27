@@ -1,5 +1,5 @@
 import { apiCall } from "@/utils/apiClient";
-import { OpeningStock, OpeningStockFormType, OpeningStockApiResponse } from '../types/openingStock';
+import { OpeningStock, OpeningStockFormType, OpeningStockApiResponse } from '../types/openingStock.types';
 import { toast } from "sonner";
 import { storageService } from "@/common/utility/storageService";
 
@@ -8,7 +8,6 @@ export interface GetOpeningStockParams {
   compid: number;
   branchid?: number;
   finid?: number;
-
 }
 
 class OpeningStockService {
@@ -54,6 +53,7 @@ class OpeningStockService {
       throw error;
     }
   }
+
   async getAllOpeningStocks(
     params: GetOpeningStockParams
   ): Promise<OpeningStock[]> {
@@ -63,7 +63,7 @@ class OpeningStockService {
         params
       );
 
-      this.handleError(response);
+      //this.handleError(response);
       return response.data || [];
     } catch (error: any) {
       console.error("Error fetching opening stock:", error);
@@ -71,23 +71,6 @@ class OpeningStockService {
       throw error;
     }
   }
-
-  // async getAllPurchaseOrders(): Promise<PurchaseOrder[]> {
-  //   try {
-  //     const response = await apiCall.get<PurchaseOrderApiResponse>(
-  //       `${this.baseUrl}po`,
-  //       { userid: this.getUserId(), compid: this.getCompanyId() }
-  //     );
-
-  //     this.handleError(response);
-  //     return response.data || [];
-
-  //   } catch (error: any) {
-  //     console.error("Error fetching companies:", error);
-  //     toast.error(error.message || "Failed to fetch companies");
-  //     throw error;
-  //   }
-  // }
 
   async getOpeningStockById(
     params: {
@@ -101,7 +84,7 @@ class OpeningStockService {
     try {
 
       const response = await apiCall.get<OpeningStockApiResponse>(
-        `${this.baseUrl}po/id`,
+        `${this.baseUrl}opstock/id`,
         params
       );
 
@@ -116,7 +99,7 @@ class OpeningStockService {
       const message =
         error instanceof Error ? error.message : String(error);
 
-      toast.error(`Error fetching purchase order: ${message}`);
+      toast.error(`Error fetching opening stock: ${message}`);
       throw new Error(message);
     }
   }
@@ -135,7 +118,7 @@ class OpeningStockService {
 
     } catch (error: any) {
       console.error("Error creating opening stock:", error);
-      toast.error(error.message || "Failed to create opening stock");
+      toast.error(error.message || "Failed to create createOpeningStock");
       throw error;
     }
   }
@@ -156,7 +139,7 @@ class OpeningStockService {
 
     } catch (error: any) {
       console.error(`Error updating updateOpeningStock with id ${id}:`, error);
-      toast.error(error.message || "Failed to update purchaseOrder");
+      toast.error(error.message || "Failed to update opening stock");
       throw error;
     }
   }
@@ -172,7 +155,7 @@ class OpeningStockService {
 
     } catch (error: any) {
       console.error(`Error deleting deleteOpeningStock with id ${id}:`, error);
-      toast.error(error.message || "Failed to delete updateOpeningStock");
+      toast.error(error.message || "Failed to delete deleteOpeningStock");
       throw error;
     }
   }

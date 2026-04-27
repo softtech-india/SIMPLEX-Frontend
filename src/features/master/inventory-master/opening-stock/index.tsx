@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import LoadPanel from 'devextreme-react/load-panel';
 import { OpeningStockDataGrid } from './components/OpeningStockDataGrid';
 import { OpeningStockForm } from './components/OpeningStockForm';
 import { useOpeningStockList } from './hooks/useOpeningStock';
-import { OpeningStock, OperationMode } from './types/openingStock';
+import { OpeningStock, OperationMode } from './types/openingStock.types';
 import useIsMobile from "@/common/hooks/useIsMobile";
 import { TransactionToolbar } from '@/common/components/barmanager/TransactionToolbar';
 import { usePrivileges } from '@/common/hooks/usePrivileges';
@@ -13,8 +13,6 @@ import { exportToExcel, ExcelColumn } from '@/common/utility/exportToExcel';
 import { fetchBranchList } from "@/api/master/ledger-api";
 import { useQuery } from '@tanstack/react-query';
 import useUserStore from '@/store/userStore';
-import { currentDate, formatDate } from '@/helpers/dateUtils';
-
 
 export default function OpeningStockModule() {
 
@@ -31,10 +29,7 @@ export default function OpeningStockModule() {
   const [toolbarBranchId, setToolbarBranchId] = useState<string | null>(null);
   const [formSelectedBranch, setFormSelectedBranch] = useState<string | null>(null);
 
-  const [fromDate, setFromDate] = useState<string | null>(currentDate);
-  const [toDate, setToDate] = useState<string | null>(currentDate);
-
-  const { data: purchaseOrderList = [], isLoading, refetch } =
+  const { data: openingStockList = [], isLoading, refetch } =
     useOpeningStockList({
       userid: Number(userId),
       compid: Number(companyId),
@@ -107,32 +102,30 @@ export default function OpeningStockModule() {
     setFormOpeningStockId(0);
     setselectedRow(null);
     setToolbarBranchId(null);
-    setFromDate(currentDate);
-    setToDate(currentDate);
   }, [refetch]);
 
   const handleExport = useCallback(() => {
-    if (!purchaseOrderList || purchaseOrderList.length === 0) return;
+    if (!openingStockList || openingStockList.length === 0) return;
 
     // Generate columns dynamically from first row keys
-    const columns: ExcelColumn[] = Object.keys(purchaseOrderList[0]).map((key) => ({
+    const columns: ExcelColumn[] = Object.keys(openingStockList[0]).map((key) => ({
       header: key.charAt(0).toUpperCase() + key.slice(1),
       key,
       width: 20,
     }));
 
     exportToExcel({
-      data: purchaseOrderList,
+      data: openingStockList,
       columns,
-      fileName: "purchase order List.xlsx",
-      sheetName: "purchase order",
+      fileName: "Opening stock order List.xlsx",
+      sheetName: "Opening stock order",
     });
-  }, [purchaseOrderList]);
+  }, [openingStockList]);
 
 
   return (
     <>
-      <div className="purchase-order-module ">
+      <div className="opening-stock-module ">
 
         <div className="bg-white rounded-xl shadow-sm border mt-2">
 
@@ -146,6 +139,7 @@ export default function OpeningStockModule() {
             onRefresh={handleRefresh}
             onView={handleViewClick}
             onPrint={handlePrintClick}
+
             selects={{
               name: "branch",
               label: "Branch",
@@ -164,24 +158,6 @@ export default function OpeningStockModule() {
               }
             }}
 
-            selectFromDate={{
-              name: "fromDate",
-              label: "From Date",
-              value: fromDate,
-              className: "w-40",
-              isClearable: true,
-              onChange: setFromDate,
-            }}
-
-            selectToDate={{
-              name: "toDate",
-              label: "To Date",
-              value: toDate,
-              className: "w-40",
-              isClearable: true,
-              onChange: setToDate,
-            }}
-
           />
 
 
@@ -190,7 +166,7 @@ export default function OpeningStockModule() {
         {!isMobile && (
           <div className="w-full px-2 sm:px-2 md:px-2 lg:px-2 max-w-full lg:max-w-355 bg-white rounded-xl shadow-sm border border-gray-200 p-2 overflow-x-auto my-4">
             <OpeningStockDataGrid
-              dataSource={purchaseOrderList}
+              dataSource={openingStockList}
               onSelectionChanged={handleSelectionChanged}
               showFilterRow
               showColumnChooser
@@ -207,15 +183,16 @@ export default function OpeningStockModule() {
           onClose={handleFormClose}
           formOpeningStockId={formOpeningStockId}
           formSelectedBranch={formSelectedBranch || branchnm}
+          toolbarBranchId={Number(toolbarBranchId) || Number(branchId)}
           mode={formMode}
         />
 
 
-        {/* <LoadPanel
-        shadingColor="rgba(0,0,0,0.4)"
-        visible={isLoading}
-        showIndicator
-      /> */}
+        <LoadPanel
+          shadingColor="rgba(0,0,0,0.4)"
+          visible={isLoading}
+          showIndicator
+        />
 
       </div>
     </>

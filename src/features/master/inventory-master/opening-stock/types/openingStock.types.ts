@@ -1,32 +1,53 @@
 export interface OpeningStockItem {
   tag?: string;
   dtlid?: number;
-  godownid: number;
+  productid?: number;
+  productnm?: string;
+  pcategorynm?: string;
+
+  godownid?: number;
+  godownnm?: string;
+
   qty1?: number;
   qty2?: number;
   rate?: number;
   value?: number;
 }
-
+// 
 export interface OpeningStock {
+  id?: number;
+
   compid?: number | string;
   branchid?: number | string;
   finid?: number;
-  productid: number;
+
+  pcategoryid? : number;
+
+  productid?: number;
+
+  productnm?: string; 
+  productname?: string;
+
+  categorynm?: string;
+  pcategorynm?: string;
+
+
+  classnm?: string;
+  unit?: string;
+
   qty1: number;
-  qty2: number;
+  qty2?: number;
   rate?: number;
   value?: number;
-  orderdt?: string;
-  orderno?: string;
 
   itemdtl?: OpeningStockItem[];
 
-  id?: number;
+
   entryby?: number;
   entrydt?: string;
   updateby?: number;
   updatedt?: string;
+  
 }
 
 export interface OpeningStockFormType

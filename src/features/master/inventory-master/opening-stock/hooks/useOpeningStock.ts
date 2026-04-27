@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { openingStockService } from '../services/openingStockService';
-import { OpeningStockFormType } from '../types/openingStock';
+import { OpeningStockFormType } from '../types/openingStock.types';
 import { toast } from 'sonner';
 
 export interface GetOpeningStockParams {
@@ -20,7 +20,7 @@ type UseOpeningStockByIdParams = {
 };
 
 export const OPENING_STOCK_KEYS = {
-  all: ["purchase-order"] as const,
+  all: ["opening-stock"] as const,
 
   lists: () => [...OPENING_STOCK_KEYS.all, "list"] as const,
 
@@ -49,19 +49,7 @@ export function useOpeningStockList(params: GetOpeningStockParams) {
   });
 }
 
-// export function usePurchaseOrderList() {
-//   return useQuery({
-//     queryKey: PURCHASE_ORDER_KEYS.list(),
-//     queryFn: () => purchaseOrderService.getAllPurchaseOrders(),
 
-//     staleTime: 0,
-//     gcTime: 0,
-
-//     refetchOnMount: 'always',
-//     refetchOnWindowFocus: true,
-//     refetchOnReconnect: true,
-//   });
-// }
 
 export function useOpeningStockById(params: UseOpeningStockByIdParams) {
   return useQuery({
@@ -87,22 +75,6 @@ export function useOpeningStockById(params: UseOpeningStockByIdParams) {
   });
 }
 
-// export function usePurchaseOrderById(id: number) {
-//   return useQuery({
-//     queryKey: PURCHASE_ORDER_KEYS.detail(id),
-//     queryFn: () => purchaseOrderService.getPurchaseOrderById(id),
-
-//     enabled: !!id,
-
-//     staleTime: 0,
-//     gcTime: 0,
-
-//     refetchOnMount: 'always',
-//     refetchOnWindowFocus: true,
-//     refetchOnReconnect: true
-//   });
-// }
-
 export function useCreateOpeningStock() {
   const queryClient = useQueryClient();
 
@@ -115,12 +87,12 @@ export function useCreateOpeningStock() {
         queryClient.invalidateQueries({ queryKey: OPENING_STOCK_KEYS.list() });
         toast.success(data.message);
       } else {
-        toast.error(data.message || "Failed to create purchase order");
+        toast.error(data.message || "Failed to create opening stock");
       }
     },
 
     onError: (err: Error) => {
-      toast.error(err.message || "Error creating purchase order");
+      toast.error(err.message || "Error creating opening stock");
     },
   });
 }
@@ -140,12 +112,12 @@ export function useUpdateOpeningStock() {
 
         toast.success(data.message);
       } else {
-        toast.error(data.message || "Failed to update purchase order");
+        toast.error(data.message || "Failed to update opening stock");
       }
     },
 
     onError: (err: Error) => {
-      toast.error(err.message || "Failed to update purchase order");
+      toast.error(err.message || "Failed to update opening stock");
     },
   });
 }
@@ -163,7 +135,7 @@ export function useDeleteOpeningStock() {
     },
 
     onError: (err: Error) => {
-      toast.error(err.message || "Failed to delete purchase order");
+      toast.error(err.message || "Failed to delete opening stock");
     },
   });
 }

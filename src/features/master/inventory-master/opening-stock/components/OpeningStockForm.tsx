@@ -1,22 +1,18 @@
 'use client';
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Popup } from "devextreme-react/popup";
 import LoadPanel from "devextreme-react/load-panel";
-import { useQuery } from "@tanstack/react-query";
-import { fetchVendorList } from "@/api/master/ledger-api";
 import { useFieldArray } from "react-hook-form";
-import { fetchSeriesList } from "@/api/purchase/purchase-api";
 import useUserStore from "@/store/userStore";
-import { FormSelect } from "@/common/components/FormSelect";
 import { useWatch } from "react-hook-form";
-import { formatDateForInput } from "@/helpers/dateUtils";
-import { OpeningStockFormType, OperationMode } from "../types/openingStock";
+import { OpeningStockFormType, OperationMode } from "../types/openingStock.types";
 import { useCreateOpeningStock, useDeleteOpeningStock, useOpeningStockById, useUpdateOpeningStock } from "../hooks/useOpeningStock";
 import { useOpeningStockForm } from "../hooks/useOpeningStockForm";
-import { pruchaseOrderFormDefaults } from "@/features/purchase/purchase-order/constants/pruchaseOrderFormDefaults";
 import { OpeningStockItems } from "./OpeningStockItems";
 import { OpeningStockFormSchema } from "../schemas/openingStock.schema";
+import { openingStockFormDefaults } from "../constants/openingStockFormFormDefaults";
+import SearchModal from "@/common/components/SearchModal";
 
 
 interface OpeningStockFormProps {
@@ -25,9 +21,10 @@ interface OpeningStockFormProps {
   formOpeningStockId: number;
   mode: OperationMode;
   formSelectedBranch: string;
+  toolbarBranchId: number;
 }
 
-export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, formSelectedBranch }: OpeningStockFormProps) {
+export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, formSelectedBranch, toolbarBranchId }: OpeningStockFormProps) {
 
   const {
     userId,
@@ -46,7 +43,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
       id: formOpeningStockId,
       userid: Number(userId),
       compid: Number(companyId),
-      branchid: branchId,
+      branchid: toolbarBranchId,
       finid: Number(finid),
     });
 
@@ -55,6 +52,8 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
   const deleteMutation = useDeleteOpeningStock();
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
+
+  const [productModalOpen, setProductModalOpen] = useState(false);
 
   const {
     control,
@@ -66,6 +65,11 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
     setValue,
     formState: { errors },
   } = useOpeningStockForm();
+
+  const productname = watch('productname');
+  const categorynm = watch("categorynm");
+  const classnm = watch("classnm");
+  const unit = watch("unit");
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -89,6 +93,8 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
     return sum + qty * rate;
   }, 0);
 
+  const avgRate = totalQty > 0 ? totalValue / totalQty : 0;
+
   // Reset form 
   useEffect(() => {
     if (!visible) return;
@@ -98,21 +104,23 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
     }, 1000);
 
     if (isAddMode) {
-      reset(pruchaseOrderFormDefaults);
+      reset(openingStockFormDefaults);
       return;
     }
 
     if (OpeningStock) {
       reset({
-        ...pruchaseOrderFormDefaults,
+        ...openingStockFormDefaults,
 
         ...OpeningStock,
 
         compid: Number(OpeningStock.compid ?? 0),
         branchid: Number(OpeningStock.branchid ?? 0),
         finid: Number(OpeningStock.finid ?? 0),
-        productid: Number(OpeningStock.productid ?? 0),
 
+        productid: Number(OpeningStock.productid ?? 0),
+        productname: OpeningStock.productnm,
+        categorynm: OpeningStock.pcategorynm,
         qty1: Number(OpeningStock.qty1 ?? 0),
         qty2: Number(OpeningStock.qty2 ?? 0),
 
@@ -120,79 +128,58 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
           OpeningStock.itemdtl?.map((item, index) => ({
             tag: item.tag ?? "I",
             dtlid: item.dtlid ?? index + 1,
-            pcategoryid: item.godownid,
-            pcategorynm: item.pcategorynm,
             productid: item.productid,
-            productnm: item.productnm,
+
+            godownid: item.godownid,
+            godownnm: item.godownnm,
+
             qty1: Number(item.qty1 ?? 0),
             qty2: Number(item.qty2 ?? 0),
             rate: Number(item.rate ?? 0),
             value: Number(item.value ?? 0),
-            altunimethod: item.altunimethod ?? "A",
-            altunitfactor: Number(item.altunitfactor ?? 1),
-            alterunitfactortype:
-              item.alterunitfactortype ?? "M",
-            rateon: Number(item.rateon ?? 1),
           })) ?? [],
       });
     }
   }, [OpeningStock, isAddMode, reset, visible, setFocus]);
 
-  const numMethodOptions = [
-    { label: "Auto", value: "A" },
-    { label: "Manual", value: "M" }
+  // Model Search product Modal Handlers
+  const baseProductParams = {
+    userid: userId,
+    compid: companyId,
+  };
+
+  const searchProductFields = [
+    { value: "productname", label: "Name" },
+    { value: "pclsname", label: "Class" },
+    { value: "group", label: "Group" },
   ];
 
-  // Series No Options
-  const voucherType = "PO";
-  const { data: seriesNoOptions = [] } = useQuery({
-    queryKey: ["fetchSeriesList", userId, companyId, branchId, voucherType],
-    queryFn: () =>
-      fetchSeriesList(userId, companyId, branchId, voucherType, finid),
-    staleTime: 0,
-    enabled: !!companyId && !!branchId && !!userId && !!visible,
-    retry: 1,
-    refetchOnWindowFocus: true,
+  const searchProductColumns = [
+    { key: "productname", label: "Product" },
+    { key: "categorynm", label: "Brand" },
+    { key: "classnm", label: "Class" },
+    { key: "subclassnm", label: "Sub Class" },
+    { key: "unit", label: "Unit" },
+    { key: "mrp", label: "Mrp" },
+  ];
 
-    select: (data) => {
-      const options =
-        (data ?? []).map((s: any) => ({
-          value: s.id,
-          label: s.name,
-          manualallow: s.manualallow,
-        })) || [];
+  const handleProductSelect = (row: any) => {
+    setValue(`productid`, row.id);
+    setValue(`productname`, row.productname);
+    setValue("categorynm", row.categorynm);
+    setValue("classnm", row.classnm);
+    setValue("unit", row.unit);
 
-      // auto-set first option safely
-      setTimeout(() => {
-        if (options.length > 0) {
-          setValue("vnumid", options[0].value);
-        }
-      }, 0);
+    setProductModalOpen(false);
+  };
 
-      return options;
-    },
-  });
+  // // auto-set first option safely categorynm
+  // setTimeout(() => {
+  //   if (options.length > 0) {
+  //     setValue("productid", options[0].value);
+  //   }
+  // }, 0);
 
-  const selectedSeries = seriesNoOptions.find(
-    (s: any) => s.value === watch("vnumid")
-  );
-
-
-  // Vendor
-  const { data: VendorspOptions = [] } = useQuery({
-    queryKey: ["VendorspOptions", userId, companyId],
-    queryFn: () => fetchVendorList(userId, companyId),
-    staleTime: 0,
-    enabled: !!userId && !!companyId && !!visible,
-    retry: 1,
-    refetchOnWindowFocus: false,
-
-    select: (data) =>
-      (data ?? []).map((s: any) => ({
-        value: s.id,
-        label: s.name,
-      })),
-  });
 
   const calculateTotals = (items: any[] = []) => {
     let qty1 = 0;
@@ -209,19 +196,18 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
       return {
         tag: item?.tag || "I",
         dtlid: item?.dtlid || index + 1,
-        productid: Number(item.productid ?? 0),
+        //  productid: Number(item.productid ?? 0),
+        godownid: Number(item.godownid ?? 0),
         qty1: Number(qty),
         qty2: Number(item?.qty2) || qty,
         rate: Number(rate),
         value: value,
-        altunimethod: item?.altunimethod || "A",
-        altunitfactor: item?.altunitfactor || 1,
-        alterunitfactortype: item?.alterunitfactortype || "M",
-        rateon: item?.rateon || 1,
       };
     });
 
-    return { qty1, totprodval, itemdtl };
+    const avgRate = qty1 > 0 ? totprodval / qty1 : 0;
+
+    return { qty1, totprodval, avgRate, itemdtl };
   };
 
   // Submit handler
@@ -234,26 +220,25 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
         return;
       }
 
-      const { qty1, totprodval, itemdtl } = calculateTotals(data.itemdtl || []);
+      const { qty1, totprodval, avgRate, itemdtl } = calculateTotals(data.itemdtl || []);
 
       const payload: OpeningStockFormType = {
         ...data,
         compid: companyId,
-        branchid: branchId,
+        branchid: toolbarBranchId,
         qty1: Number(qty1),
         qty2: Number(qty1),
-        totprodval: totprodval,
-        afttax: 0,
-        ordamt: totprodval,
+        rate: avgRate,
+        value: totprodval,
         itemdtl,
 
       };
 
-      // console.log("FINAL SUBMIT PAYLOAD:", JSON.stringify(payload, null, 2));
+      console.log("FINAL SUBMIT PAYLOAD:", JSON.stringify(payload, null, 2));
 
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
-        reset(pruchaseOrderFormDefaults);
+        reset(openingStockFormDefaults);
         onClose();
         return;
       }
@@ -294,23 +279,81 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
       >
         <div className="flex-1 overflow-y-auto p-2 space-y-2">
 
-          {/* Purchase Order Info */}
+          {/* Opening Stock Order Info */}
           <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
 
             <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
-              Purchase Order Information - {formSelectedBranch}
+              Opening Stock Information
             </h2>
 
             <div className="flex flex-wrap gap-4 items-end">
 
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Product</label>
-                <FormSelect
-                  name="vnumid"
-                  control={control}
-                  options={seriesNoOptions}
+              <div className="w-120">
+                <label className="block text-gray-700 text-sm font-medium mb-1">
+                  Product <span className="text-red-500">*</span>
+                </label>
+
+                <input
+                  type="text"
+                  readOnly
+                  value={productname || ""}
+                  onClick={() => {
+                    setProductModalOpen(true);
+                  }}
+                  className={`inputField w-full cursor-pointer ${errors?.productid ? "border-red-500" : "border-gray-400"}`}
+                  placeholder="Select Product"
+                />
+                {errors?.productid && (
+                  <p className="text-xs text-red-500 mt-1"> {errors.productid.message} </p>
+                )}
+              </div>
+
+              <div className="w-68">
+                <label className="block text-gray-700 text-sm font-medium mb-1">
+                  Category
+                </label>
+                <input
+                  type="text"
+                  value={categorynm || ""}
+                  readOnly
+                  className="inputField border-gray-400 bg-gray-100"
                 />
               </div>
+
+              <div className="w-68">
+                <label className="block text-gray-700 text-sm font-medium mb-1">
+                  Class
+                </label>
+                <input
+                  type="text"
+                  value={classnm || ""}
+                  readOnly
+                  className="inputField border-gray-400 bg-gray-100"
+                />
+              </div>
+
+              <div className="w-28">
+                <label className="block text-gray-700 text-sm font-medium mb-1">
+                  Unit
+                </label>
+                <input
+                  type="text"
+                  value={unit || ""}
+                  readOnly
+                  className="inputField border-gray-400 bg-gray-100"
+                />
+              </div>
+
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">Branch </label>
+                <input
+                  type="text"
+                  value={formSelectedBranch}
+                  className={`inputField border-gray-400 bg-gray-100`}
+                />
+              </div>
+
+
             </div>
           </section>
 
@@ -328,6 +371,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
                   onClick={() =>
                     append({
                       godownid: 0,
+                      godownnm: '',
                       qty1: 0,
                       rate: 0,
                       value: 0,
@@ -357,6 +401,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
                   watchedItems={watchedItems}
                   userId={userId}
                   companyId={companyId}
+                  branchId={toolbarBranchId}
                   visible={visible}
                   isReadOnly={isReadOnly}
                   fieldsLength={fields.length}
@@ -368,11 +413,9 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
 
               <div className="w-68" />
 
-              <div className="w-120" />
-
               <div className="w-28 relative">
                 <span className="absolute -left-20 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-700 whitespace-nowrap">
-                  Total Qty
+                  Total
                 </span>
                 <input
                   type="number"
@@ -382,12 +425,16 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
                 />
               </div>
 
-              <div className="w-28" />
+              <div className="w-28 relative">
+                <input
+                  type="number"
+                  value={Number(avgRate).toFixed(2)}
+                  readOnly
+                  className="inputField w-full bg-gray-100"
+                />
+              </div>
 
               <div className="w-28 relative">
-                <span className="absolute -left-24 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-700 whitespace-nowrap">
-                  Total Value
-                </span>
                 <input
                   type="number"
                   value={totalValue}
@@ -432,6 +479,17 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
           showIndicator
         />
       </form>
+
+      <SearchModal
+        open={productModalOpen}
+        onClose={() => setProductModalOpen(false)}
+        endpoint="product"
+        baseParams={baseProductParams}
+        columns={searchProductColumns}
+        searchFields={searchProductFields}
+        onSelect={handleProductSelect}
+      />
+
     </Popup>
   );
 
