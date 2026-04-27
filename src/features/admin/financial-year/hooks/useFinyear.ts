@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { finyearService } from '../services/finyearService';
-import { Finyear, FinyearFormData } from '../types/finyear.types';
+import { Finyear, FinYearFormType } from '../types/finyear.types';
 import { toast } from 'sonner';
 
 
@@ -47,7 +47,7 @@ export function useCreateFinyear() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: FinyearFormData) => finyearService.createFinyear(data),
+    mutationFn: (data: FinYearFormType) => finyearService.createFinyear(data),
     onSuccess: (data) => {
       if (data.success) {
         queryClient.invalidateQueries({ queryKey: FINYEAR_KEYS.list() });
@@ -66,7 +66,7 @@ export function useUpdateFinyear() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: FinyearFormData }) =>
+    mutationFn: ({ id, data }: { id: number; data: FinYearFormType }) =>
       finyearService.updateFinyear(id, data),
 
     onSuccess: (data) => {

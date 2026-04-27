@@ -1,5 +1,5 @@
 import { apiCall } from "@/utils/apiClient";
-import { Finyear, FinyearFormData, FinyearApiResponse } from '../types/finyear.types';
+import { Finyear, FinYearFormType, FinyearApiResponse } from '../types/finyear.types';
 import { toast } from "sonner";
 import { storageService } from "@/common/utility/storageService";
 
@@ -60,7 +60,7 @@ class FinyearService {
     }
   }
 
-  async createFinyear(data: FinyearFormData): Promise<FinyearApiResponse> {
+  async createFinyear(data: FinYearFormType): Promise<FinyearApiResponse> {
     try {
       const response = await apiCall.post<FinyearApiResponse>(
         `${this.baseUrl}finyear`,
@@ -79,7 +79,7 @@ class FinyearService {
     }
   }
 
-  async updateFinyear(id: number, data: Partial<FinyearFormData>): Promise<FinyearApiResponse> {
+  async updateFinyear(id: number, data: Partial<FinYearFormType>): Promise<FinyearApiResponse> {
     try {
       const response = await apiCall.put<FinyearApiResponse>(
         `${this.baseUrl}finyear`,
