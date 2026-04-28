@@ -14,6 +14,7 @@ type PurchaseOrderItemsProps = {
   watchedItems: any;
   userId: number | string;
   companyId: number | string;
+  branchId: number | string;
   visible: boolean;
   isReadOnly: boolean;
   fieldsLength: number;
@@ -30,6 +31,7 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
   watchedItems,
   userId,
   companyId,
+  branchId,
   visible,
   isReadOnly,
   fieldsLength,
@@ -102,8 +104,8 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
 
         <input
           type="text"
-          readOnly
           value={item?.pcategorynm || ""}
+          readOnly
           onClick={() => setBrandModalOpen(true)}
           className="inputField w-full cursor-pointer border border-gray-400"
           placeholder="Select Brand"
@@ -117,8 +119,8 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
 
         <input
           type="text"
-          readOnly
           value={item?.productnm || ""}
+          readOnly
           onClick={() => {
             if (!item?.pcategoryid) return;
             setProductModalOpen(true);

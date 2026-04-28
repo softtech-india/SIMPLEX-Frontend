@@ -107,8 +107,8 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
 
         <input
           type="text"
-          readOnly
           value={item?.pcategorynm || ""}
+          readOnly
           onClick={() => setCategoryModalOpen(true)}
           className="inputField w-full cursor-pointer border border-gray-400"
           placeholder="Select Category"
@@ -122,8 +122,8 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
 
         <input
           type="text"
-          readOnly
           value={item?.productnm || ""}
+          readOnly
           className={`inputField w-full cursor-pointer ${errors?.itemdtl?.[index]?.productid ? "border-red-500" : "border-gray-400"}`}
           placeholder="Select Product"
         />
@@ -211,7 +211,6 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
         <input
           type="number"
           min={0}
-          readOnly
           {...register(`itemdtl.${index}.balanceqty1`)}
           disabled={isReadOnly}
           className={`inputField ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-400"}`}

@@ -21,11 +21,10 @@ export const OpeningStockDataGrid = forwardRef<any, OpeningStockDataGridProps>(
       { dataField: "qty1", caption: "Quantity", width: 80, headerFilter: true },
       { dataField: "rate", caption: "Rate", width: 100, headerFilter: true },
       { dataField: "value", caption: "Value", width: 100, headerFilter: true },
-
       { dataField: 'entryby', caption: 'Entry User', width: 120 },
       { dataField: 'entrydt', caption: 'Entry Date', width: 150, dataType: 'date' },
       { dataField: 'updateby', caption: 'Update User', width: 120 },
-      { dataField: 'updatedt', caption: 'Update Date', width: 120, dataType: 'date' },
+      { dataField: 'updatedt', caption: 'Update Date', width: 150, dataType: 'date' },
     ];
 
     return (

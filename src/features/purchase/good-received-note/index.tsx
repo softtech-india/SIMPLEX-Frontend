@@ -45,12 +45,12 @@ export default function PurchaseOrderModule() {
     enddt: toDate || "",
   });
 
-  useEffect(() => {
-    console.log('goodReceivedNotelist :', goodReceivedNotelist);
-    console.log('branch :', toolbarBranchId);
-    console.log('fromDate :', fromDate);
-    console.log('toDate :', toDate);
-  }, [goodReceivedNotelist, toolbarBranchId, fromDate, toDate])
+  // useEffect(() => {
+  //   console.log('goodReceivedNotelist :', goodReceivedNotelist);
+  //   console.log('branch :', toolbarBranchId);
+  //   console.log('fromDate :', fromDate);
+  //   console.log('toDate :', toDate);
+  // }, [goodReceivedNotelist, toolbarBranchId, fromDate, toDate])
 
   // Fetch dropdown options
   const { data: BranchOrderOptions = [] } = useQuery({
@@ -141,7 +141,7 @@ export default function PurchaseOrderModule() {
         <div className="bg-white rounded-xl shadow-sm border mt-2">
 
           <TransactionToolbar
-            title="Purchse Orders"
+            title="Good received Note"
             // periodTitle='Period: 2026-2027'
             permissions={permissions}
             onAdd={handleAddClick}
@@ -150,27 +150,10 @@ export default function PurchaseOrderModule() {
             onRefresh={handleRefresh}
             onView={handleViewClick}
             onPrint={handlePrintClick}
-            selects={{
-              name: "branch",
-              label: "Branch",
-              value: toolbarBranchId || branchId,
-              options: BranchOrderOptions,
-              placeholder: "Select Branch",
-              className: "w-48",
-              // onChange: (val) => setToolbarBranchId(val),
-              onChange: (val) => {
-                setToolbarBranchId(val);
-                const branch = BranchOrderOptions.find(
-                  (b: any) => b.value === val
-                );
-                console.log("branch :", branch);
-                setFormSelectedBranch(branch?.label || branchnm);
-              }
-            }}
 
             selectFromDate={{
               name: "fromDate",
-              label: "From Date",
+              label: "From",
               value: fromDate,
               className: "w-40",
               isClearable: true,
@@ -179,15 +162,30 @@ export default function PurchaseOrderModule() {
 
             selectToDate={{
               name: "toDate",
-              label: "To Date",
+              label: "To",
               value: toDate,
               className: "w-40",
               isClearable: true,
               onChange: setToDate,
             }}
 
-          />
+            selectBranch={{
+              name: "branch",
+              label: "Branch",
+              value: toolbarBranchId || branchId,
+              options: BranchOrderOptions,
+              placeholder: "Select Branch",
+              className: "w-56",
+              onChange: (val) => {
+                setToolbarBranchId(val);
+                const branch = BranchOrderOptions.find(
+                  (b: any) => b.value === val
+                );
+                setFormSelectedBranch(branch?.label || branchnm);
+              }
+            }}
 
+          />
 
         </div>
 
@@ -211,6 +209,7 @@ export default function PurchaseOrderModule() {
           onClose={handleFormClose}
           formGoodReceivedNoteId={formGoodReceivedNoteId}
           formSelectedBranch={formSelectedBranch || branchnm}
+          toolbarBranchId={Number(toolbarBranchId) || Number(branchId)}
           mode={formMode}
         />
 

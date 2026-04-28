@@ -117,8 +117,8 @@ export default function OpeningStockModule() {
     exportToExcel({
       data: openingStockList,
       columns,
-      fileName: "Opening stock order List.xlsx",
-      sheetName: "Opening stock order",
+      fileName: "Opening stock List.xlsx",
+      sheetName: "Opening stock",
     });
   }, [openingStockList]);
 
@@ -130,7 +130,7 @@ export default function OpeningStockModule() {
         <div className="bg-white rounded-xl shadow-sm border mt-2">
 
           <TransactionToolbar
-            title="Purchse Orders"
+            title="Opening Stock"
             // periodTitle='Period: 2026-2027'
             permissions={permissions}
             onAdd={handleAddClick}
@@ -140,20 +140,18 @@ export default function OpeningStockModule() {
             onView={handleViewClick}
             onPrint={handlePrintClick}
 
-            selects={{
+            selectBranch={{
               name: "branch",
               label: "Branch",
               value: toolbarBranchId || branchId,
               options: BranchOrderOptions,
               placeholder: "Select Branch",
-              className: "w-48",
-              // onChange: (val) => setToolbarBranchId(val),
+              className: "w-56",
               onChange: (val) => {
                 setToolbarBranchId(val);
                 const branch = BranchOrderOptions.find(
                   (b: any) => b.value === val
                 );
-                console.log("branch :", branch);
                 setFormSelectedBranch(branch?.label || branchnm);
               }
             }}

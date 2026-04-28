@@ -27,6 +27,7 @@ interface GoodReceivedNoteProps {
   formGoodReceivedNoteId: number;
   mode: OperationMode;
   formSelectedBranch: string;
+  toolbarBranchId: number;
 }
 
 type GrnPendingRow = {
@@ -35,7 +36,7 @@ type GrnPendingRow = {
   orderdt: string;
 };
 
-export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId, mode, formSelectedBranch }: GoodReceivedNoteProps) {
+export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId, mode, formSelectedBranch, toolbarBranchId }: GoodReceivedNoteProps) {
 
   // hooks
   const {
@@ -58,7 +59,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
       id: formGoodReceivedNoteId,
       userid: Number(userId),
       compid: Number(companyId),
-      branchid: branchId,
+      branchid: toolbarBranchId,
       finid: Number(finid),
     });
 
@@ -93,18 +94,17 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
   const watchedItems = useWatch({
     control,
     name: "itemdtl",
-  });
+  }) || [];
 
   const totalQty = (watchedItems || []).reduce((sum, item) => {
     return sum + (Number(item?.qty1) || 0);
-  }, 0);
+  }, 0) || 0;
 
   const totalValue = (watchedItems || []).reduce((sum, item) => {
     const qty = Number(item?.qty1) || 0;
     const rate = Number(item?.rate) || 0;
-
     return sum + qty * rate;
-  }, 0);
+  }, 0) || 0;
 
   // Reset form 
   useEffect(() => {
@@ -135,11 +135,11 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
         qty2: Number(GoodReceivedNote.qty2 ?? 0),
         totprodval: Number(GoodReceivedNote.totprodval ?? 0),
 
-        grndt: formatDateForInput(GoodReceivedNote.grndt),
+        grndt: GoodReceivedNote.grndt ? formatDateForInput(GoodReceivedNote.grndt) : "",
         grnno: GoodReceivedNote.grnno ?? "",
 
         partyrefno: GoodReceivedNote.partyrefno ?? "",
-        partyrefdt: formatDateForInput(GoodReceivedNote.partyrefdt),
+        partyrefdt: GoodReceivedNote.partyrefdt ? formatDateForInput(GoodReceivedNote.partyrefdt) : "",
 
         godownid: Number(GoodReceivedNote.godownid ?? 0),
 
@@ -180,11 +180,10 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
   // Series No Options
   const voucherType = "GRN";
   const { data: seriesNoOptions = [] } = useQuery({
-    queryKey: ["fetchSeriesList", userId, companyId, branchId, voucherType],
-    queryFn: () =>
-      fetchSeriesList(userId, companyId, branchId, voucherType, finid),
+    queryKey: ["fetchSeriesList", userId, companyId, toolbarBranchId, voucherType],
+    queryFn: () => fetchSeriesList(userId, companyId, toolbarBranchId, voucherType, finid),
     staleTime: 0,
-    enabled: !!companyId && !!branchId && !!userId && !!visible,
+    enabled: !!companyId && !!toolbarBranchId && !!userId && !!visible,
     retry: 1,
     refetchOnWindowFocus: true,
 
@@ -197,11 +196,11 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
         })) || [];
 
       // auto-set first option safely
-      setTimeout(() => {
-        if (options.length > 0) {
-          setValue("vnumid", options[0].value);
-        }
-      }, 0);
+      // setTimeout(() => {
+      //   if (options.length > 0) {
+      //     setValue("vnumid", options[0].value);
+      //   }
+      // }, 0);
 
       return options;
     },
@@ -230,9 +229,9 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
   // Godown
   const { data: GodownOptions = [] } = useQuery({
     queryKey: ["GodownOptions", userId, companyId],
-    queryFn: () => fetchGodownList(userId, companyId),
+    queryFn: () => fetchGodownList(userId, companyId, toolbarBranchId),
     staleTime: 0,
-    enabled: !!userId && !!companyId && !!visible,
+    enabled: !!userId && !!companyId && !!toolbarBranchId && !!visible,
     retry: 1,
     refetchOnWindowFocus: false,
 
@@ -248,7 +247,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
   const baseGrnPendingParams = {
     userid: userId,
     compid: companyId,
-    branchid: branchId,
+    branchid: toolbarBranchId,
     finid: finid,
     vendorid: vendorid,
   };
@@ -306,20 +305,6 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
   // Submit handler
   const handleFormSubmit = async (data: GoodReceivedNoteFormSchema) => {
     try {
-      // if (isDeleteMode) {
-      //   if (!window.confirm("Delete this Good Received Note?")) return;
-
-      //   await deleteMutation.mutateAsync({
-      //     id: formGoodReceivedNoteId,
-      //     userid: Number(userId),
-      //     compid: Number(companyId),
-      //     branchid: Number(branchId),
-      //     finid: Number(finid),
-      //   });
-
-      //   onClose();
-      //   return;
-      // }
 
       if (isDeleteMode) {
         const ok = await confirm({
@@ -333,7 +318,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
           id: formGoodReceivedNoteId,
           userid: Number(userId),
           compid: Number(companyId),
-          branchid: Number(branchId),
+          branchid: toolbarBranchId,
           finid: Number(finid),
         });
         onClose();
@@ -345,7 +330,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
       const payload: GoodReceivedNoteFormType = {
         ...data,
         compid: companyId,
-        branchid: branchId,
+        branchid: toolbarBranchId,
         qty1: Number(qty1),
         qty2: Number(qty1),
         totprodval: totprodval,
@@ -353,7 +338,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
 
       };
 
-      console.log("FINAL SUBMIT PAYLOAD for GRN:", JSON.stringify(data, null, 2));
+     // console.log("FINAL SUBMIT PAYLOAD for GRN:", JSON.stringify(data, null, 2));
 
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
@@ -393,7 +378,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
     <Popup
       visible={visible}
       onHiding={onClose}
-      title={`${mode} GoodReceivedNote`}
+      title={`${mode} Good Received Note : ${formSelectedBranch}`}
       width="90vw"
       height="90vh"
       dragEnabled
@@ -468,22 +453,12 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                 />
               </div>
 
-              <div className="w-80">
-                <label className="block text-gray-700 font-medium mb-1">Godown</label>
-                <FormSelect
-                  name="godownid"
-                  control={control}
-                  options={GodownOptions}
-                  className={`${errors?.godownid ? "border-red-500" : "border-gray-400"}`}
-                />
-              </div>
-
               <div className="w-68">
-                <label className="block text-gray-700 font-medium mb-1">PO Pending <span className="text-red-500">*</span> </label>
+                <label className="block text-gray-700 font-medium mb-1">PO No. & Date <span className="text-red-500">*</span> </label>
                 <input
                   type="text"
-                  readOnly
                   value={orderno ? `${orderno} - ${formatDate(orderdt)}` : ""}
+                  readOnly
                   onClick={() => setGrnPendingModalOpen(true)}
                   className="inputField w-full cursor-pointer border border-gray-400"
                   placeholder="Select GRN Pending"
@@ -511,12 +486,22 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                 />
               </div>
 
+              <div className="w-80">
+                <label className="block text-gray-700 font-medium mb-1">Godown</label>
+                <FormSelect
+                  name="godownid"
+                  control={control}
+                  options={GodownOptions}
+                  className={`${errors?.godownid ? "border-red-500" : "border-gray-400"}`}
+                />
+              </div>
+
               <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Branch </label>
                 <input
                   type="text"
                   value={formSelectedBranch}
-                  disabled={isReadOnly}
+                  readOnly
                   className={`inputField border-gray-400 `}
                 />
               </div>
@@ -572,7 +557,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   watchedItems={watchedItems}
                   userId={userId}
                   companyId={companyId}
-                  branchId={branchId}
+                  branchId={toolbarBranchId}
                   finid={finid}
                   orderid={orderid || 0}
                   visible={visible}

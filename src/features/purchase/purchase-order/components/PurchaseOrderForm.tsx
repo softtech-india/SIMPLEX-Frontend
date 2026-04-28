@@ -25,9 +25,10 @@ interface PurchaseOrderFormProps {
   formPurchaseOrderId: number;
   mode: OperationMode;
   formSelectedBranch: string;
+  toolbarBranchId: number;
 }
 
-export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode, formSelectedBranch }: PurchaseOrderFormProps) {
+export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode, formSelectedBranch, toolbarBranchId }: PurchaseOrderFormProps) {
 
   const {
     userId,
@@ -46,7 +47,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
       id: formPurchaseOrderId,
       userid: Number(userId),
       compid: Number(companyId),
-      branchid: branchId,
+      branchid: toolbarBranchId,
       finid: Number(finid),
     });
 
@@ -76,18 +77,18 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
   const watchedItems = useWatch({
     control,
     name: "itemdtl",
-  });
+  }) || [];
 
   const totalQty = (watchedItems || []).reduce((sum, item) => {
     return sum + (Number(item?.qty1) || 0);
-  }, 0);
+  }, 0) || 0;
 
   const totalValue = (watchedItems || []).reduce((sum, item) => {
     const qty = Number(item?.qty1) || 0;
     const rate = Number(item?.rate) || 0;
 
     return sum + qty * rate;
-  }, 0);
+  }, 0) || 0;
 
   // Reset form 
   useEffect(() => {
@@ -108,10 +109,9 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
 
         ...PurchaseOrder,
 
-        orderdt: formatDateForInput(PurchaseOrder.orderdt),
-        enqdt: formatDateForInput(PurchaseOrder.enqdt),
-        quotdt: formatDateForInput(PurchaseOrder.quotdt),
-
+        orderdt: PurchaseOrder.orderdt ? formatDateForInput(PurchaseOrder.orderdt) : "",
+        enqdt: PurchaseOrder.enqdt ? formatDateForInput(PurchaseOrder.enqdt) : "",
+        quotdt: PurchaseOrder.quotdt ? formatDateForInput(PurchaseOrder.quotdt) : "",
 
         compid: Number(PurchaseOrder.compid ?? 0),
         branchid: Number(PurchaseOrder.branchid ?? 0),
@@ -139,8 +139,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
             value: Number(item.value ?? 0),
             altunimethod: item.altunimethod ?? "A",
             altunitfactor: Number(item.altunitfactor ?? 1),
-            alterunitfactortype:
-              item.alterunitfactortype ?? "M",
+            alterunitfactortype: item.alterunitfactortype ?? "M",
             rateon: Number(item.rateon ?? 1),
           })) ?? [],
       });
@@ -155,11 +154,11 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
   // Series No Options
   const voucherType = "PO";
   const { data: seriesNoOptions = [] } = useQuery({
-    queryKey: ["fetchSeriesList", userId, companyId, branchId, voucherType],
+    queryKey: ["fetchSeriesList", userId, companyId, toolbarBranchId, voucherType],
     queryFn: () =>
-      fetchSeriesList(userId, companyId, branchId, voucherType, finid),
+      fetchSeriesList(userId, companyId, toolbarBranchId, voucherType, finid),
     staleTime: 0,
-    enabled: !!companyId && !!branchId && !!userId && !!visible,
+    enabled: !!companyId && !!toolbarBranchId && !!userId && !!visible,
     retry: 1,
     refetchOnWindowFocus: true,
 
@@ -172,11 +171,11 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
         })) || [];
 
       // auto-set first option safely
-      setTimeout(() => {
-        if (options.length > 0) {
-          setValue("vnumid", options[0].value);
-        }
-      }, 0);
+      // setTimeout(() => {
+      //   if (options.length > 0) {
+      //     setValue("vnumid", options[0].value);
+      //   }
+      // }, 0);
 
       return options;
     },
@@ -248,7 +247,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
       const payload: PurchaseOrderFormType = {
         ...data,
         compid: companyId,
-        branchid: branchId,
+        branchid: toolbarBranchId,
         qty1: Number(qty1),
         qty2: Number(qty1),
         totprodval: totprodval,
@@ -307,7 +306,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
           <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
 
             <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
-              Purchase Order Information - {formSelectedBranch}
+              Purchase Order Information
             </h2>
 
             <div className="flex flex-wrap gap-4 items-end">
@@ -418,6 +417,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                 <input
                   type="text"
                   value={formSelectedBranch}
+                  readOnly
                   className={`inputField border-gray-400 `}
                 />
               </div>
@@ -537,6 +537,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                   watchedItems={watchedItems}
                   userId={userId}
                   companyId={companyId}
+                  branchId={toolbarBranchId}
                   visible={visible}
                   isReadOnly={isReadOnly}
                   fieldsLength={fields.length}

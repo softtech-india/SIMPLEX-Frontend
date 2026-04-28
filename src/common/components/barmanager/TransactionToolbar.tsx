@@ -38,7 +38,7 @@ type ToolbarDateSelectProps = {
   isDisabled?: boolean;
   isClearable?: boolean;
   dateFormat?: string;
-  onChange?: (value: string | null) => void; 
+  onChange?: (value: string | null) => void;
 };
 interface TransactionToolbarProps {
   title: string;
@@ -55,7 +55,7 @@ interface TransactionToolbarProps {
   hasSelection?: boolean;
   periodTitle?: string;
 
-  selects?: ToolbarSelect;
+  selectBranch?: ToolbarSelect;
   disabled?: boolean;
   selectFromDate?: ToolbarDateSelectProps;
   selectToDate?: ToolbarDateSelectProps
@@ -73,7 +73,7 @@ export function TransactionToolbar({
   onExport,
   hasSelection = true,
   periodTitle,
-  selects,
+  selectBranch,
   disabled,
   selectFromDate,
   selectToDate,
@@ -207,7 +207,7 @@ export function TransactionToolbar({
           )}
 
           {selectFromDate && (
-            <InlineSelectField label={selectFromDate.label || "From Date"}>
+            <InlineSelectField label={selectFromDate.label || "From"}>
               <input
                 type="date"
                 name={selectFromDate.name}
@@ -216,14 +216,14 @@ export function TransactionToolbar({
                   selectFromDate.onChange?.(e.target.value || null)
                 }
                 disabled={selectFromDate.isDisabled}
-                className={`w-full border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400 ${selectFromDate.className || ""
+                className={`w-full border border-gray-300 rounded text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-400 ${selectFromDate.className || ""
                   }`}
               />
             </InlineSelectField>
           )}
 
           {selectToDate && (
-            <InlineSelectField label={selectToDate.label || "To Date"}>
+            <InlineSelectField label={selectToDate.label || "To"}>
               <input
                 type="date"
                 name={selectToDate.name}
@@ -232,23 +232,30 @@ export function TransactionToolbar({
                   selectToDate.onChange?.(e.target.value || null)
                 }
                 disabled={selectToDate.isDisabled}
-                className={`w-full border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400 ${selectToDate.className || ""
-                  }`}
+                className={`w-full border border-gray-300 rounded text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-400 ${selectToDate.className || ""}`}
               />
             </InlineSelectField>
           )}
 
-          {selects && (
-            <ToolbarSelect
-              value={selects.value}
-              options={selects.options}
-              placeholder={selects.placeholder}
-              isDisabled={selects.disabled}
-              onChange={(opt) =>
-                selects.onChange?.(opt?.value ?? null)
-              }
-              className={selects.className}
-            />
+          {selectBranch && (
+            <InlineSelectField
+              label={selectBranch.label || "Branch"}
+            >
+              <ToolbarSelect
+                value={selectBranch.value}
+                options={selectBranch.options}
+                placeholder={selectBranch.placeholder || "Select"}
+                isDisabled={selectBranch.disabled}
+                onChange={(opt) =>
+                  selectBranch.onChange?.(opt?.value ?? null)
+                }
+                className={`
+                  w-full
+                  text-xs
+                  ${selectBranch.className || ""}
+                `}
+              />
+            </InlineSelectField>
           )}
 
         </div>

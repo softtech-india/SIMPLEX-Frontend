@@ -17,11 +17,11 @@ export const GoodReceivedNoteDataGrid = forwardRef<any, GoodReceivedNoteDataGrid
   ({ dataSource, onSelectionChanged, onExporting, height = 600 }, ref) => {
 
     const columns = [
-      { dataField: "grnno", caption: "GRN No.", width: 120, headerFilter: true },
+      { dataField: "grnno", caption: "GRN No.", width: 150, headerFilter: true },
       { dataField: "grndt", caption: "GRN date", dataType: "date", format: "dd-MM-yyyy", width: 120 },
       { dataField: "vendor", caption: "Vendor", width: 200, headerFilter: true },
       { dataField: "godownnm", caption: "Godownnm", width: 200, headerFilter: true },
-      { dataField: "orderno", caption: "Order No.", width: 120, headerFilter: true },
+      { dataField: "orderno", caption: "Order No.", width: 200, headerFilter: true },
       { dataField: "orderdt", caption: "Order date", dataType: "date", format: "dd-MM-yyyy", width: 120 },
       { dataField: "qty1", caption: "Quantity", width: 80, headerFilter: true },
       { dataField: "totprodval", caption: "Total Value", width: 100, headerFilter: true },
@@ -29,7 +29,7 @@ export const GoodReceivedNoteDataGrid = forwardRef<any, GoodReceivedNoteDataGrid
       { dataField: 'entryby', caption: 'Entry User', width: 120 },
       { dataField: 'entrydt', caption: 'Entry Date', width: 150, dataType: 'date' },
       { dataField: 'updateby', caption: 'Update User', width: 120 },
-      { dataField: 'updatedt', caption: 'Update Date', width: 120, dataType: 'date' },
+      { dataField: 'updatedt', caption: 'Update Date', width: 150, dataType: 'date' },
     ];
 
     return (
