@@ -217,6 +217,28 @@ class ProductService {
       throw error;
     }
   }
+
+  async getProductQR(id: number): Promise<Blob> {
+    try {
+      const response = await apiCall.get<Blob>(
+        `${this.baseUrl}product/qr`,
+        {
+          userid: this.getUserId(),
+          compid: this.getCompanyId(),
+          id,
+        },
+        undefined,
+        'blob' // ✅ now correctly passed
+      );
+
+      return response;
+
+    } catch (error: any) {
+      console.error("Error fetching QR:", error);
+      toast.error(error.message || "Failed to fetch QR");
+      throw error;
+    }
+  }
 }
 
 export const productService = new ProductService();

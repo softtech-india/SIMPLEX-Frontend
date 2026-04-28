@@ -4,12 +4,14 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import LoadPanel from 'devextreme-react/load-panel';
 import { ProductDataGrid } from './components/ProductDataGrid';
 import { ProductForm } from './components/ProductForm';
-import { useProducts, useProduct, useGsts } from './hooks/product';
+import { useProducts, useProduct, useGsts, useProductQR } from './hooks/product';
 import { Product, OperationMode } from './types/product.types';
 import useIsMobile from "@/common/hooks/useIsMobile";
 import { MasterToolbar } from '@/common/components/barmanager/MasterToolbar';
 import { usePrivileges } from '@/common/hooks/usePrivileges';
 import { exportToExcel, ExcelColumn } from '@/common/utility/exportToExcel';
+import { productService } from './services/product';
+import jsPDF from 'jspdf';
 
 export default function ProductModule() {
 
@@ -24,7 +26,7 @@ export default function ProductModule() {
   const [formProductId, setFormProductId] = useState(0);
   const { data: ProductList = [], isLoading, refetch } = useProducts();
   const gridRef = useRef<any>(null);
-
+  const { mutateAsync: getQR } = useProductQR();
   // handler
   const handleSelectionChanged = useCallback((e: any) => {
     if (e.selectedRowsData && e.selectedRowsData.length > 0) {
@@ -61,7 +63,53 @@ export default function ProductModule() {
   const handleEditClick = useCallback(() => openForm('Edit'), [openForm]);
   const handleDeleteClick = useCallback(() => openForm('Delete'), [openForm]);
   const handleViewClick = useCallback(() => openForm('View'), [openForm]);
-  const handlePrintClick = useCallback(() => openForm('Print'), [openForm]);
+
+  async function getQRBlob(id: number): Promise<Blob | null> {
+    try {
+      const blob = await getQR(id);
+
+      if (!blob || blob.size === 0) {
+        console.error("Empty QR blob returned");
+        return null;
+      }
+
+      return blob;
+    } catch (err: any) {
+      console.error("QR Error:", err);
+      return null;
+    }
+  }
+
+
+  const handlePrintClick = useCallback(async () => {
+    const row = selectedRow;
+    if (!row) return;
+
+    const blob = await getQR(row.id);
+    if (!blob) return;
+
+    // Convert blob → base64
+    const base64 = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob);
+    });
+
+    // Create PDF
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "px",
+      format: [300, 300],
+    });
+
+    pdf.addImage(base64, "PNG", 10, 10, 280, 280);
+
+    // Open PDF in new tab
+    const pdfBlob = pdf.output("blob");
+    const url = URL.createObjectURL(pdfBlob);
+
+    window.open(url, "_blank");
+  }, [selectedRow, getQR]);
 
   const handleRefresh = useCallback(() => {
     refetch();
