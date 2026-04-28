@@ -72,6 +72,7 @@ const request = async <T>(
     data?: any,
     params?: any,
     headers?: Record<string, string>,
+    responseType?: 'json' | 'blob'
 ): Promise<T> => {
     const config: AxiosRequestConfig = {
         method,
@@ -79,6 +80,7 @@ const request = async <T>(
         data,
         params,
         headers,
+        responseType: responseType || 'json',
     };
 
     try {
@@ -92,8 +94,8 @@ const request = async <T>(
 
 // Blocks for different methods
 export const apiCall = {
-    get: <T>(url: string, params?: any, headers?: Record<string, string>) =>
-        request<T>("get", url, undefined, params, headers),
+    get: <T>(url: string, params?: any, headers?: Record<string, string>, responseType?: 'json' | 'blob') =>
+        request<T>("get", url, undefined, params, headers, responseType),
     post: <T>(url: string, body?: any, params?: any, headers?: Record<string, string>) =>
         request<T>("post", url, body, params, headers),
     put: <T>(url: string, body?: any, params?: any, headers?: Record<string, string>) =>

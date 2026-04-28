@@ -244,3 +244,9 @@ export function useDeleteProduct() {
     },
   });
 }
+
+export function useProductQR() {
+  return useMutation({
+    mutationFn: (id: number) => productService.getProductQR(id),
+  });
+}
