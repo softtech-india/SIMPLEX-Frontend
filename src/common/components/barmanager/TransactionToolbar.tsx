@@ -9,7 +9,8 @@ import {
   Eye,
   Printer,
   File,
-  Share2
+  Share2,
+  CircleCheckBig
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { MenuItem } from "@/common/components/filter/MenuItem";
@@ -50,6 +51,7 @@ interface TransactionToolbarProps {
   onRefresh?: () => void;
   onView?: () => void;
   onPrint?: () => void;
+  onConfirmed?: () => void;
   onExport?: (e?: any) => void;
 
   hasSelection?: boolean;
@@ -70,6 +72,7 @@ export function TransactionToolbar({
   onRefresh,
   onView,
   onPrint,
+  onConfirmed,
   onExport,
   hasSelection = true,
   periodTitle,
@@ -197,9 +200,19 @@ export function TransactionToolbar({
               <Printer size={16} /> Print
             </button>
           )}
+
+          {canView && onConfirmed && (
+            <button
+              onClick={onConfirmed}
+              disabled={!hasSelection}
+              className="secondary-btn disabled:opacity-50"
+            >
+              <CircleCheckBig size={16} /> Confirm
+            </button>
+          )}
         </div>
 
-        {/* RIGHT SIDE */}
+        {/* RIGHT SIDE  */}
         <div className="flex items-center gap-3 ml-auto">
 
           {periodTitle && (
@@ -216,7 +229,7 @@ export function TransactionToolbar({
                   selectFromDate.onChange?.(e.target.value || null)
                 }
                 disabled={selectFromDate.isDisabled}
-                className={`w-full border border-gray-300 rounded text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-400 ${selectFromDate.className || ""
+                className={`w-full border border-gray-300 bg-white px-2 py-1 rounded text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-400 ${selectFromDate.className || ""
                   }`}
               />
             </InlineSelectField>
@@ -232,7 +245,7 @@ export function TransactionToolbar({
                   selectToDate.onChange?.(e.target.value || null)
                 }
                 disabled={selectToDate.isDisabled}
-                className={`w-full border border-gray-300 rounded text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-400 ${selectToDate.className || ""}`}
+                className={`w-full border border-gray-300 bg-white px-2 py-1 rounded text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-400 ${selectToDate.className || ""}`}
               />
             </InlineSelectField>
           )}
@@ -249,9 +262,7 @@ export function TransactionToolbar({
                 onChange={(opt) =>
                   selectBranch.onChange?.(opt?.value ?? null)
                 }
-                className={`
-                  w-full
-                  text-xs
+                className={` w-full text-sm font-medium
                   ${selectBranch.className || ""}
                 `}
               />

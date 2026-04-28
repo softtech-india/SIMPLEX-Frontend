@@ -2,6 +2,7 @@ import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import SearchModal from "@/common/components/SearchModal";
 import { toast } from "sonner";
+import { OperationMode } from "../types/goodReceivedNote.types";
 
 
 type GoodReceivedNoteItemsProps = {
@@ -21,6 +22,8 @@ type GoodReceivedNoteItemsProps = {
   visible: boolean;
   isReadOnly: boolean;
   fieldsLength: number;
+
+  mode: OperationMode;
 
   excludeIds?: number[];
   currentId?: number;
@@ -43,6 +46,8 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
   visible,
   isReadOnly,
   fieldsLength,
+
+  mode,
 
   excludeIds,
   currentId
@@ -110,12 +115,12 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
           value={item?.pcategorynm || ""}
           readOnly
           onClick={() => setCategoryModalOpen(true)}
-          className="inputField w-full cursor-pointer border border-gray-400"
+          className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"} `}
           placeholder="Select Category"
         />
       </div>
 
-      <div className="w-120">
+      <div className="w-80">
         <label className="block text-gray-700 text-sm font-medium mb-1">
           Product
         </label>
@@ -124,7 +129,11 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
           type="text"
           value={item?.productnm || ""}
           readOnly
-          className={`inputField w-full cursor-pointer ${errors?.itemdtl?.[index]?.productid ? "border-red-500" : "border-gray-400"}`}
+          className={`
+            inputField w-full 
+            ${errors?.itemdtl?.[index]?.productid ? "border-red-500" : "border-gray-300"}
+            ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : " cursor-pointer "}
+          `}
           placeholder="Select Product"
         />
         {errors?.itemdtl?.[index]?.productid && (
@@ -157,7 +166,11 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
             },
           })}
           disabled={isReadOnly}
-          className={`inputField ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-400"}`}
+          className={`
+            inputField 
+            ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-300"} 
+            ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}
+          `}
           onKeyDown={(e) => {
             if (e.key === "-") e.preventDefault();
           }}
@@ -171,7 +184,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
         <input
           {...register(`itemdtl.${index}.unit`)}
           readOnly
-          className="inputField border-gray-400 "
+          className={`inputField border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
         />
       </div>
 
@@ -184,7 +197,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
           min={0}
           {...register(`itemdtl.${index}.rate`)}
           disabled={isReadOnly}
-          className="inputField border-gray-400 "
+          className={`inputField border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""} `}
           onKeyDown={(e) => {
             if (e.key === "-") e.preventDefault();
           }}
@@ -200,7 +213,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
           min={0}
           value={value}
           readOnly
-          className="inputField  bg-gray-100 border-gray-400"
+          className={`inputField  bg-gray-100 border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
         />
       </div>
 
@@ -213,7 +226,11 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
           min={0}
           {...register(`itemdtl.${index}.balanceqty1`)}
           disabled={isReadOnly}
-          className={`inputField ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-400"}`}
+          className={`
+            inputField 
+            ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-300"}
+            ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}
+          `}
           onKeyDown={(e) => {
             if (e.key === "-") e.preventDefault();
           }}
@@ -223,6 +240,53 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
         )} */}
       </div>
 
+      {(mode === 'Confirmed') && (
+        <>
+          <div className="w-14">
+            <label className="block text-gray-700 text-sm font-medium mb-1">
+              Scan
+            </label>
+            <input
+              type="number"
+              min={0}
+              {...register(`itemdtl.${index}.scanqty`)}
+              className={`inputField border-gray-300 `}
+              onKeyDown={(e) => {
+                if (e.key === "-") e.preventDefault();
+              }}
+            />
+          </div>
+          <div className="w-14">
+            <label className="block text-gray-700 text-sm font-medium mb-1">
+              Short
+            </label>
+            <input
+              type="number"
+              min={0}
+              {...register(`itemdtl.${index}.shortqty`)}
+              className={`inputField border-gray-300 `}
+              onKeyDown={(e) => {
+                if (e.key === "-") e.preventDefault();
+              }}
+            />
+          </div>
+          <div className="w-14">
+            <label className="block text-gray-700 text-sm font-medium mb-1">
+              Excess
+            </label>
+            <input
+              type="number"
+              min={0}
+              {...register(`itemdtl.${index}.excessqty`)}
+              className={`inputField border-gray-300 `}
+              onKeyDown={(e) => {
+                if (e.key === "-") e.preventDefault();
+              }}
+            />
+          </div>
+        </>
+      )}
+
       {!isReadOnly && (
         <div className="w-12 flex justify-center">
           <button
@@ -231,8 +295,8 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
             disabled={fieldsLength === 1}
             className={`px-2 py-2 rounded flex items-center justify-center
             ${fieldsLength === 1
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-red-400 hover:bg-red-600 text-white"
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-red-300 hover:bg-red-600 text-white"
               }`}
           >
             <Trash2 size={16} />

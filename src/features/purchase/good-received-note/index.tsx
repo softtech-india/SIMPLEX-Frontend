@@ -105,6 +105,7 @@ export default function PurchaseOrderModule() {
   const handleDeleteClick = useCallback(() => openForm('Delete'), [openForm]);
   const handleViewClick = useCallback(() => openForm('View'), [openForm]);
   const handlePrintClick = useCallback(() => openForm('Print'), [openForm]);
+  const handleConfirmedClick = useCallback(() => openForm('Confirmed'), [openForm]);
 
   const handleRefresh = useCallback(() => {
     refetch();
@@ -142,7 +143,7 @@ export default function PurchaseOrderModule() {
 
           <TransactionToolbar
             title="Good received Note"
-            // periodTitle='Period: 2026-2027'
+            // periodTitle='Period: 2026-2027' 
             permissions={permissions}
             onAdd={handleAddClick}
             onEdit={handleEditClick}
@@ -150,6 +151,7 @@ export default function PurchaseOrderModule() {
             onRefresh={handleRefresh}
             onView={handleViewClick}
             onPrint={handlePrintClick}
+            onConfirmed={handleConfirmedClick}
 
             selectFromDate={{
               name: "fromDate",

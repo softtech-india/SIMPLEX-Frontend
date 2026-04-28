@@ -24,11 +24,16 @@ export interface GoodReceivedNoteItem {
   rateon?: number;
 
   orderdtlid?: number;
+
+  scanqty?: number;
+  shortqty?: number;
+  excessqty?: number;
+  
 }
 
 export interface GoodReceivedNote {
   id?: number;
-  
+
   compid?: number | string;
   branchid?: number | string;
   finid?: number;
@@ -59,9 +64,12 @@ export interface GoodReceivedNote {
 
   totprodval?: number;
 
+  qrcode?: string;
+
+
   itemdtl?: GoodReceivedNoteItem[];
 
-  
+
   entryby?: number;
   entrydt?: string;
   updateby?: number;
@@ -82,4 +90,4 @@ export interface GoodReceivedNoteApiResponse {
   data: GoodReceivedNote[];
 }
 
-export type OperationMode = "Add" | "Edit" | "Delete" | "View" | "Print";
+export type OperationMode = "Add" | "Edit" | "Delete" | "View" | "Print" | "Confirmed";

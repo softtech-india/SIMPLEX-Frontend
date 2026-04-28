@@ -171,11 +171,11 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
         })) || [];
 
       // auto-set first option safely
-      // setTimeout(() => {
-      //   if (options.length > 0) {
-      //     setValue("vnumid", options[0].value);
-      //   }
-      // }, 0);
+      setTimeout(() => {
+        if (options.length > 0) {
+          setValue("vnumid", options[0].value);
+        }
+      }, 0);
 
       return options;
     },

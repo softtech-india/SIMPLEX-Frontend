@@ -6,11 +6,11 @@ export const GoodReceivedNoteItemSchema = z.object({
 
   productid: z.coerce
     .number()
-    .min(1,"Please select a product" ),
+    .min(1, "Please select a product"),
 
   qty1: z.coerce
     .number()
-    .min(1,"Quantity should be greater than 0" ),
+    .min(1, "Quantity should be greater than 0"),
 
   qty2: z.coerce.number().optional(),
 
@@ -24,6 +24,11 @@ export const GoodReceivedNoteItemSchema = z.object({
   rateon: z.coerce.number().optional(),
 
   orderdtlid: z.coerce.number().optional(),
+
+  scanqty: z.coerce.number().optional(),
+  shortqty: z.coerce.number().optional(),
+  excessqty: z.coerce.number().optional(),
+
 });
 
 export const GoodReceivedNoteSchema = z.object({
@@ -40,7 +45,7 @@ export const GoodReceivedNoteSchema = z.object({
 
   vendorid: z.coerce
     .number()
-    .min(1, "Please select a vendor" ),
+    .min(1, "Please select a vendor"),
 
   partyrefno: z.string().optional(),
   partyrefdt: z.string().optional(),
@@ -60,9 +65,11 @@ export const GoodReceivedNoteSchema = z.object({
 
   totprodval: z.coerce.number().optional(),
 
+  qrcode: z.string().optional(),
+
   itemdtl: z
     .array(GoodReceivedNoteItemSchema)
-    .min(1,"At least one item is required" ),
+    .min(1, "At least one item is required"),
 });
 
 export type GoodReceivedNoteFormSchema = z.output<typeof GoodReceivedNoteSchema>;

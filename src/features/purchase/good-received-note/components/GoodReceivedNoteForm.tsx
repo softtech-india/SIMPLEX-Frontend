@@ -50,7 +50,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
   const isDeleteMode = mode === "Delete";
-  const isReadOnly = mode === "View" || mode === "Print";
+  const isReadOnly = mode === "View" || mode === "Print" || mode === "Confirmed";
 
   const [grnPendingModalOpen, setGrnPendingModalOpen] = useState(false);
 
@@ -167,6 +167,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
             alterunitfactortype: item.alterunitfactortype ?? "M",
             rateon: Number(item.rateon ?? 1),
             orderdtlid: item.orderdtlid || 0,
+            scanqty: item.scanqty || 0
           })) ?? [],
       });
     }
@@ -196,11 +197,11 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
         })) || [];
 
       // auto-set first option safely
-      // setTimeout(() => {
-      //   if (options.length > 0) {
-      //     setValue("vnumid", options[0].value);
-      //   }
-      // }, 0);
+      setTimeout(() => {
+        if (options.length > 0) {
+          setValue("vnumid", options[0].value);
+        }
+      }, 0);
 
       return options;
     },
@@ -338,7 +339,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
 
       };
 
-     // console.log("FINAL SUBMIT PAYLOAD for GRN:", JSON.stringify(data, null, 2));
+      // console.log("FINAL SUBMIT PAYLOAD for GRN:", JSON.stringify(data, null, 2));
 
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
@@ -406,6 +407,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   name="vnumid"
                   control={control}
                   options={seriesNoOptions}
+                  isDisabled={isReadOnly}
                 />
               </div>
 
@@ -415,7 +417,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   name="vnummethod"
                   control={control}
                   options={numMethodOptions}
-                  isDisabled={selectedSeries?.manualallow === "N"}
+                  isDisabled={selectedSeries?.manualallow === "N" || isReadOnly}
                 />
               </div>
 
@@ -425,7 +427,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   type="date"
                   {...register("grndt")}
                   disabled={isReadOnly}
-                  className={`inputField ${errors.grndt ? "text-red-500" : "border-gray-400"}`}
+                  className={`inputField ${errors.grndt ? "text-red-500" : "border-gray-300"} ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 />
               </div>
 
@@ -437,8 +439,9 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   disabled={isReadOnly || selectedSeries?.manualallow === "N"}
                   className={`
                     inputField 
-                    ${errors.grnno ? "border-red-500" : "border-gray-400"} 
+                    ${errors.grnno ? "border-red-500" : "border-gray-300"} 
                     ${selectedSeries?.manualallow === "N" ? "bg-gray-100 cursor-not-allowed" : ""}
+                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}
                   `}
                 />
               </div>
@@ -449,7 +452,8 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   name="vendorid"
                   control={control}
                   options={VendorspOptions}
-                  className={`${errors?.vendorid ? "border-red-500" : "border-gray-400"}`}
+                  isDisabled={isReadOnly}
+                  className={`${errors?.vendorid ? "border-red-500" : "border-gray-300"}`}
                 />
               </div>
 
@@ -458,9 +462,10 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                 <input
                   type="text"
                   value={orderno ? `${orderno} - ${formatDate(orderdt)}` : ""}
+                  disabled={isReadOnly}
                   readOnly
                   onClick={() => setGrnPendingModalOpen(true)}
-                  className="inputField w-full cursor-pointer border border-gray-400"
+                  className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
                   placeholder="Select GRN Pending"
                 />
               </div>
@@ -472,7 +477,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   {...register("partyrefno")}
                   disabled={isReadOnly}
                   placeholder="Enter party ref. no."
-                  className={`inputField ${errors.partyrefno ? "" : "border-gray-400"}`}
+                  className={`inputField ${errors.partyrefno ? "" : "border-gray-300"} ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 />
               </div>
 
@@ -482,7 +487,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   type="date"
                   {...register("partyrefdt")}
                   disabled={isReadOnly}
-                  className={`inputField ${errors.partyrefdt ? "text-red-500" : "border-gray-400"}`}
+                  className={`inputField ${errors.partyrefdt ? "text-red-500" : "border-gray-300"} ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 />
               </div>
 
@@ -492,19 +497,24 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   name="godownid"
                   control={control}
                   options={GodownOptions}
-                  className={`${errors?.godownid ? "border-red-500" : "border-gray-400"}`}
+                  isDisabled={isReadOnly}
+                  className={`${errors?.godownid ? "border-red-500" : "border-gray-300"}`}
                 />
               </div>
 
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Branch </label>
-                <input
-                  type="text"
-                  value={formSelectedBranch}
-                  readOnly
-                  className={`inputField border-gray-400 `}
-                />
-              </div>
+              {(mode === 'Confirmed') && (
+                <>
+                  <div className="w-48 ">
+                    <label className="block text-gray-700 font-medium mb-1"> Scan QR Code <span className="text-red-500">*</span> </label>
+                    <input
+                      type="text"
+                      {...register("qrcode")}
+                      className={`inputField border-gray-300 `}
+                    />
+                  </div>
+                </>
+              )}
+
 
             </div>
           </section>
@@ -554,6 +564,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   register={register}
                   errors={errors}
                   remove={remove}
+                  mode={mode}
                   watchedItems={watchedItems}
                   userId={userId}
                   companyId={companyId}
@@ -574,7 +585,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
 
               <div className="w-68" />
 
-              <div className="w-120" />
+              <div className="w-80" />
 
               <div className="w-28 relative">
                 <span className="absolute -left-20 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-700 whitespace-nowrap">
@@ -584,7 +595,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   type="number"
                   value={totalQty}
                   readOnly
-                  className="inputField w-full bg-gray-100"
+                  className="inputField w-full bg-gray-100 cursor-not-allowed"
                 />
               </div>
 
@@ -598,7 +609,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   type="number"
                   value={totalValue}
                   readOnly
-                  className="inputField w-full bg-gray-100"
+                  className="inputField w-full bg-gray-100 cursor-not-allowed"
                 />
               </div>
 
@@ -613,7 +624,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   {...register("narration")}
                   placeholder="Narration"
                   disabled={isReadOnly}
-                  className={`inputField ${errors.narration ? "" : "border-gray-400"}`}
+                  className={`inputField ${errors.narration ? "" : "border-gray-300"} ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 />
               </div>
 
