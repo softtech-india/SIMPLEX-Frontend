@@ -116,7 +116,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
 
         compid: Number(OpeningStock.compid ?? 0),
         branchid: Number(OpeningStock.branchid ?? 0),
-        finid: Number(OpeningStock.finid ?? 0),
+        finid: Number(finid),
 
         productid: Number(OpeningStock.productid ?? 0),
         productname: OpeningStock.productnm,
@@ -226,6 +226,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
         ...data,
         compid: companyId,
         branchid: toolbarBranchId,
+        finid: Number(finid),
         qty1: Number(qty1),
         qty2: Number(qty1),
         rate: avgRate,
