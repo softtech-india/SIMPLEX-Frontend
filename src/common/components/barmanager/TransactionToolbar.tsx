@@ -10,6 +10,7 @@ import {
   Printer,
   File,
   Share2,
+  Lock,
   CircleCheckBig
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
@@ -54,7 +55,9 @@ interface TransactionToolbarProps {
   onConfirmed?: () => void;
   onExport?: (e?: any) => void;
 
-  hasSelection?: boolean;
+  // hasSelection?: boolean;
+  isRowConfirmed?: boolean;
+
   periodTitle?: string;
 
   selectBranch?: ToolbarSelect;
@@ -74,7 +77,8 @@ export function TransactionToolbar({
   onPrint,
   onConfirmed,
   onExport,
-  hasSelection = true,
+  // hasSelection = true,
+  isRowConfirmed,
   periodTitle,
   selectBranch,
   disabled,
@@ -151,20 +155,37 @@ export function TransactionToolbar({
             </button>
           )}
 
-          {canEdit && (
+          {/* {canEdit && (
             <button
               onClick={onEdit}
-              disabled={!hasSelection}
+              // disabled={!hasSelection}
+              disabled={isRowConfirmed}
               className="secondary-btn disabled:opacity-50"
             >
               <Edit2 size={16} /> Edit
+            </button>
+          )} */}
+
+          {canEdit && (
+            <button
+              onClick={onEdit}
+              disabled={isRowConfirmed}
+              className={`
+                secondary-btn flex items-center gap-1
+                transition-all duration-150
+                ${isRowConfirmed
+                  ? "opacity-60 cursor-not-allowed bg-gray-200 text-gray-500 border-gray-300"
+                  : "hover:bg-blue-50 hover:text-blue-600"}
+              `}
+            >
+              {isRowConfirmed ? <Lock size={16} /> : <Edit2 size={16} />} Edit
             </button>
           )}
 
           {canDelete && (
             <button
               onClick={onDelete}
-              disabled={!hasSelection}
+              //  disabled={!hasSelection} 
               className="secondary-btn disabled:opacity-50"
             >
               <Trash2 size={16} /> Delete
@@ -178,7 +199,7 @@ export function TransactionToolbar({
           {canView && (
             <button
               onClick={onView}
-              disabled={!hasSelection}
+              //  disabled={!hasSelection}
               className="secondary-btn disabled:opacity-50"
             >
               <Eye size={16} /> View
@@ -194,7 +215,7 @@ export function TransactionToolbar({
           {canPrint && (
             <button
               onClick={onPrint}
-              disabled={!hasSelection}
+              // disabled={!hasSelection}
               className="secondary-btn disabled:opacity-50"
             >
               <Printer size={16} /> Print
@@ -204,10 +225,17 @@ export function TransactionToolbar({
           {canView && onConfirmed && (
             <button
               onClick={onConfirmed}
-              disabled={!hasSelection}
-              className="secondary-btn disabled:opacity-50"
+              //  disabled={!hasSelection}
+              disabled={isRowConfirmed}
+              className={`
+                secondary-btn flex items-center gap-1
+                transition-all duration-150
+                ${isRowConfirmed
+                  ? "opacity-60 cursor-not-allowed bg-gray-200 text-gray-500 border-gray-300"
+                  : "hover:bg-blue-50 hover:text-blue-600"}
+              `}
             >
-              <CircleCheckBig size={16} /> Confirm
+              {isRowConfirmed ? <Lock size={16} /> : <CircleCheckBig size={16} />} Confirm
             </button>
           )}
         </div>

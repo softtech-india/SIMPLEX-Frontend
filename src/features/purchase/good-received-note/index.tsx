@@ -72,8 +72,6 @@ export default function PurchaseOrderModule() {
   const handleSelectionChanged = useCallback((e: any) => {
     if (e.selectedRowsData && e.selectedRowsData.length > 0) {
       setselectedRow(e.selectedRowsData[0]);
-    } else {
-      setselectedRow(null);
     }
   }, []);
 
@@ -101,11 +99,24 @@ export default function PurchaseOrderModule() {
     setselectedRow(null);
     openForm('Add');
   }, [openForm]);
-  const handleEditClick = useCallback(() => openForm('Edit'), [openForm]);
-  const handleDeleteClick = useCallback(() => openForm('Delete'), [openForm]);
+
+  const handleEditClick = useCallback(() => {
+    if (selectedRow?.isconfirm === "Y") return;
+    openForm('Edit')
+  }, [openForm]);
+
+  const handleDeleteClick = useCallback(() => {
+    openForm('Delete')
+  }, [openForm]);
+
   const handleViewClick = useCallback(() => openForm('View'), [openForm]);
   const handlePrintClick = useCallback(() => openForm('Print'), [openForm]);
-  const handleConfirmedClick = useCallback(() => openForm('Confirmed'), [openForm]);
+  const handleConfirmedClick = useCallback(() => {
+    if (selectedRow?.isconfirm === "Y") return;
+    // console.log('selectedRow : ', selectedRow);
+    openForm('Confirmed')
+  }, [openForm]);
+
 
   const handleRefresh = useCallback(() => {
     refetch();
@@ -135,6 +146,12 @@ export default function PurchaseOrderModule() {
   }, [goodReceivedNotelist]);
 
 
+  // Confirmation Check Ponit
+  const isRowConfirmed = selectedRow?.isconfirm === "Y";
+  // useEffect(() => {
+  //   console.log("isRowConfirmed :", isRowConfirmed);
+  // }, [selectedRow]);
+
   return (
     <>
       <div className="purchase-order-module ">
@@ -152,6 +169,8 @@ export default function PurchaseOrderModule() {
             onView={handleViewClick}
             onPrint={handlePrintClick}
             onConfirmed={handleConfirmedClick}
+            // hasSelection={!!selectedRow}
+            isRowConfirmed={isRowConfirmed}
 
             selectFromDate={{
               name: "fromDate",

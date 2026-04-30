@@ -25,9 +25,10 @@ export const GoodReceivedNoteItemSchema = z.object({
 
   orderdtlid: z.coerce.number().optional(),
 
-  scanqty: z.coerce.number().optional(),
-  shortqty: z.coerce.number().optional(),
-  excessqty: z.coerce.number().optional(),
+  scanqty: z.number().optional(),
+  shortqty: z.number().optional(),
+  excessqty: z.number().optional(),
+  actualprodval: z.number().optional(),
 
 });
 
@@ -72,4 +73,25 @@ export const GoodReceivedNoteSchema = z.object({
     .min(1, "At least one item is required"),
 });
 
+export const ConfirmGoodReceivedNoteSchema = z.object({
+  id: z.number(),
+  compid: z.number(),
+  qty1: z.number(),
+  totprodval: z.number(),
+
+  itemdtl: z.array(
+    z.object({
+      tag: z.string(),
+      dtlid: z.number(),
+      productid: z.number(),
+      qty1: z.number(),
+
+      scanqty: z.number().optional(),
+      shortqty: z.number().optional(),
+      excessqty: z.number().optional(),
+    })
+  ),
+});
+
 export type GoodReceivedNoteFormSchema = z.output<typeof GoodReceivedNoteSchema>;
+export type ConfirmGoodReceivedNoteFormSchema = z.output<typeof ConfirmGoodReceivedNoteSchema>;

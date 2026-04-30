@@ -57,6 +57,7 @@ export const goodReceivedNoteFormDefaults: GoodReceivedNoteFormSchema = {
       scanqty: 0,
       shortqty: 0,
       excessqty: 0,
+      actualprodval: 0,
     },
   ],
 };

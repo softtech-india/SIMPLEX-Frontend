@@ -1,5 +1,5 @@
 import { apiCall } from "@/utils/apiClient";
-import { GoodReceivedNote, GoodReceivedNoteFormType, GoodReceivedNoteApiResponse } from '../types/goodReceivedNote.types';
+import { GoodReceivedNote, GoodReceivedNoteFormType, GoodReceivedNoteApiResponse, ConfirmGRNApiReponse } from '../types/goodReceivedNote.types';
 import { toast } from "sonner";
 import { storageService } from "@/common/utility/storageService";
 
@@ -159,6 +159,25 @@ class GoodReceivedNoteService {
     } catch (error: any) {
       console.error(`Error deleting Good Received Note:`, error);
       toast.error(error.message || "Failed to delete Good Received Note");
+      throw error;
+    }
+  }
+
+  async createConfirmGrn(data: GoodReceivedNoteFormType): Promise<ConfirmGRNApiReponse> {
+    try {
+      const response = await apiCall.put<ConfirmGRNApiReponse>(
+        `${this.baseUrl}grn/confirm`,
+        data,
+        { userid: this.getUserId() }
+      );
+
+      this.handleError(response);
+
+      return response;
+
+    } catch (error: any) {
+      console.error("Error confirming Good Received Note:", error);
+      toast.error(error.message || "Failed to confirm Good Received Note");
       throw error;
     }
   }

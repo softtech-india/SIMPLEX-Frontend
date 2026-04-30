@@ -28,7 +28,8 @@ export interface GoodReceivedNoteItem {
   scanqty?: number;
   shortqty?: number;
   excessqty?: number;
-  
+  actualprodval?: number;
+
 }
 
 export interface GoodReceivedNote {
@@ -63,12 +64,12 @@ export interface GoodReceivedNote {
   qty2?: number;
 
   totprodval?: number;
+  isconfirm?: string;
+  isconfirmdesc?: string;
 
   qrcode?: string;
 
-
   itemdtl?: GoodReceivedNoteItem[];
-
 
   entryby?: number;
   entrydt?: string;
@@ -88,6 +89,34 @@ export interface GoodReceivedNoteApiResponse {
   success: boolean;
   message: string;
   data: GoodReceivedNote[];
+}
+
+// Confirm
+export interface ConfirmItems {
+  tag: string;
+  dtlid: number;
+  productid: number;
+  qty1: number;
+}
+export interface ConfirmGrn {
+  id: number;
+  compid: number;
+  qty1: number;
+  totprodval: number;
+  itemdtl: ConfirmItems[];
+}
+
+export interface ConfirmGrnType
+  extends Partial<
+    Omit<
+      ConfirmGrn,
+      "id" | "entryby" | "entrydt" | "updateby" | "updatedt"
+    >
+  > { }
+export interface ConfirmGRNApiReponse {
+  success: boolean;
+  message: string;
+  data: [];
 }
 
 export type OperationMode = "Add" | "Edit" | "Delete" | "View" | "Print" | "Confirmed";

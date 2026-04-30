@@ -1,5 +1,5 @@
 import { Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SearchModal from "@/common/components/SearchModal";
 import { toast } from "sonner";
 import { OperationMode } from "../types/goodReceivedNote.types";
@@ -57,6 +57,12 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
   const qty = Number(item?.qty1) || 0;
   const rate = Number(item?.rate) || 0;
   const value = qty * rate;
+  const actualValue = Number(item.scanqty) * rate
+
+
+  // useEffect(() => {
+  //   console.log('Items :', item);
+  // }, [item])
 
 
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
@@ -188,7 +194,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
         />
       </div>
 
-      <div className="w-28">
+      <div className="w-24">
         <label className="block text-gray-700 text-sm font-medium mb-1">
           Rate
         </label>
@@ -204,7 +210,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
         />
       </div>
 
-      <div className="w-28">
+      <div className="w-24">
         <label className="block text-gray-700 text-sm font-medium mb-1">
           Value
         </label>
@@ -217,28 +223,33 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
         />
       </div>
 
-      <div className="w-14">
-        <label className="block text-gray-700 text-sm font-medium mb-1">
-          Bal. Qty.
-        </label>
-        <input
-          type="number"
-          min={0}
-          {...register(`itemdtl.${index}.balanceqty1`)}
-          disabled={isReadOnly}
-          className={`
+      {(mode !== 'Confirmed') && (
+        <>
+          <div className="w-14">
+            <label className="block text-gray-700 text-sm font-medium mb-1">
+              Bal. Qty.
+            </label>
+            <input
+              type="number"
+              min={0}
+              {...register(`itemdtl.${index}.balanceqty1`)}
+              disabled={isReadOnly}
+              className={`
             inputField 
             ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-300"}
             ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}
           `}
-          onKeyDown={(e) => {
-            if (e.key === "-") e.preventDefault();
-          }}
-        />
-        {/* {errors?.itemdtl?.[index]?.qty1 && (
+              onKeyDown={(e) => {
+                if (e.key === "-") e.preventDefault();
+              }}
+            />
+            {/* {errors?.itemdtl?.[index]?.qty1 && (
           <p className="text-xs text-red-500 mt-1">{errors.itemdtl[index].qty1.message}</p>
         )} */}
-      </div>
+          </div>
+        </>
+      )}
+
 
       {(mode === 'Confirmed') && (
         <>
@@ -249,6 +260,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
             <input
               type="number"
               min={0}
+              disabled={isReadOnly}
               {...register(`itemdtl.${index}.scanqty`)}
               className={`inputField border-gray-300 `}
               onKeyDown={(e) => {
@@ -263,6 +275,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
             <input
               type="number"
               min={0}
+              disabled={isReadOnly}
               {...register(`itemdtl.${index}.shortqty`)}
               className={`inputField border-gray-300 `}
               onKeyDown={(e) => {
@@ -277,11 +290,25 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
             <input
               type="number"
               min={0}
+              disabled={isReadOnly}
               {...register(`itemdtl.${index}.excessqty`)}
               className={`inputField border-gray-300 `}
               onKeyDown={(e) => {
                 if (e.key === "-") e.preventDefault();
               }}
+            />
+          </div>
+
+          <div className="w-20">
+            <label className="block text-gray-700 text-sm font-medium mb-1">
+              Actual Value
+            </label>
+            <input
+              type="number"
+              min={0}
+              value={actualValue}
+              readOnly
+              className={`inputField  bg-gray-100 border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
             />
           </div>
         </>

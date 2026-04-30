@@ -2,6 +2,7 @@
 import { forwardRef } from 'react';
 import { GoodReceivedNote } from '../types/goodReceivedNote.types';
 import CustomDataGrid from '@/common/components/sharedComponents/CustomDataGrid';
+import { AlignCenter, CheckCircle, XCircle } from 'lucide-react';
 
 interface GoodReceivedNoteDataGridProps {
   dataSource: GoodReceivedNote[];
@@ -18,6 +19,30 @@ export const GoodReceivedNoteDataGrid = forwardRef<any, GoodReceivedNoteDataGrid
 
     const columns = [
       { dataField: "grnno", caption: "GRN No.", width: 150, headerFilter: true },
+      { dataField: "isconfirm", caption: "Confirm", width: 120, headerFilter: true,
+        cellRender: (data: any) => {
+          const value = data.value;
+
+          const isConfirmed =
+            value === "Confirmed" || value === "Y" || value === true;
+
+          return (
+            <div className='flex gap-2' >
+              {isConfirmed ? (
+                <>
+                  <CheckCircle color="green" size={18} />
+                  <span className='text-green-600 font-bold'> Yes </span>
+                </>
+              ) : (
+                <>
+                  <XCircle color="red" size={18} />
+                  <span className='text-red-600 font-bold'> No </span>
+                </>
+              )}
+            </div>
+          );
+        },
+      },
       { dataField: "grndt", caption: "GRN date", dataType: "date", format: "dd-MM-yyyy", width: 120 },
       { dataField: "vendor", caption: "Vendor", width: 200, headerFilter: true },
       { dataField: "godownnm", caption: "Godownnm", width: 200, headerFilter: true },

@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { Popup } from "devextreme-react/popup";
 import LoadPanel from "devextreme-react/load-panel";
 import { useQuery } from "@tanstack/react-query";
-import { useGoodReceivedNoteById, useCreateGoodReceivedNote, useUpdateGoodReceivedNote, useDeleteGoodReceivedNote } from "../hooks/useGoodReceivedNote";
+import { useGoodReceivedNoteById, useCreateGoodReceivedNote, useUpdateGoodReceivedNote, useDeleteGoodReceivedNote, useCreateConfirmGrn } from "../hooks/useGoodReceivedNote";
 import { fetchGodownList, fetchVendorList } from "@/api/master/ledger-api";
-import { GoodReceivedNoteFormType, OperationMode } from "../types/goodReceivedNote.types";
-import { GoodReceivedNoteFormSchema } from "../schemas/goodReceivedNote.schema";
+import { ConfirmGrn, ConfirmGrnType, ConfirmItems, GoodReceivedNoteFormType, OperationMode } from "../types/goodReceivedNote.types";
+import { GoodReceivedNoteFormSchema, ConfirmGoodReceivedNoteFormSchema } from "../schemas/goodReceivedNote.schema";
 import { goodReceivedNoteFormDefaults } from "../constants/goodReceivedNoteFormDefaults";
 import { useGoodReceivedNoteForm } from "../hooks/useGoodReceivedNoteForm";
 import { useFieldArray } from "react-hook-form";
@@ -19,6 +19,7 @@ import { useWatch } from "react-hook-form";
 import { formatDate, formatDateForInput } from "@/helpers/dateUtils";
 import SearchModal from "@/common/components/SearchModal";
 import { useConfirm } from "@/common/hooks/useConfirm";
+import { useQrScanner } from "@/hooks/useQrScanner";
 
 
 interface GoodReceivedNoteProps {
@@ -50,6 +51,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
   const isDeleteMode = mode === "Delete";
+  const isConfiemMode = mode === "Confirmed";
   const isReadOnly = mode === "View" || mode === "Print" || mode === "Confirmed";
 
   const [grnPendingModalOpen, setGrnPendingModalOpen] = useState(false);
@@ -66,8 +68,10 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
   const createMutation = useCreateGoodReceivedNote();
   const updateMutation = useUpdateGoodReceivedNote();
   const deleteMutation = useDeleteGoodReceivedNote();
+  const confirmMutation = useCreateConfirmGrn();
 
-  const isSubmitting = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
+  const isSubmitting = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending || confirmMutation.isPending;
+
 
   const {
     control,
@@ -95,7 +99,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
     control,
     name: "itemdtl",
   }) || [];
-
+  // console.log(' watchedItems ', watchedItems);
   const totalQty = (watchedItems || []).reduce((sum, item) => {
     return sum + (Number(item?.qty1) || 0);
   }, 0) || 0;
@@ -105,6 +109,25 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
     const rate = Number(item?.rate) || 0;
     return sum + qty * rate;
   }, 0) || 0;
+
+  const totalScanQty = (watchedItems || []).reduce((sum, item) => {
+    return sum + (Number(item?.scanqty) || 0);
+  }, 0) || 0;
+
+  const totalScanValue = (watchedItems || []).reduce((sum, item) => {
+    const qty = Number(item?.scanqty) || 0;
+    const rate = Number(item?.rate) || 0;
+    return sum + qty * rate;
+  }, 0) || 0;
+
+  const { scanInputRef, handleScan } = useQrScanner({
+    watchedItems,
+    setValue,
+    onUpdateItems: (items) => {
+      setValue("itemdtl", items, { shouldValidate: true });
+    },
+  });
+
 
   // Reset form 
   useEffect(() => {
@@ -167,7 +190,10 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
             alterunitfactortype: item.alterunitfactortype ?? "M",
             rateon: Number(item.rateon ?? 1),
             orderdtlid: item.orderdtlid || 0,
-            scanqty: item.scanqty || 0
+            scanqty: item.scanqty || 0,
+            shortqty: item.shortqty || 0,
+            excessqty: item.excessqty || 0,
+            actualprodval: item.excessqty || 0,
           })) ?? [],
       });
     }
@@ -304,6 +330,31 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
   };
 
   // Submit handler
+  const handleConfirm = async () => {
+    try {
+      // confirm payload from watched items 
+      const confirmItems: ConfirmItems[] = (watchedItems || []).map((item: any) => ({
+        tag: item.tag || "I",
+        dtlid: item.dtlid,
+        productid: item.productid,
+        qty1: Number(item.scanqty) || 0,
+      }));
+
+      const confirmPayload: ConfirmGrn = {
+        id: formGoodReceivedNoteId,
+        compid: Number(companyId),
+        qty1: totalScanQty,
+        totprodval: totalScanValue,
+        itemdtl: confirmItems,
+      };
+
+      await confirmMutation.mutateAsync(confirmPayload);
+
+    } catch (error) {
+      console.error("Confirm error:", error);
+    }
+  };
+
   const handleFormSubmit = async (data: GoodReceivedNoteFormSchema) => {
     try {
 
@@ -356,6 +407,11 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
         onClose();
       }
 
+      if (isConfiemMode) {
+        await handleConfirm();
+        return;
+      }
+
     } catch (error) {
       console.error("Submit error:", error);
     }
@@ -365,9 +421,22 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
     ?.map((item: any) => item?.productid)
     ?.filter(Boolean);
 
+
   // useEffect(() => {
-  //   console.log('selectedProductIds :', selectedProductIds);
-  // }, [selectedProductIds])
+  //   console.log('watchedItems :', watchedItems);
+  // }, [watchedItems])
+
+  const getButtonLabel = () => {
+    if (isSubmitting) {
+      if (isDeleteMode) return "Deleting...";
+      if (isConfiemMode) return "Confirming...";
+      return "Saving...";
+    }
+
+    if (isDeleteMode) return "Delete";
+    if (isConfiemMode) return "Confirm";
+    return "Save";
+  };
 
   // Debug validation issues 
   const onError = (err: any) => {
@@ -502,15 +571,29 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                 />
               </div>
 
+
               {(mode === 'Confirmed') && (
                 <>
                   <div className="w-48 ">
-                    <label className="block text-gray-700 font-medium mb-1"> Scan QR Code <span className="text-red-500">*</span> </label>
+                    <label className="block text-gray-700 font-medium mb-1">
+                      Scan QR Code <span className="text-red-500">*</span>
+                    </label>
+
                     <input
                       type="text"
                       {...register("qrcode")}
-                      className={`inputField border-gray-300 `}
+                      ref={(el) => {
+                        scanInputRef.current = el;
+                        register("qrcode").ref(el);
+                      }}
+                      className="inputField border-gray-300"
+                      onKeyDown={(e: any) => {
+                        if (e.key !== "Enter") return;
+                        e.preventDefault();
+                        handleScan(e.target.value);
+                      }}
                     />
+
                   </div>
                 </>
               )}
@@ -587,9 +670,9 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
 
               <div className="w-80" />
 
-              <div className="w-28 relative">
+              <div className="w-14 relative">
                 <span className="absolute -left-20 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-700 whitespace-nowrap">
-                  Total Qty
+                  Total
                 </span>
                 <input
                   type="number"
@@ -599,12 +682,10 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                 />
               </div>
 
-              <div className="w-28" />
+              <div className="w-14" />
+              <div className="w-24" />
 
-              <div className="w-28 relative">
-                <span className="absolute -left-24 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-700 whitespace-nowrap">
-                  Total Value
-                </span>
+              <div className="w-24 relative">
                 <input
                   type="number"
                   value={totalValue}
@@ -612,6 +693,30 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   className="inputField w-full bg-gray-100 cursor-not-allowed"
                 />
               </div>
+
+              {(mode === 'Confirmed') && (
+                <>
+                  <div className="w-14 relative">
+                    <input
+                      type="number"
+                      value={totalScanQty}
+                      readOnly
+                      className="inputField w-full bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+                  <div className="w-14 relative"></div>
+                  <div className="w-14 relative"></div>
+                  <div className="w-20 relative">
+                    <input
+                      type="number"
+                      value={totalScanValue}
+                      readOnly
+                      className="inputField w-full bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+                </>
+              )}
+
 
               <div className="w-12" />
 
@@ -643,9 +748,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
               disabled={isSubmitting}
               className="primary-btn disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting
-                ? isDeleteMode ? "Deleting..." : "Saving..."
-                : isDeleteMode ? "Delete" : "Save"}
+              {getButtonLabel()}
             </button>
           )}
           <button
