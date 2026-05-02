@@ -47,15 +47,18 @@ export const GoodReceivedNoteSchema = z.object({
   vendorid: z.coerce
     .number()
     .min(1, "Please select a vendor"),
+  vendorName: z.string().optional(),
 
   partyrefno: z.string().optional(),
   partyrefdt: z.string().optional(),
 
- // godownid: z.coerce.number().optional(),
+  // godownid: z.coerce.number().optional(),
 
   godownid: z.coerce
     .number()
     .min(1, "Please select a Godown"),
+  godownName: z.string().optional(),
+
 
   ordertype: z.string().optional(),
   orderid: z.coerce.number().optional(),

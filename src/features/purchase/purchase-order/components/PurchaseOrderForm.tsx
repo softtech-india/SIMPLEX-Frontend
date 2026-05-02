@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Popup } from "devextreme-react/popup";
 import LoadPanel from "devextreme-react/load-panel";
 import { useQuery } from "@tanstack/react-query";
@@ -17,6 +17,7 @@ import { FormSelect } from "@/common/components/FormSelect";
 import { PurchaseOrderItems } from "./PurchaseOrderItems";
 import { useWatch } from "react-hook-form";
 import { formatDateForInput } from "@/helpers/dateUtils";
+import SearchModal from "@/common/components/SearchModal";
 
 
 interface PurchaseOrderFormProps {
@@ -36,6 +37,8 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
     branchId,
     finid,
   } = useUserStore();
+
+  const [vendoeodalOpen, setVendoeodalOpen] = useState(false);
 
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
@@ -202,6 +205,28 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
       })),
   });
 
+  // Model Search Vendoe Modal Handlers
+  const baseVendoeParams = {
+    userid: userId,
+    compid: companyId,
+  };
+
+  const searchVendoeColumns = [
+    { key: "name", label: "name." },
+  ];
+
+  const searchVendoeFields = [
+    { value: "name", label: "Name" },
+  ];
+
+  const handleVendoeSelect = (row: any) => {
+    setValue("vendorid", row.id);
+    setValue("vendorName", row.name);
+    setVendoeodalOpen(false);
+  };
+
+  const vendorName = watch("vendorName");
+
   const calculateTotals = (items: any[] = []) => {
     let qty1 = 0;
     let totprodval = 0;
@@ -289,7 +314,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
     <Popup
       visible={visible}
       onHiding={onClose}
-      title={`${mode} PurchaseOrder`}
+      title={`${mode} Purchase Order`}
       width="90vw"
       height="90vh"
       dragEnabled
@@ -359,7 +384,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                 )} */}
               </div>
 
-              <div className="w-110">
+              {/* <div className="w-110">
                 <label className="block text-gray-700 font-medium mb-1">Vendor</label>
                 <FormSelect
                   name="vendorid"
@@ -367,7 +392,19 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                   options={VendorspOptions}
                   className={`${errors?.vendorid ? "border-red-500" : "border-gray-400"}`}
                 />
+              </div> */}
 
+              <div className="w-110">
+                <label className="block text-gray-700 font-medium mb-1">Vendor <span className="text-red-500">*</span> </label>
+                <input
+                  type="text"
+                  value={vendorName || ''}
+                  disabled={isReadOnly}
+                  readOnly
+                  onClick={() => setVendoeodalOpen(true)}
+                  className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
+                  placeholder="Select GRN Pending"
+                />
               </div>
 
               <div className="w-48">
@@ -643,6 +680,17 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
           visible={isSubmitting || isLoadingPurchaseOrder}
           showIndicator
         />
+
+        <SearchModal
+          open={vendoeodalOpen}
+          onClose={() => setVendoeodalOpen(false)}
+          endpoint="vendor"
+          baseParams={baseVendoeParams}
+          columns={searchVendoeColumns}
+          searchFields={searchVendoeFields}
+          onSelect={handleVendoeSelect}
+        />
+
       </form>
     </Popup>
   );

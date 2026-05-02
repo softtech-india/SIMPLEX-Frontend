@@ -28,6 +28,7 @@ export const PurchaseOrderSchema = z.object({
   orderno: z.string().optional(),
 
   vendorid: z.coerce.number().min(1, "Please select a vendor"),
+  vendorName: z.string().optional(),
 
   enqno: z.string().optional(),
   enqdt: z.string().optional(),

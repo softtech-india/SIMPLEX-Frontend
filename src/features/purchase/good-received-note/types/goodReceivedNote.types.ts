@@ -47,12 +47,14 @@ export interface GoodReceivedNote {
   grnno?: string;
 
   vendorid?: number;
+  vendorName: string;
 
   partyrefno?: string;
   partyrefdt?: string;
 
   godownid?: number;
-
+  godownName?: string;
+  
   ordertype?: string;
   orderid?: number;
 

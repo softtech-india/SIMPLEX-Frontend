@@ -57,6 +57,8 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
   const isReadOnly = mode === "View" || mode === "Print" || mode === "Confirmed";
 
   const [grnPendingModalOpen, setGrnPendingModalOpen] = useState(false);
+  const [vendorModalOpen, setVendorModalOpen] = useState(false);
+  const [godownModalOpen, setGodownModalOpen] = useState(false);
 
   const { data: GoodReceivedNote, isLoading: isLoadingGoodReceivedNote } =
     useGoodReceivedNoteById({
@@ -258,6 +260,29 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
       })),
   });
 
+
+  // Model Search Vendor Modal Handlers
+  const baseVendorParams = {
+    userid: userId,
+    compid: companyId,
+  };
+
+  const searchVendorColumns = [
+    { key: "name", label: "name." },
+  ];
+
+  const searchVendorFields = [
+    { value: "name", label: "Name" },
+  ];
+
+  const handleVendorSelect = (row: any) => {
+    setValue("vendorid", row.id);
+    setValue("vendorName", row.name);
+    setVendorModalOpen(false);
+  };
+
+  const vendorName = watch("vendorName");
+
   // Godown
   const { data: GodownOptions = [] } = useQuery({
     queryKey: ["GodownOptions", userId, companyId],
@@ -274,7 +299,29 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
       })),
   });
 
-  // GRN Pending List
+  // Model Search Godown Modal Handlers
+  const baseGodownParams = {
+    userid: userId,
+    compid: companyId,
+    branchid: toolbarBranchId
+  };
+
+  const searchGodownColumns = [
+    { key: "name", label: "name." },
+  ];
+
+  const searchGodownFields = [
+    { value: "name", label: "Name" },
+  ];
+
+  const handleGodownSelect = (row: any) => {
+    setValue("godownid", row.id);
+    setValue("godownName", row.name);
+    setVendorModalOpen(false);
+  };
+
+  const godownName = watch("godownName");
+
   // Model Search GrnPending Modal Handlers
   const baseGrnPendingParams = {
     userid: userId,
@@ -613,7 +660,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                 />
               </div>
 
-              <div className="w-110">
+              {/* <div className="w-110">
                 <label className="block text-gray-700 font-medium mb-1">Vendor <span className="text-red-500">*</span> </label>
                 <FormSelect
                   name="vendorid"
@@ -621,6 +668,19 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   options={VendorspOptions}
                   isDisabled={isReadOnly}
                   className={`${errors?.vendorid ? "border-red-500" : "border-gray-300"}`}
+                />
+              </div> */}
+
+              <div className="w-110">
+                <label className="block text-gray-700 font-medium mb-1">Vendor <span className="text-red-500">*</span> </label>
+                <input
+                  type="text"
+                  value={vendorName || ''}
+                  disabled={isReadOnly}
+                  readOnly
+                  onClick={() => setVendorModalOpen(true)}
+                  className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
+                  placeholder="Select GRN Pending"
                 />
               </div>
 
@@ -658,7 +718,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                 />
               </div>
 
-              <div className="w-80">
+              {/* <div className="w-80">
                 <label className="block text-gray-700 font-medium mb-1">Godown <span className="text-red-500">*</span></label>
                 <FormSelect
                   name="godownid"
@@ -666,6 +726,19 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   options={GodownOptions}
                   isDisabled={isReadOnly}
                   className={`${errors?.godownid ? "border-red-500" : "border-gray-300"}`}
+                />
+              </div> */}
+
+              <div className="w-80">
+                <label className="block text-gray-700 font-medium mb-1"> Godown <span className="text-red-500">*</span> </label>
+                <input
+                  type="text"
+                  value={godownName || ''}
+                  disabled={isReadOnly}
+                  readOnly
+                  onClick={() => setGodownModalOpen(true)}
+                  className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
+                  placeholder="Select GRN Pending"
                 />
               </div>
 
@@ -869,6 +942,16 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
 
 
       <SearchModal
+        open={vendorModalOpen}
+        onClose={() => setVendorModalOpen(false)}
+        endpoint="vendor"
+        baseParams={baseVendorParams}
+        columns={searchVendorColumns}
+        searchFields={searchVendorFields}
+        onSelect={handleVendorSelect}
+      />
+
+      <SearchModal
         open={grnPendingModalOpen}
         onClose={() => setGrnPendingModalOpen(false)}
         endpoint="po/pendinglist"
@@ -877,7 +960,16 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
         searchFields={searchGrnPendingFields}
         onSelect={handleGrnPendingSelect}
         excludeIds={selectedProductIds}
+      />
 
+      <SearchModal
+        open={godownModalOpen}
+        onClose={() => setGodownModalOpen(false)}
+        endpoint="godown"
+        baseParams={baseGodownParams}
+        columns={searchGodownColumns}
+        searchFields={searchGodownFields}
+        onSelect={handleGodownSelect}
       />
 
     </Popup>

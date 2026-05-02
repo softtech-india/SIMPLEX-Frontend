@@ -26,6 +26,7 @@ export interface PurchaseOrder {
   orderno?: string;
 
   vendorid?: number;
+  vendorName?: string;
 
   enqno?: string;
   enqdt?: string;
