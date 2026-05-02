@@ -16,6 +16,7 @@ export interface GoodReceivedNoteItem {
 
   unit: string;
   balanceqty1: number;
+  confirmqty1: number;
 
   altunimethod?: string;
   altunitfactor?: number;

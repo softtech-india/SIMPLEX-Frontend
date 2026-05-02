@@ -51,7 +51,11 @@ export const GoodReceivedNoteSchema = z.object({
   partyrefno: z.string().optional(),
   partyrefdt: z.string().optional(),
 
-  godownid: z.coerce.number().optional(),
+ // godownid: z.coerce.number().optional(),
+
+  godownid: z.coerce
+    .number()
+    .min(1, "Please select a Godown"),
 
   ordertype: z.string().optional(),
   orderid: z.coerce.number().optional(),
@@ -67,6 +71,7 @@ export const GoodReceivedNoteSchema = z.object({
   totprodval: z.coerce.number().optional(),
 
   qrcode: z.string().optional(),
+  isconfirm: z.string().optional(),
 
   itemdtl: z
     .array(GoodReceivedNoteItemSchema)

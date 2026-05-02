@@ -104,12 +104,15 @@ export function useCreateGoodReceivedNote() {
 
 
 export function useCreateConfirmGrn() {
+  const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: (data : any) =>
+    mutationFn: (data: any) =>
       goodReceivedNoteService.createConfirmGrn(data),
 
     onSuccess: (data: ConfirmGRNApiReponse) => {
       if (data.success) {
+        queryClient.invalidateQueries({ queryKey: GOOD_RECEIVED_NOTE_KEY.list() });
         toast.success(data.message);
       } else {
         toast.error(data.message || "Failed to Confirm Good Received Note");

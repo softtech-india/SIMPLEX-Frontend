@@ -232,6 +232,7 @@ export default function PurchaseOrderModule() {
           formSelectedBranch={formSelectedBranch || branchnm}
           toolbarBranchId={Number(toolbarBranchId) || Number(branchId)}
           mode={formMode}
+          isRowConfirmed={isRowConfirmed}
         />
 
 

@@ -20,6 +20,7 @@ import { formatDate, formatDateForInput } from "@/helpers/dateUtils";
 import SearchModal from "@/common/components/SearchModal";
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { useQrScanner } from "@/hooks/useQrScanner";
+import { toast } from "sonner";
 
 
 interface GoodReceivedNoteProps {
@@ -29,6 +30,7 @@ interface GoodReceivedNoteProps {
   mode: OperationMode;
   formSelectedBranch: string;
   toolbarBranchId: number;
+  isRowConfirmed: boolean;
 }
 
 type GrnPendingRow = {
@@ -37,7 +39,7 @@ type GrnPendingRow = {
   orderdt: string;
 };
 
-export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId, mode, formSelectedBranch, toolbarBranchId }: GoodReceivedNoteProps) {
+export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId, mode, formSelectedBranch, toolbarBranchId, isRowConfirmed }: GoodReceivedNoteProps) {
 
   // hooks
   const {
@@ -156,7 +158,9 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
 
         qty1: Number(GoodReceivedNote.qty1 ?? 0),
         qty2: Number(GoodReceivedNote.qty2 ?? 0),
+
         totprodval: Number(GoodReceivedNote.totprodval ?? 0),
+        isconfirm: GoodReceivedNote.isconfirm ?? "",
 
         grndt: GoodReceivedNote.grndt ? formatDateForInput(GoodReceivedNote.grndt) : "",
         grnno: GoodReceivedNote.grnno ?? "",
@@ -185,6 +189,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
             value: Number(item.value ?? 0),
             unit: item.unit,
             balanceqty1: item?.balanceqty1,
+            confirmqty1: item?.confirmqty1,
             altunimethod: item.altunimethod ?? "A",
             altunitfactor: Number(item.altunitfactor ?? 1),
             alterunitfactortype: item.alterunitfactortype ?? "M",
@@ -318,6 +323,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
         value: value,
         unit: item?.unit,
         balanceqty1: item?.balanceqty1,
+        confirmqty1: item?.confirmqty1,
         altunimethod: item?.altunimethod || "A",
         altunitfactor: item?.altunitfactor || 1,
         alterunitfactortype: item?.alterunitfactortype || "M",
@@ -330,28 +336,120 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
   };
 
   // Submit handler
+
+  // const handleConfirm = async () => {
+  //   try {
+
+  //     const proceedSave = async () => {
+  //       // confirm payload 
+  //       const confirmItems: ConfirmItems[] = (watchedItems || []).map((item: any) => ({
+  //         tag: item.tag || "I",
+  //         dtlid: item.dtlid,
+  //         productid: item.productid,
+  //         qty1: Number(item.scanqty) || 0,
+  //       }));
+
+  //       const confirmPayload: ConfirmGrn = {
+  //         id: formGoodReceivedNoteId,
+  //         compid: Number(companyId),
+  //         qty1: totalScanQty,
+  //         totprodval: totalScanValue,
+  //         itemdtl: confirmItems,
+  //       };
+
+  //       await confirmMutation.mutateAsync(confirmPayload);
+
+  //       toast.success("Confirmed successfully");
+  //     };
+
+  //     if (totalScanQty === 0) {
+  //       toast.error("Scanned quantity is 0. Cannot proceed with save."); return;
+  //     }
+
+  //     if (totalScanQty < totalQty) {
+  //       toast.warning(
+  //         `Scanned quantity (${totalScanQty}) is less than total quantity (${totalQty}). Continue?`,
+  //         {
+  //           action: {
+  //             label: "OK",
+  //             onClick: proceedSave,
+  //           },
+  //           cancel: {
+  //             label: "Cancel",
+  //             onClick: () => { },
+  //           },
+  //         }
+  //       );
+  //       return;
+  //     }
+
+  //     await proceedSave();
+
+  //   } catch (error) {
+  //     console.error("Confirm error:", error);
+  //     toast.error("Something went wrong while confirming");
+  //   }
+  // };
+
   const handleConfirm = async () => {
     try {
-      // confirm payload from watched items 
-      const confirmItems: ConfirmItems[] = (watchedItems || []).map((item: any) => ({
-        tag: item.tag || "I",
-        dtlid: item.dtlid,
-        productid: item.productid,
-        qty1: Number(item.scanqty) || 0,
-      }));
+      const proceedSave = async () => {
+        const confirmItems: ConfirmItems[] = (watchedItems || []).map((item: any) => ({
+          tag: item.tag || "I",
+          dtlid: item.dtlid,
+          productid: item.productid,
+          qty1: Number(item.scanqty) || 0,
+        }));
 
-      const confirmPayload: ConfirmGrn = {
-        id: formGoodReceivedNoteId,
-        compid: Number(companyId),
-        qty1: totalScanQty,
-        totprodval: totalScanValue,
-        itemdtl: confirmItems,
+        const confirmPayload: ConfirmGrn = {
+          id: formGoodReceivedNoteId,
+          compid: Number(companyId),
+          qty1: totalScanQty,
+          totprodval: totalScanValue,
+          itemdtl: confirmItems,
+        };
+
+        await confirmMutation.mutateAsync(confirmPayload);
+
+        onClose();
       };
 
-      await confirmMutation.mutateAsync(confirmPayload);
+      if (!totalScanQty || totalScanQty === 0) {
+        toast.error("Scanned quantity is 0. Cannot proceed with save.");
+        return;
+      }
+      if (totalScanQty < totalQty) {
+        toast.warning(
+          `Scanned quantity (${totalScanQty}) is less than total quantity (${totalQty}). Do you want to continue?`,
+          {
+            action: (
+              <div className="flex gap-2">
+                <button
+                  onClick={proceedSave}
+                  className="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700"
+                >
+                  Continue
+                </button>
+
+                <button
+                  onClick={() => { }}
+                  className="bg-gray-200 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+              </div>
+            ),
+          }
+        );
+
+        return;
+      }
+
+      await proceedSave();
 
     } catch (error) {
       console.error("Confirm error:", error);
+      toast.error("Something went wrong while confirming");
     }
   };
 
@@ -561,7 +659,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
               </div>
 
               <div className="w-80">
-                <label className="block text-gray-700 font-medium mb-1">Godown</label>
+                <label className="block text-gray-700 font-medium mb-1">Godown <span className="text-red-500">*</span></label>
                 <FormSelect
                   name="godownid"
                   control={control}
@@ -649,6 +747,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   remove={remove}
                   mode={mode}
                   watchedItems={watchedItems}
+                  isRowConfirmed={isRowConfirmed}
                   userId={userId}
                   companyId={companyId}
                   branchId={toolbarBranchId}
@@ -670,7 +769,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
 
               <div className="w-80" />
 
-              <div className="w-14 relative">
+              <div className="w-20 relative">
                 <span className="absolute -left-20 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-700 whitespace-nowrap">
                   Total
                 </span>
