@@ -7,7 +7,7 @@ import CustomSelectBox from "@/common/components/sharedComponents/CustomSelectBo
 import { useQuery } from "@tanstack/react-query";
 import { stockTrialService } from "../services/stockTrialService";
 import { StockTrialFilterState } from "../types/stockTrial.types";
-import { LoadPanel, Popup, TagBox } from "devextreme-react";
+import { LoadPanel, Popup, SelectBox, TagBox } from "devextreme-react";
 
 interface StockTrialFilterCriteriaProps {
     visible: boolean;
@@ -15,11 +15,13 @@ interface StockTrialFilterCriteriaProps {
     onApply: (filters: Partial<StockTrialFilterState>) => void;
     onClear: () => void;
     filterParams: StockTrialFilterState;
+    localFilters: Partial<StockTrialFilterState>;
+    setLocalFilters: React.Dispatch<React.SetStateAction<Partial<StockTrialFilterState>>>;
 }
 
 const printrtvalOptions = [
-    { id: 0, name: "No" },
-    { id: 1, name: "Yes" },
+    { id: 1, name: "No" },
+    { id: 0, name: "Yes" },
 ];
 
 const balancetagOptions = [
@@ -32,7 +34,9 @@ const StockTrialFilterCriteria: React.FC<StockTrialFilterCriteriaProps> = ({
     onClose,
     onApply,
     onClear,
-    filterParams
+    filterParams,
+    localFilters,
+    setLocalFilters
 }) => {
     const { data: brandsOptions = [] } = useQuery({
         queryKey: ["brandsOptions"],
@@ -71,7 +75,6 @@ const StockTrialFilterCriteria: React.FC<StockTrialFilterCriteriaProps> = ({
     });
 
     // Local state for form values before applying
-    const [localFilters, setLocalFilters] = useState<Partial<StockTrialFilterState>>({});
     const [isLoading, setIsLoading] = useState(false);
 
     // Initialize local filters when popup opens
@@ -112,20 +115,25 @@ const StockTrialFilterCriteria: React.FC<StockTrialFilterCriteriaProps> = ({
     }, [onClear]);
 
     // Helper to convert array of selected IDs to comma-separated string
-    const handleTagBoxChange = useCallback((value: any[], fieldName: keyof StockTrialFilterState) => {
-        // Join with comma instead of space
-        const commaSeparatedValue = value.length > 0 ? value.join(',') : '';
-        setLocalFilters(prev => ({
-            ...prev,
-            [fieldName]: commaSeparatedValue
-        }));
-    }, []);
+    const handleTagBoxChange = useCallback(
+        (value: number[], fieldName: keyof StockTrialFilterState) => {
+            const commaSeparatedValue = value.length > 0 ? value.join(',') : '';
+
+            setLocalFilters(prev => ({
+                ...prev,
+                [fieldName]: commaSeparatedValue
+            }));
+        },
+        []
+    );
 
     // Helper to convert comma-separated string to array for TagBox
-    const getTagBoxValue = useCallback((value: string | undefined): any[] => {
+    const getTagBoxValue = useCallback((value: string | undefined): number[] => {
         if (!value || value === '') return [];
-        // Split by comma instead of space
-        return value.split(',').filter(v => v.trim() !== '');
+        return value
+            .split(',')
+            .map(v => Number(v))   // ✅ FIX
+            .filter(v => !isNaN(v));
     }, []);
 
     // Memoized handlers for select boxes to prevent re-renders
@@ -158,106 +166,107 @@ const StockTrialFilterCriteria: React.FC<StockTrialFilterCriteriaProps> = ({
         >
             <div className="p-4">
                 <div className="space-y-4">
-                    {/* Print Rate Value */}
-                    <InlineSelectField label="Print Rate Value">
-                        <div className="ml-10">
-                            <CustomSelectBox
-                                dataSource={printrtvalOptions}
-                                displayExpr="name"
-                                valueExpr="id"
-                                value={printrtvalValue}
-                                onValueChanged={handlePrintrtvalChange}
-                                placeholder="Select"
-                                className="w-full text-sm bg-transparent"
-                            />
-                        </div>
-                    </InlineSelectField>
-
-                    {/* Balance tag */}
-                    <InlineSelectField label="Balance Tag">
-                        <div className="ml-10">
-                            <CustomSelectBox
-                                dataSource={balancetagOptions}
-                                displayExpr="name"
-                                valueExpr="id"
-                                value={balancetagValue}
-                                onValueChanged={handleBalancetagChange}
-                                placeholder="Select"
-                                className="w-full text-sm bg-transparent"
-                            />
-                        </div>
-                    </InlineSelectField>
 
                     {/* Brand */}
-                    <div className="dx-field">
-                        <div className="dx-field-label">Brand</div>
-                        <div className="dx-field-value">
+                    <InlineSelectField label="Brand">
+                        <div className="ml-10">
                             <TagBox
                                 dataSource={brandsOptions}
                                 valueExpr="id"
                                 displayExpr="name"
-                                placeholder="Select Brand..."
-                                showSelectionControls={true}
-                                applyValueMode="useButtons"
                                 searchEnabled={true}
+                                showSelectionControls={true}
+                                applyValueMode="instantly"
                                 value={strbrandValue}
                                 onValueChanged={(e) => handleTagBoxChange(e.value, 'strbrand')}
                             />
                         </div>
-                    </div>
+                    </InlineSelectField>
 
                     {/* Class */}
-                    <div className="dx-field">
-                        <div className="dx-field-label">Class</div>
-                        <div className="dx-field-value">
+                    <InlineSelectField label="Class">
+
+                        <div className="ml-10">
                             <TagBox
                                 dataSource={classOptions}
                                 valueExpr="id"
                                 displayExpr="name"
-                                placeholder="Select Class..."
-                                showSelectionControls={true}
-                                applyValueMode="useButtons"
                                 searchEnabled={true}
+                                showSelectionControls={true}
+                                applyValueMode="instantly"
                                 value={strclassValue}
                                 onValueChanged={(e) => handleTagBoxChange(e.value, 'strclass')}
                             />
                         </div>
-                    </div>
+                    </InlineSelectField>
 
                     {/* Sub Class */}
-                    <div className="dx-field">
-                        <div className="dx-field-label">Sub Class</div>
-                        <div className="dx-field-value">
+                    <InlineSelectField label="Sub class">
+
+                        <div className="ml-10">
                             <TagBox
                                 dataSource={subClassOptions}
                                 valueExpr="id"
                                 displayExpr="name"
-                                placeholder="Select sub class..."
-                                showSelectionControls={true}
-                                applyValueMode="useButtons"
                                 searchEnabled={true}
+                                showSelectionControls={true}
+                                applyValueMode="instantly"
                                 value={strsubclassValue}
                                 onValueChanged={(e) => handleTagBoxChange(e.value, 'strsubclass')}
                             />
                         </div>
-                    </div>
+                    </InlineSelectField>
 
                     {/* Godown */}
-                    <div className="dx-field">
-                        <div className="dx-field-label">Godown</div>
-                        <div className="dx-field-value">
+                    <InlineSelectField label="Godown">
+
+                        <div className="ml-10">
                             <TagBox
                                 dataSource={godownOptions}
                                 valueExpr="id"
                                 displayExpr="name"
-                                placeholder="Select Godown..."
-                                showSelectionControls={true}
-                                applyValueMode="useButtons"
                                 searchEnabled={true}
+                                showSelectionControls={true}
+                                applyValueMode="instantly"
                                 value={strgodownValue}
                                 onValueChanged={(e) => handleTagBoxChange(e.value, 'strgodown')}
                             />
                         </div>
+                    </InlineSelectField>
+
+
+                    <div className="flex gap-4">
+                        {/* Print Rate Value */}
+                        <InlineSelectField label="Print Rate Value">
+                            <div className="ml-10">
+                                <SelectBox
+                                    dataSource={printrtvalOptions}
+                                    valueExpr="id"
+                                    displayExpr="name"
+                                    value={printrtvalValue}
+                                    onValueChanged={handlePrintrtvalChange}
+                                    placeholder="Select"
+                                    searchEnabled={false}
+                                    className="w-full"
+                                />
+                            </div>
+                        </InlineSelectField>
+
+                        {/* Balance tag */}
+                        <InlineSelectField label="Balance Tag">
+                            <div className="ml-10">
+                                <SelectBox
+                                    dataSource={balancetagOptions}
+                                    displayExpr="name"
+                                    valueExpr="id"
+                                    value={balancetagValue}
+                                    onValueChanged={handleBalancetagChange}
+                                    placeholder="Select"
+                                    searchEnabled={false}
+                                    className="w-full"
+                                />
+                            </div>
+                        </InlineSelectField>
                     </div>
                 </div>
 

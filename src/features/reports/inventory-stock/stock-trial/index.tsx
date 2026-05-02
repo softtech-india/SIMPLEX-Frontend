@@ -13,11 +13,12 @@ import { useQuery } from '@tanstack/react-query';
 import useUserStore from '@/store/userStore';
 import { currentDate, formatDate } from '@/helpers/dateUtils';
 import StockTrialFilterCriteria from './components/StockTrialFilterCriteria';
+import { StockLedgersModal } from './components/StockLedgerModal';
 import {
   StockTrialFilterState,
-  DEFAULT_STOCK_TRIAL_FILTER,
   formatDateForApi
 } from './types/stockTrial.types';
+import { DEFAULT_STOCK_TRIAL_FILTER } from './constants/stockTrialDefaults';
 
 export default function StockTrialModule() {
   // Hooks
@@ -28,8 +29,16 @@ export default function StockTrialModule() {
   // State 
   const [selectedRow, setSelectedRow] = useState<StockTrial | null>(null);
   const [isFilterFormOpen, setIsFilterFormOpen] = useState(false);
+  const [toolbarBranchId, setToolbarBranchId] = useState<string | null>(null);
+  const [formSelectedBranch, setFormSelectedBranch] = useState<string | null>(null);
+  const [localFilters, setLocalFilters] = useState<Partial<StockTrialFilterState>>({});
 
-  // ✅ Direct date state like Purchase Order
+  // Modal state
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<StockTrial | null>(null);
+  const [selectedBranchName, setSelectedBranchName] = useState<string>(branchnm || '');
+
+  // Direct date state like Purchase Order
   const [fromDate, setFromDate] = useState<string | null>(currentDate);
   const [toDate, setToDate] = useState<string | null>(currentDate);
 
@@ -48,14 +57,13 @@ export default function StockTrialModule() {
     strgodown: '',
   });
 
-  // ✅ API call with both date and advanced filters
   const { data: stockTrialList = [], isLoading, refetch } = useStockTrialList({
     userid: filterParams.userid,
     compid: filterParams.compid,
-    branchid: filterParams.branchid,
+    branchid: Number(toolbarBranchId) || filterParams.branchid,
     finid: filterParams.finid,
-    startdt: fromDate ? formatDateForApi(fromDate) : formatDateForApi(currentDate), // ✅ Use fromDate directly
-    enddt: toDate ? formatDateForApi(toDate) : formatDateForApi(currentDate), // ✅ Use toDate directly
+    startdt: fromDate ? formatDateForApi(fromDate) : formatDateForApi(currentDate),
+    enddt: toDate ? formatDateForApi(toDate) : formatDateForApi(currentDate),
     printrtval: filterParams.printrtval,
     strbrand: filterParams.strbrand,
     strclass: filterParams.strclass,
@@ -73,15 +81,20 @@ export default function StockTrialModule() {
     refetchOnWindowFocus: false,
     select: (data) =>
       (data ?? []).map((s: any) => ({
-        value: s.id,
+        value: String(s.id),
         label: s.name,
       })),
   });
 
-  // ✅ Refetch when dates or advanced filters change
+  // Refetch when dates, branch, or advanced filters change
   useEffect(() => {
     refetch();
-  }, [fromDate, toDate, filterParams, refetch]);
+  }, [fromDate, toDate, toolbarBranchId, filterParams, refetch]);
+
+  // Initialize selected branch name on component mount
+  useEffect(() => {
+    setSelectedBranchName(branchnm || '');
+  }, [branchnm]);
 
   // Handlers
   const handleSelectionChanged = useCallback((e: any) => {
@@ -90,6 +103,20 @@ export default function StockTrialModule() {
     } else {
       setSelectedRow(null);
     }
+  }, []);
+
+  // Double-click handler
+  const handleRowDblClick = useCallback((e: any) => {
+    if (e.data) {
+      setSelectedProduct(e.data);
+      setIsDetailsModalOpen(true);
+    }
+  }, []);
+
+  // Modal close handler
+  const handleDetailsModalClose = useCallback(() => {
+    setIsDetailsModalOpen(false);
+    setSelectedProduct(null);
   }, []);
 
   const handleMoreFilterClick = useCallback(() => {
@@ -105,8 +132,13 @@ export default function StockTrialModule() {
       ...prev,
       ...filters,
     }));
+
     setIsFilterFormOpen(false);
-  }, []);
+
+    setTimeout(() => {
+      refetch();
+    }, 0);
+  }, [refetch]);
 
   const handleClearFilters = useCallback(() => {
     setFilterParams({
@@ -123,10 +155,12 @@ export default function StockTrialModule() {
       strgodown: '',
       printrtval: 0
     });
-    // ✅ Also reset dates
     setFromDate(currentDate);
     setToDate(currentDate);
-  }, [userId, companyId, branchId, finid]);
+    setToolbarBranchId(null);
+    setFormSelectedBranch(null);
+    setSelectedBranchName(branchnm || '');
+  }, [userId, companyId, branchId, finid, branchnm]);
 
   const handleRefresh = useCallback(() => {
     handleClearFilters();
@@ -149,15 +183,24 @@ export default function StockTrialModule() {
     });
   }, [stockTrialList]);
 
-  // Update branch filter
+  // Update branch handler
   const handleBranchChange = useCallback((branchIdValue: string | null) => {
-    setFilterParams(prev => ({
-      ...prev,
-      branchid: Number(branchIdValue) || Number(branchId),
-    }));
-  }, [branchId]);
+    setToolbarBranchId(branchIdValue);
+    if (branchIdValue) {
+      const branch = BranchOrderOptions.find((b: any) => b.value === branchIdValue);
+      const branchName = branch?.label || branchnm || '';
+      setSelectedBranchName(branchName);
+      setFormSelectedBranch(branchName);
+      setFilterParams(prev => ({
+        ...prev,
+        branchid: Number(branchIdValue),
+      }));
+    } else {
+      setSelectedBranchName(branchnm || '');
+      setFormSelectedBranch(branchnm || '');
+    }
+  }, [BranchOrderOptions, branchnm]);
 
-  // ✅ Direct date handlers like Purchase Order
   const handleFromDateChange = useCallback((date: string | null) => {
     setFromDate(date);
   }, []);
@@ -176,18 +219,25 @@ export default function StockTrialModule() {
             onMoreFilter={handleMoreFilterClick}
             onRefresh={handleRefresh}
             onExport={handleExport}
+            periodTitle={`Period: ${fromDate} to ${toDate}`}
             selects={{
               name: "branch",
-              value: String(filterParams.branchid),
+              label: "Branch",
+              value: toolbarBranchId || String(branchId),
               options: BranchOrderOptions,
               placeholder: "Select Branch",
               className: "w-48",
-              onChange: handleBranchChange,
+              onChange: (val) => {
+                handleBranchChange(val);
+                if (val) {
+                  const branch = BranchOrderOptions.find((b: any) => b.value === val);
+                  setFormSelectedBranch(branch?.label || branchnm);
+                }
+              }
             }}
-            // ✅ Direct date props like Purchase Order
             selectFromDate={{
               name: "fromDate",
-              label: "From Date",
+              label: "From",
               value: fromDate,
               className: "w-40",
               isClearable: true,
@@ -195,7 +245,7 @@ export default function StockTrialModule() {
             }}
             selectToDate={{
               name: "toDate",
-              label: "To Date",
+              label: "To ",
               value: toDate,
               className: "w-40",
               isClearable: true,
@@ -209,11 +259,13 @@ export default function StockTrialModule() {
             <StockTrialDataGrid
               dataSource={stockTrialList}
               onSelectionChanged={handleSelectionChanged}
+              onRowDblClick={handleRowDblClick}
               showFilterRow
               showColumnChooser
               selectionMode="single"
               onExporting={handleExport}
               height={500}
+              localFilters={localFilters}
             />
           </div>
         )}
@@ -224,6 +276,19 @@ export default function StockTrialModule() {
           onClose={handleFilterFormClose}
           onApply={handleApplyFilters}
           onClear={handleClearFilters}
+          localFilters={localFilters}
+          setLocalFilters={setLocalFilters}
+        />
+
+        <StockLedgersModal
+          visible={isDetailsModalOpen}
+          onClose={handleDetailsModalClose}
+          selectedRow={selectedProduct}
+          branchId={Number(toolbarBranchId) || Number(branchId)}
+          branchName={selectedBranchName || branchnm || ''}
+          startDate={fromDate}
+          endDate={toDate}
+          godownIds={filterParams.strgodown}
         />
       </div>
     </>

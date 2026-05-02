@@ -60,8 +60,7 @@ export function TransactionToolbar({
     onRefresh,
     onExport,
     onPrint,
-    hasSelection = true,
-    periodTitle,
+    hasSelection = true,  // ✅ Add this
     selects,
     disabled,
     selectFromDate,
@@ -82,6 +81,8 @@ export function TransactionToolbar({
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
+
 
     if (isMobile) {
         return (
@@ -136,11 +137,41 @@ export function TransactionToolbar({
                         </button>
                     )}
 
-                    {onRefresh && (
-                        <button onClick={onRefresh} className="secondary-btn">
-                            <RefreshCw size={16} /> Refresh
-                        </button>
+                    {/* From Date - Direct binding */}
+                    {selectFromDate && (
+                        <InlineSelectField label={selectFromDate.label || "From "}>
+                            <input
+                                type="date"
+                                name={selectFromDate.name}
+                                value={selectFromDate.value ?? ""}
+                                onChange={(e) => selectFromDate.onChange?.(e.target.value || null)}
+                                disabled={selectFromDate.isDisabled}
+                                className={`w-full border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400 ${selectFromDate.className || ""}`}
+                            />
+                        </InlineSelectField>
                     )}
+
+                    {/* To Date - Direct binding */}
+                    {selectToDate && (
+                        <InlineSelectField label={selectToDate.label || "To "}>
+                            <input
+                                type="date"
+                                name={selectToDate.name}
+                                value={selectToDate.value ?? ""}
+                                onChange={(e) => selectToDate.onChange?.(e.target.value || null)}
+                                disabled={selectToDate.isDisabled}
+                                className={`w-full border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400 ${selectToDate.className || ""}`}
+                            />
+                        </InlineSelectField>
+                    )}
+
+                    {/* <button
+                        type="button"
+                        className="primary-btn px-4 py-2"
+                    >
+                        <Eye size={16} className="inline mr-2" />
+                        Run Report
+                    </button> */}
 
                     {canExport && onExport && (
                         <button onClick={onExport} className="secondary-btn">
@@ -161,48 +192,30 @@ export function TransactionToolbar({
 
                 {/* RIGHT SIDE - Filters */}
                 <div className="flex items-center gap-3 ml-auto">
-                    {periodTitle && (
-                        <span className="text-sm text-color">{periodTitle}</span>
-                    )}
+                    {/* ✅ Add Period Title */}
+                    {/* {periodTitle && (
+                        <span className="text-sm text-gray-600 whitespace-nowrap">{periodTitle}</span>
+                    )} */}
 
-                    {/* ✅ From Date - Direct binding, no local state */}
-                    {selectFromDate && (
-                        <InlineSelectField label={selectFromDate.label || "From Date"}>
-                            <input
-                                type="date"
-                                name={selectFromDate.name}
-                                value={selectFromDate.value ?? ""}
-                                onChange={(e) => selectFromDate.onChange?.(e.target.value || null)}
-                                disabled={selectFromDate.isDisabled}
-                                className={`w-full border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400 ${selectFromDate.className || ""}`}
-                            />
-                        </InlineSelectField>
-                    )}
 
-                    {/* ✅ To Date - Direct binding, no local state */}
-                    {selectToDate && (
-                        <InlineSelectField label={selectToDate.label || "To Date"}>
-                            <input
-                                type="date"
-                                name={selectToDate.name}
-                                value={selectToDate.value ?? ""}
-                                onChange={(e) => selectToDate.onChange?.(e.target.value || null)}
-                                disabled={selectToDate.isDisabled}
-                                className={`w-full border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400 ${selectToDate.className || ""}`}
-                            />
-                        </InlineSelectField>
-                    )}
 
                     {/* Branch Select */}
                     {selects && (
-                        <ToolbarSelectComponent
-                            value={selects.value}
-                            options={selects.options}
-                            placeholder={selects.placeholder}
-                            isDisabled={selects.disabled}
-                            onChange={(opt) => selects.onChange?.(opt?.value ?? null)}
-                            className={selects.className}
-                        />
+                        <div className="flex items-center gap-2">
+                            {selects.label && (
+                                <label className="text-sm font-medium text-gray-700">
+                                    {selects.label}:
+                                </label>
+                            )}
+                            <ToolbarSelectComponent
+                                value={selects.value}
+                                options={selects.options}
+                                placeholder={selects.placeholder}
+                                isDisabled={selects.disabled}
+                                onChange={(opt) => selects.onChange?.(opt?.value ?? null)}
+                                className={`${selects.className ?? ""} w-60`}
+                            />
+                        </div>
                     )}
                 </div>
             </div>

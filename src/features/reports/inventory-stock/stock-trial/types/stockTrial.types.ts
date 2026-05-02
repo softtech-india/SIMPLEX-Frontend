@@ -13,7 +13,7 @@ export interface StockTrial {
   brandnm: string;
   classnm: string;
   subclassnm: string;
-
+  branchnm?: string; // Add this field
   entryby?: number;
   entrydt?: string;
   updateby?: number;
@@ -58,6 +58,27 @@ export interface StockTrialParams {
   strgodown: string,
 }
 
+export interface StockLedgerTransaction {
+  trnid: number;
+  trnno: string;
+  trndt: string;
+  trtype: string;
+  refno: string;
+  recvqty: number;
+  issuqty: number;
+  clqty: number;
+  clrate: number;
+  clval: number;
+  unit: string;
+}
+
+
+export interface stockLedgerApiResponse {
+  success: boolean;
+  message: string;
+  data: StockLedgerTransaction[];
+}
+
 
 export interface StockTrialFilterParams {
   userid: number;
@@ -91,23 +112,6 @@ export interface StockTrialFilterState {
   strgodown: string;
 }
 
-
-// Default values
-const today = new Date().toISOString().split("T")[0];
-export const DEFAULT_STOCK_TRIAL_FILTER: StockTrialFilterState = {
-  userid: 0,
-  compid: 0,
-  branchid: 0,
-  finid: 0,
-  startdt: today,
-  enddt: today,
-  printrtval: 0,
-  strbrand: ' ',
-  strclass: ' ',
-  strsubclass: ' ',
-  balancetag: 1,
-  strgodown: ' ',
-};
 
 // Helper function to format date to "DD/MMM/YYYY" (e.g., "01/Apr/2026")
 export const formatDateForApi = (date: Date | string | null): string => {

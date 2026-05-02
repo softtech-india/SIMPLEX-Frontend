@@ -1,5 +1,5 @@
 import { apiCall } from "@/utils/apiClient";
-import { StockTrial, stockTrialApiResponse, BrandApiResponse, Brand } from '../types/stockTrial.types';
+import { StockTrial, stockTrialApiResponse, BrandApiResponse, Brand, StockLedgerTransaction, stockLedgerApiResponse } from '../types/stockTrial.types';
 import { toast } from "sonner";
 import { storageService } from "@/common/utility/storageService";
 import { StockTrialParams } from "../types/stockTrial.types";
@@ -124,8 +124,30 @@ class StockTrialService {
   }
 
 
-
-
+  async getAllStockLedgers(
+    params: {
+      userid: number;
+      compid: number;
+      branchid: number;
+      finid: number;
+      startdt: string;
+      enddt: string;
+      productid: number;
+      strgodown: string;
+    }
+  ): Promise<StockLedgerTransaction[]> {
+    try {
+      const response = await apiCall.get<stockLedgerApiResponse>(
+        `${this.baseUrl}stockledger`,
+        params
+      );
+      return response.data || [];
+    } catch (error: any) {
+      console.error("Error fetching stock ledger:", error);
+      toast.error(error.message || "Failed to fetch stock ledger");
+      throw error;
+    }
+  }
 }
 
 export const stockTrialService = new StockTrialService();
