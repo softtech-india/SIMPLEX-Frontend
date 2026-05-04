@@ -9,7 +9,9 @@ import {
   Eye,
   Printer,
   File,
-  Share2
+  Share2,
+  Lock,
+  CircleCheckBig
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { MenuItem } from "@/common/components/filter/MenuItem";
@@ -52,10 +54,15 @@ interface TransactionToolbarProps {
   onPrint?: () => void;
   onExport?: (e?: any) => void;
 
-  hasSelection?: boolean;
+  onApprove?: () => void;
+  onConfirmed?: () => void;
+
+  // hasSelection?: boolean;
+  isRowConfirmed?: boolean;
+
   periodTitle?: string;
 
-  selects?: ToolbarSelect;
+  selectBranch?: ToolbarSelect;
   disabled?: boolean;
   selectFromDate?: ToolbarDateSelectProps;
   selectToDate?: ToolbarDateSelectProps
@@ -71,9 +78,14 @@ export function TransactionToolbar({
   onView,
   onPrint,
   onExport,
-  hasSelection = true,
+
+  onConfirmed,
+  onApprove,
+
+  // hasSelection = true,
+  isRowConfirmed,
   periodTitle,
-  selects,
+  selectBranch,
   disabled,
   selectFromDate,
   selectToDate,
@@ -148,20 +160,37 @@ export function TransactionToolbar({
             </button>
           )}
 
-          {canEdit && (
+          {/* {canEdit && (
             <button
               onClick={onEdit}
-              disabled={!hasSelection}
+              // disabled={!hasSelection}
+              disabled={isRowConfirmed}
               className="secondary-btn disabled:opacity-50"
             >
               <Edit2 size={16} /> Edit
+            </button>
+          )} */}
+
+          {canEdit && (
+            <button
+              onClick={onEdit}
+              disabled={isRowConfirmed}
+              className={`
+                secondary-btn flex items-center gap-1
+                transition-all duration-150
+                ${isRowConfirmed
+                  ? "opacity-60 cursor-not-allowed bg-gray-200 text-gray-500 border-gray-300"
+                  : "hover:bg-blue-50 hover:text-blue-600"}
+              `}
+            >
+              {isRowConfirmed ? <Lock size={16} /> : <Edit2 size={16} />} Edit
             </button>
           )}
 
           {canDelete && (
             <button
               onClick={onDelete}
-              disabled={!hasSelection}
+              //  disabled={!hasSelection} 
               className="secondary-btn disabled:opacity-50"
             >
               <Trash2 size={16} /> Delete
@@ -175,7 +204,7 @@ export function TransactionToolbar({
           {canView && (
             <button
               onClick={onView}
-              disabled={!hasSelection}
+              //  disabled={!hasSelection}
               className="secondary-btn disabled:opacity-50"
             >
               <Eye size={16} /> View
@@ -191,15 +220,48 @@ export function TransactionToolbar({
           {canPrint && (
             <button
               onClick={onPrint}
-              disabled={!hasSelection}
+              // disabled={!hasSelection}
               className="secondary-btn disabled:opacity-50"
             >
               <Printer size={16} /> Print
             </button>
           )}
+
+          {canView && onConfirmed && (
+            <button
+              onClick={onConfirmed}
+              //  disabled={!hasSelection}
+              disabled={isRowConfirmed}
+              className={`
+                secondary-btn flex items-center gap-1
+                transition-all duration-150
+                ${isRowConfirmed
+                  ? "opacity-60 cursor-not-allowed bg-gray-200 text-gray-500 border-gray-300"
+                  : "hover:bg-blue-50 hover:text-blue-600"}
+              `}
+            >
+              {isRowConfirmed ? <Lock size={16} /> : <CircleCheckBig size={16} />} Confirm
+            </button>
+          )}
+
+          {canEdit && onApprove && (
+            <button
+              onClick={onApprove}
+              className={`
+                secondary-btn flex items-center gap-1
+                transition-all duration-150
+                ${isRowConfirmed
+                  ? "opacity-60 cursor-not-allowed bg-gray-200 text-gray-500 border-gray-300"
+                  : "hover:bg-blue-50 hover:text-blue-600"}
+              `}
+            >
+              Approve
+            </button>
+          )}
+
         </div>
 
-        {/* RIGHT SIDE */}
+        {/* RIGHT SIDE  */}
         <div className="flex items-center gap-3 ml-auto">
 
           {periodTitle && (
@@ -207,7 +269,7 @@ export function TransactionToolbar({
           )}
 
           {selectFromDate && (
-            <InlineSelectField label={selectFromDate.label || "From Date"}>
+            <InlineSelectField label={selectFromDate.label || "From"}>
               <input
                 type="date"
                 name={selectFromDate.name}
@@ -216,14 +278,14 @@ export function TransactionToolbar({
                   selectFromDate.onChange?.(e.target.value || null)
                 }
                 disabled={selectFromDate.isDisabled}
-                className={`w-full border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400 ${selectFromDate.className || ""
+                className={`w-full border border-gray-300 bg-white px-2 py-1 rounded text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-400 ${selectFromDate.className || ""
                   }`}
               />
             </InlineSelectField>
           )}
 
           {selectToDate && (
-            <InlineSelectField label={selectToDate.label || "To Date"}>
+            <InlineSelectField label={selectToDate.label || "To"}>
               <input
                 type="date"
                 name={selectToDate.name}
@@ -232,23 +294,28 @@ export function TransactionToolbar({
                   selectToDate.onChange?.(e.target.value || null)
                 }
                 disabled={selectToDate.isDisabled}
-                className={`w-full border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400 ${selectToDate.className || ""
-                  }`}
+                className={`w-full border border-gray-300 bg-white px-2 py-1 rounded text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-400 ${selectToDate.className || ""}`}
               />
             </InlineSelectField>
           )}
 
-          {selects && (
-            <ToolbarSelect
-              value={selects.value}
-              options={selects.options}
-              placeholder={selects.placeholder}
-              isDisabled={selects.disabled}
-              onChange={(opt) =>
-                selects.onChange?.(opt?.value ?? null)
-              }
-              className={selects.className}
-            />
+          {selectBranch && (
+            <InlineSelectField
+              label={selectBranch.label || "Branch"}
+            >
+              <ToolbarSelect
+                value={selectBranch.value}
+                options={selectBranch.options}
+                placeholder={selectBranch.placeholder || "Select"}
+                isDisabled={selectBranch.disabled}
+                onChange={(opt) =>
+                  selectBranch.onChange?.(opt?.value ?? null)
+                }
+                className={` w-full text-sm font-medium
+                  ${selectBranch.className || ""}
+                `}
+              />
+            </InlineSelectField>
           )}
 
         </div>

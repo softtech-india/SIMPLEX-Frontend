@@ -49,7 +49,7 @@ class PurchaseOrderService {
         params
       );
 
-   //   this.handleError(response);
+      //   this.handleError(response);
       return response.data || [];
     } catch (error: any) {
       console.error("Error fetching purchase orders:", error);
@@ -63,7 +63,7 @@ class PurchaseOrderService {
       id: number;
       userid: number;
       compid: number;
-      branchid: number |string;
+      branchid: number | string;
       finid: number
     }
   ): Promise<PurchaseOrder> {
@@ -145,6 +145,27 @@ class PurchaseOrderService {
       throw error;
     }
   }
+
+  async approvePurchaseOrder(data: PurchaseOrderFormType): Promise<PurchaseOrderApiResponse> {
+    try {
+      const response = await apiCall.put<PurchaseOrderApiResponse>(
+        `${this.baseUrl}po/approve`,
+        data,
+        { userid: this.getUserId() }
+      );
+
+      this.handleError(response);
+
+      return response;
+
+    } catch (error: any) {
+      console.error("Error creating purchaseOrder:", error);
+      toast.error(error.message || "Failed to create purchaseOrder");
+      throw error;
+    }
+  }
+
+  
 }
 
 export const purchaseOrderService = new PurchaseOrderService();

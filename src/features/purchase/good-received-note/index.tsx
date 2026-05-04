@@ -45,12 +45,12 @@ export default function PurchaseOrderModule() {
     enddt: toDate || "",
   });
 
-  useEffect(() => {
-    console.log('goodReceivedNotelist :', goodReceivedNotelist);
-    console.log('branch :', toolbarBranchId);
-    console.log('fromDate :', fromDate);
-    console.log('toDate :', toDate);
-  }, [goodReceivedNotelist, toolbarBranchId, fromDate, toDate])
+  // useEffect(() => {
+  //   console.log('goodReceivedNotelist :', goodReceivedNotelist);
+  //   console.log('branch :', toolbarBranchId);
+  //   console.log('fromDate :', fromDate);
+  //   console.log('toDate :', toDate);
+  // }, [goodReceivedNotelist, toolbarBranchId, fromDate, toDate])
 
   // Fetch dropdown options
   const { data: BranchOrderOptions = [] } = useQuery({
@@ -72,8 +72,6 @@ export default function PurchaseOrderModule() {
   const handleSelectionChanged = useCallback((e: any) => {
     if (e.selectedRowsData && e.selectedRowsData.length > 0) {
       setselectedRow(e.selectedRowsData[0]);
-    } else {
-      setselectedRow(null);
     }
   }, []);
 
@@ -101,10 +99,24 @@ export default function PurchaseOrderModule() {
     setselectedRow(null);
     openForm('Add');
   }, [openForm]);
-  const handleEditClick = useCallback(() => openForm('Edit'), [openForm]);
-  const handleDeleteClick = useCallback(() => openForm('Delete'), [openForm]);
+
+  const handleEditClick = useCallback(() => {
+    if (selectedRow?.isconfirm === "Y") return;
+    openForm('Edit')
+  }, [openForm]);
+
+  const handleDeleteClick = useCallback(() => {
+    openForm('Delete')
+  }, [openForm]);
+
   const handleViewClick = useCallback(() => openForm('View'), [openForm]);
   const handlePrintClick = useCallback(() => openForm('Print'), [openForm]);
+  const handleConfirmedClick = useCallback(() => {
+    if (selectedRow?.isconfirm === "Y") return;
+    // console.log('selectedRow : ', selectedRow);
+    openForm('Confirmed')
+  }, [openForm]);
+
 
   const handleRefresh = useCallback(() => {
     refetch();
@@ -134,6 +146,12 @@ export default function PurchaseOrderModule() {
   }, [goodReceivedNotelist]);
 
 
+  // Confirmation Check Ponit
+  const isRowConfirmed = selectedRow?.isconfirm === "Y";
+  // useEffect(() => {
+  //   console.log("isRowConfirmed :", isRowConfirmed);
+  // }, [selectedRow]);
+
   return (
     <>
       <div className="purchase-order-module ">
@@ -141,8 +159,8 @@ export default function PurchaseOrderModule() {
         <div className="bg-white rounded-xl shadow-sm border mt-2">
 
           <TransactionToolbar
-            title="Purchse Orders"
-            // periodTitle='Period: 2026-2027'
+            title="Good received Note"
+            // periodTitle='Period: 2026-2027' 
             permissions={permissions}
             onAdd={handleAddClick}
             onEdit={handleEditClick}
@@ -150,27 +168,13 @@ export default function PurchaseOrderModule() {
             onRefresh={handleRefresh}
             onView={handleViewClick}
             onPrint={handlePrintClick}
-            selects={{
-              name: "branch",
-              label: "Branch",
-              value: toolbarBranchId || branchId,
-              options: BranchOrderOptions,
-              placeholder: "Select Branch",
-              className: "w-48",
-              // onChange: (val) => setToolbarBranchId(val),
-              onChange: (val) => {
-                setToolbarBranchId(val);
-                const branch = BranchOrderOptions.find(
-                  (b: any) => b.value === val
-                );
-                console.log("branch :", branch);
-                setFormSelectedBranch(branch?.label || branchnm);
-              }
-            }}
+            onConfirmed={handleConfirmedClick}
+            // hasSelection={!!selectedRow}
+            isRowConfirmed={isRowConfirmed}
 
             selectFromDate={{
               name: "fromDate",
-              label: "From Date",
+              label: "From",
               value: fromDate,
               className: "w-40",
               isClearable: true,
@@ -179,15 +183,30 @@ export default function PurchaseOrderModule() {
 
             selectToDate={{
               name: "toDate",
-              label: "To Date",
+              label: "To",
               value: toDate,
               className: "w-40",
               isClearable: true,
               onChange: setToDate,
             }}
 
-          />
+            selectBranch={{
+              name: "branch",
+              label: "Branch",
+              value: toolbarBranchId || branchId,
+              options: BranchOrderOptions,
+              placeholder: "Select Branch",
+              className: "w-56",
+              onChange: (val) => {
+                setToolbarBranchId(val);
+                const branch = BranchOrderOptions.find(
+                  (b: any) => b.value === val
+                );
+                setFormSelectedBranch(branch?.label || branchnm);
+              }
+            }}
 
+          />
 
         </div>
 
@@ -211,7 +230,9 @@ export default function PurchaseOrderModule() {
           onClose={handleFormClose}
           formGoodReceivedNoteId={formGoodReceivedNoteId}
           formSelectedBranch={formSelectedBranch || branchnm}
+          toolbarBranchId={Number(toolbarBranchId) || Number(branchId)}
           mode={formMode}
+          isRowConfirmed={isRowConfirmed}
         />
 
 

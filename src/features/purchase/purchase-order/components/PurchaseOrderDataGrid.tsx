@@ -18,13 +18,7 @@ export const PurchaseOrderDataGrid = forwardRef<any, PurchaseOrderDataGridProps>
 
     const columns = [
       { dataField: "orderno", caption: "Order No.", width: 120, headerFilter: true },
-      {
-        dataField: "orderdt",
-        caption: "Order date",
-        dataType: "date",
-        format: "dd-MM-yyyy",
-        width: 120,
-      },
+      { dataField: "orderdt", caption: "Order date", dataType: "date", format: "dd-MM-yyyy", width: 120,},
       { dataField: "vendor", caption: "Vendor", width: 200, headerFilter: true },
       { dataField: "qty1", caption: "Quantity", width: 80, headerFilter: true },
       { dataField: "totprodval", caption: "Total Value", width: 100, headerFilter: true },

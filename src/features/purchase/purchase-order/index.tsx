@@ -106,6 +106,8 @@ export default function PurchaseOrderModule() {
   const handleViewClick = useCallback(() => openForm('View'), [openForm]);
   const handlePrintClick = useCallback(() => openForm('Print'), [openForm]);
 
+  const handleApproveClick = useCallback(() => openForm('Approve'), [openForm]);
+
   const handleRefresh = useCallback(() => {
     refetch();
     setFormPurchaseOrderId(0);
@@ -128,8 +130,8 @@ export default function PurchaseOrderModule() {
     exportToExcel({
       data: purchaseOrderList,
       columns,
-      fileName: "purchase order List.xlsx",
-      sheetName: "purchase order",
+      fileName: "Purchase order List.xlsx",
+      sheetName: "Purchase order",
     });
   }, [purchaseOrderList]);
 
@@ -146,31 +148,15 @@ export default function PurchaseOrderModule() {
             permissions={permissions}
             onAdd={handleAddClick}
             onEdit={handleEditClick}
+            onApprove={handleApproveClick}
             onDelete={handleDeleteClick}
             onRefresh={handleRefresh}
             onView={handleViewClick}
             onPrint={handlePrintClick}
-            selects={{
-              name: "branch",
-              label: "Branch",
-              value: toolbarBranchId || branchId,
-              options: BranchOrderOptions,
-              placeholder: "Select Branch",
-              className: "w-48",
-              // onChange: (val) => setToolbarBranchId(val),
-              onChange: (val) => {
-                setToolbarBranchId(val);
-                const branch = BranchOrderOptions.find(
-                  (b: any) => b.value === val
-                );
-                console.log("branch :", branch);
-                setFormSelectedBranch(branch?.label || branchnm);
-              }
-            }}
 
             selectFromDate={{
               name: "fromDate",
-              label: "From Date",
+              label: "From",
               value: fromDate,
               className: "w-40",
               isClearable: true,
@@ -179,11 +165,27 @@ export default function PurchaseOrderModule() {
 
             selectToDate={{
               name: "toDate",
-              label: "To Date",
+              label: "To",
               value: toDate,
               className: "w-40",
               isClearable: true,
               onChange: setToDate,
+            }}
+
+            selectBranch={{
+              name: "branch",
+              label: "Branch",
+              value: toolbarBranchId || branchId,
+              options: BranchOrderOptions,
+              placeholder: "Select Branch",
+              className: "w-56",
+              onChange: (val) => {
+                setToolbarBranchId(val);
+                const branch = BranchOrderOptions.find(
+                  (b: any) => b.value === val
+                );
+                setFormSelectedBranch(branch?.label || branchnm);
+              }
             }}
 
           />
@@ -211,15 +213,16 @@ export default function PurchaseOrderModule() {
           onClose={handleFormClose}
           formPurchaseOrderId={formPurchaseOrderId}
           formSelectedBranch={formSelectedBranch || branchnm}
+          toolbarBranchId={Number(toolbarBranchId) || Number(branchId)}
           mode={formMode}
         />
 
 
-        {/* <LoadPanel
-        shadingColor="rgba(0,0,0,0.4)"
-        visible={isLoading}
-        showIndicator
-      /> */}
+        <LoadPanel
+          shadingColor="rgba(0,0,0,0.4)"
+          visible={isLoading}
+          showIndicator
+        />
 
       </div>
     </>

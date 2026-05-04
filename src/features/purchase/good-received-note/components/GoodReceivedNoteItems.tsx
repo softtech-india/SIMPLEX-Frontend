@@ -1,7 +1,8 @@
 import { Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SearchModal from "@/common/components/SearchModal";
 import { toast } from "sonner";
+import { OperationMode } from "../types/goodReceivedNote.types";
 
 
 type GoodReceivedNoteItemsProps = {
@@ -13,6 +14,7 @@ type GoodReceivedNoteItemsProps = {
   setValue: any;
   remove: (index: number) => void;
   watchedItems: any;
+  isRowConfirmed: boolean;
   userId: number | string;
   companyId: number | string;
   branchId: number | string;
@@ -21,6 +23,8 @@ type GoodReceivedNoteItemsProps = {
   visible: boolean;
   isReadOnly: boolean;
   fieldsLength: number;
+
+  mode: OperationMode;
 
   excludeIds?: number[];
   currentId?: number;
@@ -35,6 +39,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
   setValue,
   remove,
   watchedItems,
+  isRowConfirmed,
   userId,
   companyId,
   branchId,
@@ -44,6 +49,8 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
   isReadOnly,
   fieldsLength,
 
+  mode,
+
   excludeIds,
   currentId
 
@@ -52,6 +59,15 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
   const qty = Number(item?.qty1) || 0;
   const rate = Number(item?.rate) || 0;
   const value = qty * rate;
+
+  const actualValue =
+    mode === 'Confirmed' ? Number(item.scanqty) * rate : 0;
+
+
+
+  // useEffect(() => {
+  //   console.log('isRowConfirmed :', isRowConfirmed);
+  // }, [isRowConfirmed])
 
 
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
@@ -107,24 +123,28 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
 
         <input
           type="text"
-          readOnly
           value={item?.pcategorynm || ""}
+          readOnly
           onClick={() => setCategoryModalOpen(true)}
-          className="inputField w-full cursor-pointer border border-gray-400"
+          className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"} `}
           placeholder="Select Category"
         />
       </div>
 
-      <div className="w-120">
+      <div className="w-80">
         <label className="block text-gray-700 text-sm font-medium mb-1">
           Product
         </label>
 
         <input
           type="text"
-          readOnly
           value={item?.productnm || ""}
-          className={`inputField w-full cursor-pointer ${errors?.itemdtl?.[index]?.productid ? "border-red-500" : "border-gray-400"}`}
+          readOnly
+          className={`
+            inputField w-full 
+            ${errors?.itemdtl?.[index]?.productid ? "border-red-500" : "border-gray-300"}
+            ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : " cursor-pointer "}
+          `}
           placeholder="Select Product"
         />
         {errors?.itemdtl?.[index]?.productid && (
@@ -132,7 +152,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
         )}
       </div>
 
-      <div className="w-14">
+      <div className="w-20">
         <label className="block text-gray-700 text-sm font-medium mb-1">
           Quantity
         </label>
@@ -157,7 +177,11 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
             },
           })}
           disabled={isReadOnly}
-          className={`inputField ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-400"}`}
+          className={`
+            inputField 
+            ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-300"} 
+            ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}
+          `}
           onKeyDown={(e) => {
             if (e.key === "-") e.preventDefault();
           }}
@@ -171,11 +195,11 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
         <input
           {...register(`itemdtl.${index}.unit`)}
           readOnly
-          className="inputField border-gray-400 "
+          className={`inputField border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
         />
       </div>
 
-      <div className="w-28">
+      <div className="w-24">
         <label className="block text-gray-700 text-sm font-medium mb-1">
           Rate
         </label>
@@ -184,14 +208,14 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
           min={0}
           {...register(`itemdtl.${index}.rate`)}
           disabled={isReadOnly}
-          className="inputField border-gray-400 "
+          className={`inputField border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""} `}
           onKeyDown={(e) => {
             if (e.key === "-") e.preventDefault();
           }}
         />
       </div>
 
-      <div className="w-28">
+      <div className="w-24">
         <label className="block text-gray-700 text-sm font-medium mb-1">
           Value
         </label>
@@ -200,29 +224,111 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
           min={0}
           value={value}
           readOnly
-          className="inputField  bg-gray-100 border-gray-400"
+          className={`inputField  bg-gray-100 border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
         />
       </div>
 
-      <div className="w-14">
-        <label className="block text-gray-700 text-sm font-medium mb-1">
-          Bal. Qty.
-        </label>
-        <input
-          type="number"
-          min={0}
-          readOnly
-          {...register(`itemdtl.${index}.balanceqty1`)}
-          disabled={isReadOnly}
-          className={`inputField ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-400"}`}
-          onKeyDown={(e) => {
-            if (e.key === "-") e.preventDefault();
-          }}
-        />
-        {/* {errors?.itemdtl?.[index]?.qty1 && (
-          <p className="text-xs text-red-500 mt-1">{errors.itemdtl[index].qty1.message}</p>
-        )} */}
-      </div>
+      {(mode !== 'Confirmed') && (
+        <>
+          <div className="w-14">
+            <label className="block text-gray-700 text-sm font-medium mb-1">
+              Bal. Qty.
+            </label>
+            <input
+              type="number"
+              min={0}
+              {...register(`itemdtl.${index}.balanceqty1`)}
+              readOnly
+              className={`
+                inputField  bg-gray-100 cursor-not-allowed"
+                ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-300"}
+              `}
+            />
+          </div>
+        </>
+      )}
+
+      {isRowConfirmed && (
+        <div className="w-24">
+          <label className="block text-gray-700 text-sm font-medium mb-1">
+            Confirm Qty.
+          </label>
+          <input
+            type="number"
+            min={0}
+            {...register(`itemdtl.${index}.confirmqty1`)}
+            disabled={isReadOnly}
+            className={`
+                inputField 
+                ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-300"}
+                ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}
+              `}
+          />
+        </div>
+      )}
+
+      {(mode === 'Confirmed') && (
+        <>
+          <div className="w-14">
+            <label className="block text-gray-700 text-sm font-medium mb-1">
+              Scan
+            </label>
+            <input
+              type="number"
+              min={0}
+              disabled={isReadOnly}
+              {...register(`itemdtl.${index}.scanqty`)}
+              className={`inputField border-gray-300 `}
+              onKeyDown={(e) => {
+                if (e.key === "-") e.preventDefault();
+              }}
+            />
+          </div>
+          <div className="w-14">
+            <label className="block text-gray-700 text-sm font-medium mb-1">
+              Short
+            </label>
+            <input
+              type="number"
+              min={0}
+              disabled={isReadOnly}
+              {...register(`itemdtl.${index}.shortqty`)}
+              className={`inputField border-gray-300 `}
+              onKeyDown={(e) => {
+                if (e.key === "-") e.preventDefault();
+              }}
+            />
+          </div>
+          <div className="w-14">
+            <label className="block text-gray-700 text-sm font-medium mb-1">
+              Excess
+            </label>
+            <input
+              type="number"
+              min={0}
+              disabled={isReadOnly}
+              {...register(`itemdtl.${index}.excessqty`)}
+              className={`inputField border-gray-300 `}
+              onKeyDown={(e) => {
+                if (e.key === "-") e.preventDefault();
+              }}
+            />
+          </div>
+
+          <div className="w-20">
+            <label className="block text-gray-700 text-sm font-medium mb-1">
+              Actual Value
+            </label>
+            <input
+              type="number"
+              min={0}
+              value={actualValue}
+              readOnly
+              className={`inputField  bg-gray-100 border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+            />
+          </div>
+        </>
+      )}
 
       {!isReadOnly && (
         <div className="w-12 flex justify-center">
@@ -232,8 +338,8 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
             disabled={fieldsLength === 1}
             className={`px-2 py-2 rounded flex items-center justify-center
             ${fieldsLength === 1
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-red-400 hover:bg-red-600 text-white"
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-red-300 hover:bg-red-600 text-white"
               }`}
           >
             <Trash2 size={16} />

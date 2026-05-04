@@ -87,7 +87,8 @@ export const fetchVendorList = async (
 
 export const fetchGodownList = async (
   userId: string | number | null,
-  companyId: string | number | null
+  companyId: string | number | null,
+  branchid?: string | number | null
 ) => {
   try {
     const response: any = await apiCall.get(
@@ -95,6 +96,7 @@ export const fetchGodownList = async (
       {
         userid: userId,
         compid: companyId,
+        branchid: branchid,
         // skip: 0,
         // take: 200,
       }

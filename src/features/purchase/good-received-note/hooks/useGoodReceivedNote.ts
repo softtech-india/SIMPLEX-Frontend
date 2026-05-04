@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { goodReceivedNoteService } from '../services/goodReceivedNoteService';
-import { GoodReceivedNoteFormType } from '../types/goodReceivedNote.types';
+import { ConfirmGRNApiReponse, GoodReceivedNoteFormType } from '../types/goodReceivedNote.types';
 import { toast } from 'sonner';
 
 export interface GetGoodReceivedNoteParams {
@@ -98,6 +98,29 @@ export function useCreateGoodReceivedNote() {
 
     onError: (err: Error) => {
       toast.error(err.message || "Error creating Good Received Note");
+    },
+  });
+}
+
+
+export function useCreateConfirmGrn() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: any) =>
+      goodReceivedNoteService.createConfirmGrn(data),
+
+    onSuccess: (data: ConfirmGRNApiReponse) => {
+      if (data.success) {
+        queryClient.invalidateQueries({ queryKey: GOOD_RECEIVED_NOTE_KEY.list() });
+        toast.success(data.message);
+      } else {
+        toast.error(data.message || "Failed to Confirm Good Received Note");
+      }
+    },
+
+    onError: (err: Error) => {
+      toast.error(err.message || "Error Confirm Good Received Note");
     },
   });
 }

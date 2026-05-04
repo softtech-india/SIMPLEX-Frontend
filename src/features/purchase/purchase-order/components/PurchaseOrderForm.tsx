@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Popup } from "devextreme-react/popup";
 import LoadPanel from "devextreme-react/load-panel";
 import { useQuery } from "@tanstack/react-query";
-import { usePurchaseOrderById, useCreatePurchaseOrder, useUpdatePurchaseOrder, useDeletePurchaseOrder } from "../hooks/usePurchaseOrder";
+import { usePurchaseOrderById, useCreatePurchaseOrder, useUpdatePurchaseOrder, useDeletePurchaseOrder, useApprovePurchaseOrder } from "../hooks/usePurchaseOrder";
 import { fetchVendorList } from "@/api/master/ledger-api";
 import { PurchaseOrderFormType, OperationMode } from "../types/purchaseOrder.types";
 import { PurchaseOrderFormSchema } from "../schemas/purchaseOrder.schema";
@@ -17,6 +17,8 @@ import { FormSelect } from "@/common/components/FormSelect";
 import { PurchaseOrderItems } from "./PurchaseOrderItems";
 import { useWatch } from "react-hook-form";
 import { formatDateForInput } from "@/helpers/dateUtils";
+import SearchModal from "@/common/components/SearchModal";
+import { toast } from "sonner";
 
 
 interface PurchaseOrderFormProps {
@@ -25,9 +27,10 @@ interface PurchaseOrderFormProps {
   formPurchaseOrderId: number;
   mode: OperationMode;
   formSelectedBranch: string;
+  toolbarBranchId: number;
 }
 
-export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode, formSelectedBranch }: PurchaseOrderFormProps) {
+export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode, formSelectedBranch, toolbarBranchId }: PurchaseOrderFormProps) {
 
   const {
     userId,
@@ -36,9 +39,12 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
     finid,
   } = useUserStore();
 
+  const [vendoeodalOpen, setVendoeodalOpen] = useState(false);
+
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
   const isDeleteMode = mode === "Delete";
+  const isApproveMode = mode === "Approve";
   const isReadOnly = mode === "View" || mode === "Print";
 
   const { data: PurchaseOrder, isLoading: isLoadingPurchaseOrder } =
@@ -46,15 +52,16 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
       id: formPurchaseOrderId,
       userid: Number(userId),
       compid: Number(companyId),
-      branchid: branchId,
+      branchid: toolbarBranchId,
       finid: Number(finid),
     });
 
   const createMutation = useCreatePurchaseOrder();
   const updateMutation = useUpdatePurchaseOrder();
   const deleteMutation = useDeletePurchaseOrder();
+  const approveMutation = useApprovePurchaseOrder();
 
-  const isSubmitting = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
+  const isSubmitting = createMutation.isPending || approveMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   const {
     control,
@@ -76,18 +83,18 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
   const watchedItems = useWatch({
     control,
     name: "itemdtl",
-  });
+  }) || [];
 
   const totalQty = (watchedItems || []).reduce((sum, item) => {
     return sum + (Number(item?.qty1) || 0);
-  }, 0);
+  }, 0) || 0;
 
   const totalValue = (watchedItems || []).reduce((sum, item) => {
     const qty = Number(item?.qty1) || 0;
     const rate = Number(item?.rate) || 0;
 
     return sum + qty * rate;
-  }, 0);
+  }, 0) || 0;
 
   // Reset form 
   useEffect(() => {
@@ -108,16 +115,16 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
 
         ...PurchaseOrder,
 
-        orderdt: formatDateForInput(PurchaseOrder.orderdt),
-        enqdt: formatDateForInput(PurchaseOrder.enqdt),
-        quotdt: formatDateForInput(PurchaseOrder.quotdt),
-
+        orderdt: PurchaseOrder.orderdt ? formatDateForInput(PurchaseOrder.orderdt) : "",
+        enqdt: PurchaseOrder.enqdt ? formatDateForInput(PurchaseOrder.enqdt) : "",
+        quotdt: PurchaseOrder.quotdt ? formatDateForInput(PurchaseOrder.quotdt) : "",
 
         compid: Number(PurchaseOrder.compid ?? 0),
         branchid: Number(PurchaseOrder.branchid ?? 0),
         finid: Number(PurchaseOrder.finid ?? 0),
         vnumid: Number(PurchaseOrder.vnumid ?? 0),
         vendorid: Number(PurchaseOrder.vendorid ?? 0),
+        vendornm: PurchaseOrder.vendornm,
 
         qty1: Number(PurchaseOrder.qty1 ?? 0),
         qty2: Number(PurchaseOrder.qty2 ?? 0),
@@ -139,8 +146,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
             value: Number(item.value ?? 0),
             altunimethod: item.altunimethod ?? "A",
             altunitfactor: Number(item.altunitfactor ?? 1),
-            alterunitfactortype:
-              item.alterunitfactortype ?? "M",
+            alterunitfactortype: item.alterunitfactortype ?? "M",
             rateon: Number(item.rateon ?? 1),
           })) ?? [],
       });
@@ -155,11 +161,11 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
   // Series No Options
   const voucherType = "PO";
   const { data: seriesNoOptions = [] } = useQuery({
-    queryKey: ["fetchSeriesList", userId, companyId, branchId, voucherType],
+    queryKey: ["fetchSeriesList", userId, companyId, toolbarBranchId, voucherType],
     queryFn: () =>
-      fetchSeriesList(userId, companyId, branchId, voucherType, finid),
+      fetchSeriesList(userId, companyId, toolbarBranchId, voucherType, finid),
     staleTime: 0,
-    enabled: !!companyId && !!branchId && !!userId && !!visible,
+    enabled: !!companyId && !!toolbarBranchId && !!userId && !!visible,
     retry: 1,
     refetchOnWindowFocus: true,
 
@@ -203,6 +209,28 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
       })),
   });
 
+  // Model Search Vendoe Modal Handlers
+  const baseVendoeParams = {
+    userid: userId,
+    compid: companyId,
+  };
+
+  const searchVendoeColumns = [
+    { key: "name", label: "name." },
+  ];
+
+  const searchVendoeFields = [
+    { value: "name", label: "Name" },
+  ];
+
+  const handleVendoeSelect = (row: any) => {
+    setValue("vendorid", row.id);
+    setValue("vendorName", row.name);
+    setVendoeodalOpen(false);
+  };
+
+  const vendorName = watch("vendorName") || watch("vendornm");
+
   const calculateTotals = (items: any[] = []) => {
     let qty1 = 0;
     let totprodval = 0;
@@ -233,7 +261,11 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
     return { qty1, totprodval, itemdtl };
   };
 
-  // Submit handler
+  const approveOptions = [
+    { value: "A", label: "Approve" },
+    { value: "R", label: "Rejected" },
+  ];
+
   const handleFormSubmit = async (data: PurchaseOrderFormSchema) => {
     try {
       if (isDeleteMode) {
@@ -248,7 +280,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
       const payload: PurchaseOrderFormType = {
         ...data,
         compid: companyId,
-        branchid: branchId,
+        branchid: toolbarBranchId,
         qty1: Number(qty1),
         qty2: Number(qty1),
         totprodval: totprodval,
@@ -275,9 +307,55 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
         onClose();
       }
 
+      const approvePayload: PurchaseOrderFormType = {
+        ...data,
+        id: formPurchaseOrderId,
+        compid: companyId,
+        branchid: toolbarBranchId,
+        qty1: Number(qty1),
+        qty2: Number(qty1),
+        totprodval: totprodval,
+        finid: Number(finid),
+        afttax: 0,
+        ordamt: totprodval,
+        aprvstatus: data.aprvstatus,
+        aprvremarks: data.aprvremarks?.trim() || "",
+        itemdtl,
+      };
+
+      if (isApproveMode) {
+
+        if (!data.aprvstatus) {
+          toast.error("Please select approval status");
+          return;
+        }
+
+        if (data.aprvstatus === "R" && !data.aprvremarks?.trim()) {
+          toast.error("Please enter remark for rejection");
+          return;
+        }
+
+        await approveMutation.mutateAsync(approvePayload)
+        reset(pruchaseOrderFormDefaults);
+        onClose();
+        return;
+      }
+
     } catch (error) {
       console.error("Submit error:", error);
     }
+  };
+
+  const getButtonLabel = () => {
+    if (isSubmitting) {
+      if (isDeleteMode) return "Deleting...";
+      if (isApproveMode) return "Approving...";
+      return "Saving...";
+    }
+
+    if (isDeleteMode) return "Delete";
+    if (isApproveMode) return "Approve";
+    return "Save";
   };
 
   // Debug validation issues 
@@ -290,7 +368,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
     <Popup
       visible={visible}
       onHiding={onClose}
-      title={`${mode} PurchaseOrder`}
+      title={`${mode} Purchase Order`}
       width="90vw"
       height="90vh"
       dragEnabled
@@ -307,7 +385,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
           <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
 
             <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
-              Purchase Order Information - {formSelectedBranch}
+              Purchase Order Information
             </h2>
 
             <div className="flex flex-wrap gap-4 items-end">
@@ -360,7 +438,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                 )} */}
               </div>
 
-              <div className="w-110">
+              {/* <div className="w-110">
                 <label className="block text-gray-700 font-medium mb-1">Vendor</label>
                 <FormSelect
                   name="vendorid"
@@ -368,7 +446,19 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                   options={VendorspOptions}
                   className={`${errors?.vendorid ? "border-red-500" : "border-gray-400"}`}
                 />
+              </div> */}
 
+              <div className="w-110">
+                <label className="block text-gray-700 font-medium mb-1">Vendor <span className="text-red-500">*</span> </label>
+                <input
+                  type="text"
+                  value={vendorName || ''}
+                  disabled={isReadOnly}
+                  readOnly
+                  onClick={() => setVendoeodalOpen(true)}
+                  className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
+                  placeholder="Select GRN Pending"
+                />
               </div>
 
               <div className="w-48">
@@ -418,6 +508,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                 <input
                   type="text"
                   value={formSelectedBranch}
+                  readOnly
                   className={`inputField border-gray-400 `}
                 />
               </div>
@@ -537,6 +628,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                   watchedItems={watchedItems}
                   userId={userId}
                   companyId={companyId}
+                  branchId={toolbarBranchId}
                   visible={visible}
                   isReadOnly={isReadOnly}
                   fieldsLength={fields.length}
@@ -611,6 +703,35 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
           </section>
 
 
+          {isApproveMode && (
+            <>
+              <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
+                <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
+                  Approvable
+                </h2>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="w-64">
+                    <label className="block text-gray-700 font-medium mb-1">Remark 1 </label>
+                    <FormSelect
+                      name="aprvstatus"
+                      control={control}
+                      options={approveOptions}
+                    />
+                  </div>
+                  <div className="w-full">
+                    <label className="block text-gray-700 font-medium mb-1">Approve Remark </label>
+                    <input
+                      {...register("aprvremarks")}
+                      placeholder="Approve remark "
+                      disabled={isReadOnly}
+                      className={`inputField ${errors.rem2 ? "" : "border-gray-400"}`}
+                    />
+                  </div>
+                </div>
+              </section>
+            </>
+          )}
 
         </div>
 
@@ -622,9 +743,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
               disabled={isSubmitting}
               className="primary-btn disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting
-                ? isDeleteMode ? "Deleting..." : "Saving..."
-                : isDeleteMode ? "Delete" : "Save"}
+              {getButtonLabel()}
             </button>
           )}
           <button
@@ -642,6 +761,17 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
           visible={isSubmitting || isLoadingPurchaseOrder}
           showIndicator
         />
+
+        <SearchModal
+          open={vendoeodalOpen}
+          onClose={() => setVendoeodalOpen(false)}
+          endpoint="vendor"
+          baseParams={baseVendoeParams}
+          columns={searchVendoeColumns}
+          searchFields={searchVendoeFields}
+          onSelect={handleVendoeSelect}
+        />
+
       </form>
     </Popup>
   );

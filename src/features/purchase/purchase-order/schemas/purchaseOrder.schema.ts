@@ -28,6 +28,8 @@ export const PurchaseOrderSchema = z.object({
   orderno: z.string().optional(),
 
   vendorid: z.coerce.number().min(1, "Please select a vendor"),
+  vendornm: z.string().optional(),
+  vendorName: z.string().optional(),
 
   enqno: z.string().optional(),
   enqdt: z.string().optional(),
@@ -52,6 +54,10 @@ export const PurchaseOrderSchema = z.object({
   totprodval: z.coerce.number().optional(),
   afttax: z.coerce.number().optional(),
   ordamt: z.coerce.number().optional(),
+
+
+  aprvstatus: z.string().optional(),
+  aprvremarks: z.string().optional(),
 
   itemdtl: z
     .array(PurchaseOrderItemSchema)

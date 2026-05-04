@@ -16,6 +16,7 @@ export interface GoodReceivedNoteItem {
 
   unit: string;
   balanceqty1: number;
+  confirmqty1: number;
 
   altunimethod?: string;
   altunitfactor?: number;
@@ -24,11 +25,17 @@ export interface GoodReceivedNoteItem {
   rateon?: number;
 
   orderdtlid?: number;
+
+  scanqty?: number;
+  shortqty?: number;
+  excessqty?: number;
+  actualprodval?: number;
+
 }
 
 export interface GoodReceivedNote {
   id?: number;
-  
+
   compid?: number | string;
   branchid?: number | string;
   finid?: number;
@@ -40,12 +47,16 @@ export interface GoodReceivedNote {
   grnno?: string;
 
   vendorid?: number;
+  vendorName: string;
+  vendornm: string;
 
   partyrefno?: string;
   partyrefdt?: string;
 
   godownid?: number;
-
+  godownName?: string;
+  godownnm?: string;
+  
   ordertype?: string;
   orderid?: number;
 
@@ -58,10 +69,13 @@ export interface GoodReceivedNote {
   qty2?: number;
 
   totprodval?: number;
+  isconfirm?: string;
+  isconfirmdesc?: string;
+
+  qrcode?: string;
 
   itemdtl?: GoodReceivedNoteItem[];
 
-  
   entryby?: number;
   entrydt?: string;
   updateby?: number;
@@ -82,4 +96,32 @@ export interface GoodReceivedNoteApiResponse {
   data: GoodReceivedNote[];
 }
 
-export type OperationMode = "Add" | "Edit" | "Delete" | "View" | "Print";
+// Confirm
+export interface ConfirmItems {
+  tag: string;
+  dtlid: number;
+  productid: number;
+  qty1: number;
+}
+export interface ConfirmGrn {
+  id: number;
+  compid: number;
+  qty1: number;
+  totprodval: number;
+  itemdtl: ConfirmItems[];
+}
+
+export interface ConfirmGrnType
+  extends Partial<
+    Omit<
+      ConfirmGrn,
+      "id" | "entryby" | "entrydt" | "updateby" | "updatedt"
+    >
+  > { }
+export interface ConfirmGRNApiReponse {
+  success: boolean;
+  message: string;
+  data: [];
+}
+
+export type OperationMode = "Add" | "Edit" | "Delete" | "View" | "Print" | "Confirmed";

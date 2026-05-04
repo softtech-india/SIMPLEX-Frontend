@@ -80,18 +80,18 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
   const watchedItems = useWatch({
     control,
     name: "itemdtl",
-  });
+  }) || 0;
 
   const totalQty = (watchedItems || []).reduce((sum, item) => {
     return sum + (Number(item?.qty1) || 0);
-  }, 0);
+  }, 0) || 0;
 
   const totalValue = (watchedItems || []).reduce((sum, item) => {
     const qty = Number(item?.qty1) || 0;
     const rate = Number(item?.rate) || 0;
 
     return sum + qty * rate;
-  }, 0);
+  }, 0) || 0;
 
   const avgRate = totalQty > 0 ? totalValue / totalQty : 0;
 
@@ -172,14 +172,6 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
 
     setProductModalOpen(false);
   };
-
-  // // auto-set first option safely categorynm
-  // setTimeout(() => {
-  //   if (options.length > 0) {
-  //     setValue("productid", options[0].value);
-  //   }
-  // }, 0);
-
 
   const calculateTotals = (items: any[] = []) => {
     let qty1 = 0;
