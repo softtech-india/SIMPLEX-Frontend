@@ -38,7 +38,7 @@ type ToolbarDateSelectProps = {
   isDisabled?: boolean;
   isClearable?: boolean;
   dateFormat?: string;
-  onChange?: (value: string | null) => void; 
+  onChange?: (value: string | null) => void;
 };
 interface TransactionToolbarProps {
   title: string;
