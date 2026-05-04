@@ -16,6 +16,8 @@ export interface PurchaseOrderItem {
 }
 
 export interface PurchaseOrder {
+  id: number;
+
   compid?: number | string;
   branchid?: number | string;
   finid?: number;
@@ -26,6 +28,7 @@ export interface PurchaseOrder {
   orderno?: string;
 
   vendorid?: number;
+  vendornm?: string;
   vendorName?: string;
 
   enqno?: string;
@@ -52,9 +55,12 @@ export interface PurchaseOrder {
   afttax?: number;
   ordamt?: number;
 
+  aprvstatus?: string;
+  aprvremarks?: string;
+
   itemdtl?: PurchaseOrderItem[];
 
-  id?: number;
+
   entryby?: number;
   entrydt?: string;
   updateby?: number;
@@ -65,9 +71,9 @@ export interface PurchaseOrderFormType
   extends Partial<
     Omit<
       PurchaseOrder,
-      "id" | "entryby" | "entrydt" | "updateby" | "updatedt"
+       | "entryby" | "entrydt" | "updateby" | "updatedt"
     >
-  > {}
+  > { }
 
 export interface PurchaseOrderApiResponse {
   success: boolean;
@@ -75,4 +81,4 @@ export interface PurchaseOrderApiResponse {
   data: PurchaseOrder[];
 }
 
-export type OperationMode = "Add" | "Edit" | "Delete" | "View" | "Print";
+export type OperationMode = "Add" | "Edit" | "Delete" | "View" | "Print" | "Approve";

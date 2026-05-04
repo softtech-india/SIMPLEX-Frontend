@@ -106,6 +106,8 @@ export default function PurchaseOrderModule() {
   const handleViewClick = useCallback(() => openForm('View'), [openForm]);
   const handlePrintClick = useCallback(() => openForm('Print'), [openForm]);
 
+  const handleApproveClick = useCallback(() => openForm('Approve'), [openForm]);
+
   const handleRefresh = useCallback(() => {
     refetch();
     setFormPurchaseOrderId(0);
@@ -146,6 +148,7 @@ export default function PurchaseOrderModule() {
             permissions={permissions}
             onAdd={handleAddClick}
             onEdit={handleEditClick}
+            onApprove={handleApproveClick}
             onDelete={handleDeleteClick}
             onRefresh={handleRefresh}
             onView={handleViewClick}

@@ -52,8 +52,10 @@ interface TransactionToolbarProps {
   onRefresh?: () => void;
   onView?: () => void;
   onPrint?: () => void;
-  onConfirmed?: () => void;
   onExport?: (e?: any) => void;
+
+  onApprove?: () => void;
+  onConfirmed?: () => void;
 
   // hasSelection?: boolean;
   isRowConfirmed?: boolean;
@@ -75,8 +77,11 @@ export function TransactionToolbar({
   onRefresh,
   onView,
   onPrint,
-  onConfirmed,
   onExport,
+
+  onConfirmed,
+  onApprove,
+
   // hasSelection = true,
   isRowConfirmed,
   periodTitle,
@@ -238,6 +243,22 @@ export function TransactionToolbar({
               {isRowConfirmed ? <Lock size={16} /> : <CircleCheckBig size={16} />} Confirm
             </button>
           )}
+
+          {canEdit && onApprove && (
+            <button
+              onClick={onApprove}
+              className={`
+                secondary-btn flex items-center gap-1
+                transition-all duration-150
+                ${isRowConfirmed
+                  ? "opacity-60 cursor-not-allowed bg-gray-200 text-gray-500 border-gray-300"
+                  : "hover:bg-blue-50 hover:text-blue-600"}
+              `}
+            >
+              Approve
+            </button>
+          )}
+
         </div>
 
         {/* RIGHT SIDE  */}

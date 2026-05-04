@@ -98,6 +98,28 @@ export function useCreatePurchaseOrder() {
   });
 }
 
+export function useApprovePurchaseOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: PurchaseOrderFormType) =>
+      purchaseOrderService.approvePurchaseOrder(data),
+
+    onSuccess: (data) => {
+      if (data.success) {
+        queryClient.invalidateQueries({ queryKey: PURCHASE_ORDER_KEYS.list() });
+        toast.success(data.message);
+      } else {
+        toast.error(data.message || "Failed to approve purchase order");
+      }
+    },
+
+    onError: (err: Error) => {
+      toast.error(err.message || "Error while approving purchase order");
+    },
+  });
+}
+
 
 export function useUpdatePurchaseOrder() {
   const queryClient = useQueryClient();

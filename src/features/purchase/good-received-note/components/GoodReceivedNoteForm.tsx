@@ -157,6 +157,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
         finid: Number(finid ?? 0),
         vnumid: Number(GoodReceivedNote.vnumid ?? 0),
         vendorid: Number(GoodReceivedNote.vendorid ?? 0),
+        vendornm: GoodReceivedNote.vendornm,
 
         qty1: Number(GoodReceivedNote.qty1 ?? 0),
         qty2: Number(GoodReceivedNote.qty2 ?? 0),
@@ -171,6 +172,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
         partyrefdt: GoodReceivedNote.partyrefdt ? formatDateForInput(GoodReceivedNote.partyrefdt) : "",
 
         godownid: Number(GoodReceivedNote.godownid ?? 0),
+        godownnm: GoodReceivedNote.godownnm,
 
         ordertype: GoodReceivedNote.ordertype ?? "",
         orderid: Number(GoodReceivedNote.orderid ?? 0),
@@ -281,7 +283,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
     setVendorModalOpen(false);
   };
 
-  const vendorName = watch("vendorName");
+  const vendorName = watch("vendorName") || watch("vendornm");
 
   // Godown
   const { data: GodownOptions = [] } = useQuery({
@@ -320,7 +322,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
     setVendorModalOpen(false);
   };
 
-  const godownName = watch("godownName");
+  const godownName = watch("godownName") || watch("godownnm");
 
   // Model Search GrnPending Modal Handlers
   const baseGrnPendingParams = {

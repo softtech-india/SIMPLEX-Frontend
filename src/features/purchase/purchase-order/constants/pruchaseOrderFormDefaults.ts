@@ -13,6 +13,7 @@ export const pruchaseOrderFormDefaults: PurchaseOrderFormSchema = {
   orderno: "",
 
   vendorid: 0,
+  vendornm: "",
 
   enqno: "",
   enqdt: today,
@@ -37,6 +38,9 @@ export const pruchaseOrderFormDefaults: PurchaseOrderFormSchema = {
   totprodval: 0,
   afttax: 0,
   ordamt: 0,
+
+  aprvstatus: "",
+  aprvremarks: "",
 
   itemdtl: [
     {

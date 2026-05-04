@@ -38,6 +38,7 @@ export const GoodReceivedNoteSchema = z.object({
   finid: z.coerce.number().optional(),
 
   vnumid: z.coerce.number().min(1, "This field is required",),
+  vendornm: z.string().optional(),
 
   vnummethod: z.string().min(1, "This field is required"),
 
@@ -58,6 +59,7 @@ export const GoodReceivedNoteSchema = z.object({
     .number()
     .min(1, "Please select a Godown"),
   godownName: z.string().optional(),
+  godownnm: z.string().optional(),
 
 
   ordertype: z.string().optional(),
