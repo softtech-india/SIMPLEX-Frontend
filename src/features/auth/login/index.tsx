@@ -102,11 +102,11 @@ export default function Login() {
       // Save to storage
       storageService.setItem("accessToken", user.token);
       storageService.setItem("userPriviledge", JSON.stringify(response.data));
-      // storageService.setItem("userId", user.userid);
-      // storageService.setItem("userName", user.username);
-      // storageService.setItem("userCode", user.usercode);
-      // storageService.setItem("companyId", user.compid);
-      // storageService.setItem("companyName", user.name);
+      storageService.setItem("userId", user.userid);
+      storageService.setItem("userName", user.username);
+      storageService.setItem("userCode", user.usercode);
+      storageService.setItem("companyId", user.compid);
+      storageService.setItem("companyName", user.name);
       storageService.setItem("isLoggedIn", "true");
 
       useCompanyStore.getState().setCompanyData({

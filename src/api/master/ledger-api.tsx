@@ -340,7 +340,7 @@ export const fetchCompanySelectionList = async (
 ) => {
   try {
     const response: any = await apiCall.get(
-      `${process.env.NEXT_PUBLIC_PROJECT_API_ENDPOINT}company`,
+      `${process.env.NEXT_PUBLIC_PROJECT_API_ENDPOINT}companyselection`,
       {
         userid: userId,
       }
