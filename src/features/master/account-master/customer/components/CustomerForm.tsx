@@ -67,8 +67,26 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode }: Custome
 
     if (Customer) {
       reset({
-        ...Customer,
-        mobile: undefined
+        id: Customer.id,
+        name: Customer.name ?? "",
+        subledgertypeid: Customer.subledgertypeid ?? customerFormDefaults.subledgertypeid,
+        ledgergroupid: Customer.ledgergroupid ?? customerFormDefaults.ledgergroupid,
+        cityid: Customer.cityid,
+        stateid: Customer.stateid ?? customerFormDefaults.stateid,
+        addr1: Customer.addr1 ?? "",
+        addr2: Customer.addr2 ?? "",
+        addr3: Customer.addr3 ?? "",
+        nl: Customer.nl ?? "",
+        pin: Customer.pin ?? "",
+        phone: Customer.phone ?? "",
+        mobile: Customer.mobile ?? "",  // REMOVED the undefined override
+        email: Customer.email ?? "",
+        pan: Customer.pan ?? "",
+        crdays: Customer.crdays ?? 0,
+        crlimit: Customer.crlimit ?? 0,
+        gstregtype: Customer.gstregtype ?? customerFormDefaults.gstregtype,
+        gstin: Customer.gstin ?? "",
+        status: Customer.status ?? customerFormDefaults.status,
       });
     }
   }, [Customer, isAddMode, reset, visible, setFocus]);
@@ -149,6 +167,19 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode }: Custome
       prevStateRef.current = selectedStateId;
     }
   }, [selectedStateId, setValue]);
+
+  useEffect(() => {
+    if (!visible || isAddMode) return;
+
+    if (Customer && Customer.stateid && Customer.cityid) {
+      // Ensure state is set first, then allow time for city options to load
+      const timer = setTimeout(() => {
+        setValue("cityid", Customer.cityid ?? 0);
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [Customer, visible, isAddMode, cityOptions, setValue]);
 
   // Options arrays
   const ledgerStatusOption: Option[] = useMemo(
@@ -501,15 +532,6 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode }: Custome
               Statutory Details
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-
-
-
-
-
-
-
-
 
 
               <div className="flex gap-4">

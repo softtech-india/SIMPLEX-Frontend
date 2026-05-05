@@ -6,7 +6,7 @@ import LoadPanel from "devextreme-react/load-panel";
 import { useQuery } from "@tanstack/react-query";
 import { useVendorById, useCreateVendor, useUpdateVendor, useDeleteVendor } from "../hooks/useVendor";
 import { fetchLedgerGroupList, fetchStateList, fetchCityList } from "@/api/master/ledger-api";
-import { allowNegetive, companyStatus, costcenterApplicable, deducteeTypeTags, gstregType, interestMethod, isCardeWallet, isMainLedger, isTdsApplicable, ledgerStatus, maintainBillwise, salaryDeducTtype, stockEffect, taxNature } from "@/common/utility/data";
+import { deducteeTypeTags, gstregType, interestMethod, isCardeWallet, isMainLedger, isTdsApplicable, ledgerStatus, maintainBillwise, salaryDeducTtype, stockEffect, taxNature } from "@/common/utility/data";
 import { Vendor, OperationMode, VendorFormData, SubLedgerType, TDS } from "../types/vendor.types";
 import { VendorFormSchema } from "../schemas/vendor.schema";
 import { FormSelect } from "@/common/components/FormSelect";
@@ -67,9 +67,39 @@ export function VendorForm({ visible, onClose, formVendorId, mode }: VendorFormP
 
     if (Vendor) {
       reset({
-        ...Vendor,
-        bankaccno: "",
-        mobile: undefined
+        id: Vendor.id,
+        name: Vendor.name ?? "",
+        subledgertypeid: Vendor.subledgertypeid ?? vendorFormDefaults.subledgertypeid,
+        ledgergroupid: Vendor.ledgergroupid ?? vendorFormDefaults.ledgergroupid,
+        cityid: Vendor.cityid ?? vendorFormDefaults.cityid,
+        stateid: Vendor.stateid ?? vendorFormDefaults.stateid,
+        addr1: Vendor.addr1 ?? "",
+        addr2: Vendor.addr2 ?? "",
+        addr3: Vendor.addr3 ?? "",
+        nl: Vendor.nl ?? "",
+        pin: Vendor.pin ?? "",
+        phone: Vendor.phone ?? "",
+        mobile: Vendor.mobile ?? "",
+        email: Vendor.email ?? "",
+        pan: Vendor.pan ?? "",
+        bankbranch: Vendor.bankbranch ?? "",
+        bankifsc: Vendor.bankifsc ?? "",
+        banknm: Vendor.banknm ?? "",
+        bankaccno: String(Vendor.bankaccno) ?? "",
+        crdays: Vendor.crdays ?? 0,
+        crlimit: Vendor.crlimit ?? 0,
+        gstregtype: Vendor.gstregtype ?? vendorFormDefaults.gstregtype,
+        gstin: Vendor.gstin ?? "",
+        closedtag: Vendor.closedtag ?? vendorFormDefaults.closedtag,
+        corpgrpid: Vendor.corpgrpid ?? vendorFormDefaults.corpgrpid,
+        intmethod: Vendor.intmethod ?? vendorFormDefaults.intmethod,
+        intpct: Vendor.intpct ?? vendorFormDefaults.intpct,
+        tdsapplicable: Vendor.tdsapplicable ?? vendorFormDefaults.tdsapplicable,
+        deducteetype: Vendor.deducteetype ?? vendorFormDefaults.deducteetype,
+        tdssecid: Vendor.tdssecid ?? vendorFormDefaults.tdssecid,
+        maintainbillwise: Vendor.maintainbillwise ?? vendorFormDefaults.maintainbillwise,
+        ismainledger: Vendor.ismainledger ?? vendorFormDefaults.ismainledger,
+        accpostledgerid: Vendor.accpostledgerid ?? vendorFormDefaults.accpostledgerid,
       });
     }
   }, [Vendor, isAddMode, reset, visible, setFocus]);
@@ -205,35 +235,12 @@ export function VendorForm({ visible, onClose, formVendorId, mode }: VendorFormP
     []
   );
 
-  const stockeffectOption: Option[] = useMemo(
-    () => stockEffect.map((s) => ({ value: s.id, label: s.name })),
-    []
-  );
-
-  const costcenterapplicableOption: Option[] = useMemo(
-    () => costcenterApplicable.map((s) => ({ value: s.id, label: s.name })),
-    []
-  );
 
   const tdsApplicableOption: Option[] = useMemo(
     () => isTdsApplicable.map((s) => ({ value: s.id, label: s.name })),
     []
   );
 
-  const isCardeWalletOption: Option[] = useMemo(
-    () => isCardeWallet.map((s) => ({ value: s.id, label: s.name })),
-    []
-  );
-
-  const salaryDeductTypeOption: Option[] = useMemo(
-    () => salaryDeducTtype.map((s) => ({ value: s.id, label: s.name })),
-    []
-  );
-
-  const taxNatureOption: Option[] = useMemo(
-    () => taxNature.map((s) => ({ value: s.id, label: s.name })),
-    []
-  );
 
   const maintainBillwiseOption: Option[] = useMemo(
     () => maintainBillwise.map((s) => ({ value: s.id, label: s.name })),
@@ -270,7 +277,6 @@ export function VendorForm({ visible, onClose, formVendorId, mode }: VendorFormP
     const selectedSubledg = subledgertypeOptions.find(
       (m: Option) => m.value === selectedOption.value
     );
-    // console.log(selectedSubledg)
     if (selectedSubledg) {
       setValue("subledgertypeid", Number(selectedSubledg.value));
       setValue("ledgergroupid", selectedSubledg.ledgergroupid);

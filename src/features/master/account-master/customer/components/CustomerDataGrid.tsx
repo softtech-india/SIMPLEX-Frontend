@@ -22,7 +22,7 @@ export const CustomerDataGrid = forwardRef<any, CustomerDataGridProps>(
       { dataField: "name", caption: "Name", width: 150, headerFilter: true },
       { dataField: "subledgertypenm", caption: "Type", width: 80, headerFilter: true },
       { dataField: "ledgergroupnm", caption: "Ledger Group", width: 130, headerFilter: true },
-      { dataField: "status", caption: "Status", width: 80, headerFilter: true },
+      { dataField: "statusdesc", caption: "Status", width: 80, headerFilter: true },
 
       // Address Info
       { dataField: "addr", caption: "Address", width: 390 },
