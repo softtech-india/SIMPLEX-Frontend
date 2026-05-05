@@ -57,8 +57,9 @@ interface TransactionToolbarProps {
   onApprove?: () => void;
   onConfirmed?: () => void;
 
-  // hasSelection?: boolean;
+  // hasSelection?: boolean; 
   isRowConfirmed?: boolean;
+  isRowApproved?: boolean;
 
   periodTitle?: string;
 
@@ -84,6 +85,8 @@ export function TransactionToolbar({
 
   // hasSelection = true,
   isRowConfirmed,
+  isRowApproved,
+
   periodTitle,
   selectBranch,
   disabled,
@@ -96,6 +99,9 @@ export function TransactionToolbar({
 
   const [openShare, setOpenShare] = useState(false);
   const shareRef = useRef<HTMLDivElement | null>(null);
+
+  const isEditDisabled = isRowConfirmed || isRowApproved;
+  const isDeleteDisabled = isRowApproved;
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -160,40 +166,29 @@ export function TransactionToolbar({
             </button>
           )}
 
-          {/* {canEdit && (
-            <button
-              onClick={onEdit}
-              // disabled={!hasSelection}
-              disabled={isRowConfirmed}
-              className="secondary-btn disabled:opacity-50"
-            >
-              <Edit2 size={16} /> Edit
-            </button>
-          )} */}
-
           {canEdit && (
             <button
               onClick={onEdit}
-              disabled={isRowConfirmed}
+              disabled={isEditDisabled}
               className={`
                 secondary-btn flex items-center gap-1
                 transition-all duration-150
-                ${isRowConfirmed
+                ${isEditDisabled
                   ? "opacity-60 cursor-not-allowed bg-gray-200 text-gray-500 border-gray-300"
                   : "hover:bg-blue-50 hover:text-blue-600"}
               `}
             >
-              {isRowConfirmed ? <Lock size={16} /> : <Edit2 size={16} />} Edit
+              {isEditDisabled ? <Lock size={16} /> : <Edit2 size={16} />} Edit
             </button>
           )}
 
           {canDelete && (
             <button
               onClick={onDelete}
-              //  disabled={!hasSelection} 
+              disabled={isDeleteDisabled}
               className="secondary-btn disabled:opacity-50"
             >
-              <Trash2 size={16} /> Delete
+              {isDeleteDisabled ? <Lock size={16} /> : <Trash2 size={16} />} Delete
             </button>
           )}
 
@@ -247,15 +242,16 @@ export function TransactionToolbar({
           {canEdit && onApprove && (
             <button
               onClick={onApprove}
+              disabled={isRowApproved}
               className={`
                 secondary-btn flex items-center gap-1
                 transition-all duration-150
-                ${isRowConfirmed
+                ${isRowApproved
                   ? "opacity-60 cursor-not-allowed bg-gray-200 text-gray-500 border-gray-300"
                   : "hover:bg-blue-50 hover:text-blue-600"}
               `}
             >
-              Approve
+              {isRowApproved ? <Lock size={16} /> : <CircleCheckBig size={16} />}  Approve
             </button>
           )}
 

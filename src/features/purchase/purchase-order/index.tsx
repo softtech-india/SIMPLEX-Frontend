@@ -34,6 +34,8 @@ export default function PurchaseOrderModule() {
   const [fromDate, setFromDate] = useState<string | null>(currentDate);
   const [toDate, setToDate] = useState<string | null>(currentDate);
 
+  const isRowApproved = selectedRow?.aprvstatus === "A";
+
   const { data: purchaseOrderList = [], isLoading, refetch } =
     usePurchaseOrderList({
       userid: Number(userId),
@@ -72,8 +74,6 @@ export default function PurchaseOrderModule() {
   const handleSelectionChanged = useCallback((e: any) => {
     if (e.selectedRowsData && e.selectedRowsData.length > 0) {
       setselectedRow(e.selectedRowsData[0]);
-    } else {
-      setselectedRow(null);
     }
   }, []);
 
@@ -106,7 +106,10 @@ export default function PurchaseOrderModule() {
   const handleViewClick = useCallback(() => openForm('View'), [openForm]);
   const handlePrintClick = useCallback(() => openForm('Print'), [openForm]);
 
-  const handleApproveClick = useCallback(() => openForm('Approve'), [openForm]);
+  const handleApproveClick = useCallback(() => {
+    if (isRowApproved) return;
+    openForm("Approve");
+  }, [isRowApproved, openForm]);
 
   const handleRefresh = useCallback(() => {
     refetch();
@@ -135,6 +138,9 @@ export default function PurchaseOrderModule() {
     });
   }, [purchaseOrderList]);
 
+  // useEffect(() => {
+  //   console.log("isRowApproved :", isRowApproved);
+  // }, [selectedRow]);
 
   return (
     <>
@@ -153,6 +159,8 @@ export default function PurchaseOrderModule() {
             onRefresh={handleRefresh}
             onView={handleViewClick}
             onPrint={handlePrintClick}
+
+            isRowApproved={isRowApproved}
 
             selectFromDate={{
               name: "fromDate",

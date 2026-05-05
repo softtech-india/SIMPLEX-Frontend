@@ -5,7 +5,6 @@ import { Popup } from "devextreme-react/popup";
 import LoadPanel from "devextreme-react/load-panel";
 import { useQuery } from "@tanstack/react-query";
 import { usePurchaseOrderById, useCreatePurchaseOrder, useUpdatePurchaseOrder, useDeletePurchaseOrder, useApprovePurchaseOrder } from "../hooks/usePurchaseOrder";
-import { fetchVendorList } from "@/api/master/ledger-api";
 import { PurchaseOrderFormType, OperationMode } from "../types/purchaseOrder.types";
 import { PurchaseOrderFormSchema } from "../schemas/purchaseOrder.schema";
 import { pruchaseOrderFormDefaults } from "../constants/pruchaseOrderFormDefaults";
@@ -191,23 +190,6 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
   const selectedSeries = seriesNoOptions.find(
     (s: any) => s.value === watch("vnumid")
   );
-
-
-  // Vendor
-  const { data: VendorspOptions = [] } = useQuery({
-    queryKey: ["VendorspOptions", userId, companyId],
-    queryFn: () => fetchVendorList(userId, companyId),
-    staleTime: 0,
-    enabled: !!userId && !!companyId && !!visible,
-    retry: 1,
-    refetchOnWindowFocus: false,
-
-    select: (data) =>
-      (data ?? []).map((s: any) => ({
-        value: s.id,
-        label: s.name,
-      })),
-  });
 
   // Model Search Vendoe Modal Handlers
   const baseVendoeParams = {
@@ -437,16 +419,6 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                   </p>
                 )} */}
               </div>
-
-              {/* <div className="w-110">
-                <label className="block text-gray-700 font-medium mb-1">Vendor</label>
-                <FormSelect
-                  name="vendorid"
-                  control={control}
-                  options={VendorspOptions}
-                  className={`${errors?.vendorid ? "border-red-500" : "border-gray-400"}`}
-                />
-              </div> */}
 
               <div className="w-110">
                 <label className="block text-gray-700 font-medium mb-1">Vendor <span className="text-red-500">*</span> </label>
