@@ -42,15 +42,10 @@ export default function CompanyPage({ pageTitle }: CompanyPageProps) {
     queryFn: () => fetchCompanySelectionList(userId),
 
     enabled: !!userId,
-
-    // 🔥 Prevent stale/ghost rendering issues
     staleTime: 0,
-    gcTime: 0, // (React Query v5) replaces cacheTime
-
+    gcTime: 0, 
     retry: 1,
     refetchOnWindowFocus: false,
-
-    // 🔥 IMPORTANT: ensures fresh fetch when popup/page reopens
     refetchOnMount: "always",
 
     select: (data) =>
@@ -60,7 +55,7 @@ export default function CompanyPage({ pageTitle }: CompanyPageProps) {
         compadd1: s.compadd1,
         compgstin: s.compgstin,
         branchid: s.branchid,
-        branchnm: s.branchnm,
+        branchnm: s.branchname,
         userid: s.userid,
         finid: s.finid,
       })),
@@ -70,11 +65,9 @@ export default function CompanyPage({ pageTitle }: CompanyPageProps) {
   const handleSelectCompany = (selected: any) => {
     if (!selected) return;
 
-    // 🔹 Persist
     storageService.setItem("companyId", selected.compid);
     storageService.setItem("companyName", selected.compname);
 
-    // 🔹 Company Store
     useCompanyStore.getState().setCompanyData({
       companyId: selected.compid,
       companyName: selected.compname,
@@ -82,7 +75,6 @@ export default function CompanyPage({ pageTitle }: CompanyPageProps) {
       branchName: selected.branchnm,
     });
 
-    // 🔹 User Store
     useUserStore.getState().setUserData({
       companyId: selected.compid,
       branchId: selected.branchid,
@@ -99,7 +91,7 @@ export default function CompanyPage({ pageTitle }: CompanyPageProps) {
       onHiding={onClose}
       title="Company Selection"
       width="70vw"
-      height="80vh"
+      height="50vh"
       dragEnabled
       showTitle
       showCloseButton
@@ -115,8 +107,7 @@ export default function CompanyPage({ pageTitle }: CompanyPageProps) {
             columnAutoWidth
             onRowDblClick={(e: any) => handleSelectCompany(e.data)}
             onRowClick={(e: any) => {
-              // 🔹 Enter key support (optional UX boost)
-              if (e.event?.detail === 2) return; // ignore dblclick duplicate
+              if (e.event?.detail === 2) return; 
             }}
           >
             <Selection mode="single" />
@@ -128,7 +119,6 @@ export default function CompanyPage({ pageTitle }: CompanyPageProps) {
           </DataGrid>
         </div>
 
-        {/* Footer */}
         <div className="border-t p-3 flex justify-end bg-gray-50">
           <button onClick={onClose} className="secondary-btn">
             Exit

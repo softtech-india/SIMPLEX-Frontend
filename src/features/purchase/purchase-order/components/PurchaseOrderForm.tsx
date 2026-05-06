@@ -116,6 +116,8 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
 
         ...PurchaseOrder,
 
+        aprvstatus: "",
+
         orderdt: PurchaseOrder.orderdt ? formatDateForInput(PurchaseOrder.orderdt) : "",
         enqdt: PurchaseOrder.enqdt ? formatDateForInput(PurchaseOrder.enqdt) : "",
         quotdt: PurchaseOrder.quotdt ? formatDateForInput(PurchaseOrder.quotdt) : "",
@@ -163,7 +165,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
   const voucherType = "PO";
   const { data: seriesNoOptions = [] } = useQuery({
     queryKey: ["fetchSeriesList", userId, companyId, toolbarBranchId, voucherType],
-    queryFn: () =>  fetchSeriesList(userId, companyId, toolbarBranchId, voucherType, finid),
+    queryFn: () => fetchSeriesList(userId, companyId, toolbarBranchId, voucherType, finid),
     staleTime: 0,
     enabled: !!companyId && !!toolbarBranchId && !!userId && !!visible,
     retry: 1,
@@ -251,7 +253,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
 
   const handleFormSubmit = async (data: PurchaseOrderFormSchema) => {
     try {
-
+      console.log("aprvstatus value 1:", data.aprvstatus);
       if (isDeleteMode) {
         const ok = await confirmDelete({
           title: "Delete Purchase Order",
@@ -312,22 +314,24 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
         finid: Number(finid),
         afttax: 0,
         ordamt: totprodval,
-        aprvstatus: data.aprvstatus,
-        aprvremarks: data.aprvremarks?.trim() || "",
+        // aprvstatus: data.aprvstatus,
+        // aprvremarks: data.aprvremarks?.trim() || "",
         itemdtl,
       };
 
       if (isApproveMode) {
 
-        if (!data.aprvstatus) {
-          toast.error("Please select approval status");
-          return;
-        }
+        console.log("aprvstatus value 2:", data.aprvstatus);
 
-        if (data.aprvstatus === "R" && !data.aprvremarks?.trim()) {
-          toast.error("Please enter remark for rejection");
-          return;
-        }
+        // if (data.aprvstatus === '') {
+        //   toast.error("Please select approval status");
+        //   return;
+        // }
+
+        // if (!data.aprvremarks?.trim()) {
+        //   toast.error("Please enter remark for rejection");
+        //   return;
+        // }
 
         await approveMutation.mutateAsync(approvePayload)
         reset(pruchaseOrderFormDefaults);
@@ -438,7 +442,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                   readOnly
                   onClick={() => setVendoeodalOpen(true)}
                   className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
-                  placeholder="Select GRN Pending"
+                  placeholder="Select Vendor"
                 />
               </div>
 
@@ -490,7 +494,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                   type="text"
                   value={formSelectedBranch}
                   readOnly
-                  className={`inputField border-gray-400 `}
+                  className={`inputField border-gray-400 bg-gray-100 cursor-not-allowed `}
                 />
               </div>
 
@@ -692,22 +696,24 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                 </h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  <div className="w-64">
-                    <label className="block text-gray-700 font-medium mb-1">Remark 1 </label>
+                  <div >
+                    <label className="block text-gray-700 font-medium mb-1">Status <span className="text-red-500">*</span> </label>
                     <FormSelect
                       name="aprvstatus"
                       control={control}
                       options={approveOptions}
                     />
+                    {/* {errors.aprvstatus && <p className="text-red-500 mt-1 text-sm">{errors.aprvstatus.message}</p>} */}
                   </div>
-                  <div className="w-full">
-                    <label className="block text-gray-700 font-medium mb-1">Approve Remark </label>
+                  <div>
+                    <label className="block text-gray-700 font-medium mb-1">Approve Remark <span className="text-red-500">*</span> </label>
                     <input
                       {...register("aprvremarks")}
                       placeholder="Approve remark "
                       disabled={isReadOnly}
-                      className={`inputField ${errors.rem2 ? "" : "border-gray-400"}`}
+                      className={`inputField ${errors.aprvremarks ? "border-red-500" : "border-gray-400"}`}
                     />
+                    {errors.aprvremarks && <p className="text-red-500 mt-1 text-sm">{errors.aprvremarks.message}</p>}
                   </div>
                 </div>
               </section>

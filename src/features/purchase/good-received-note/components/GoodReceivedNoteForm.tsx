@@ -576,7 +576,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   readOnly
                   onClick={() => setVendorModalOpen(true)}
                   className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
-                  placeholder="Select GRN Pending"
+                  placeholder="Select Vendor"
                 />
               </div>
 
@@ -589,7 +589,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   readOnly
                   onClick={() => setGrnPendingModalOpen(true)}
                   className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
-                  placeholder="Select GRN Pending"
+                  placeholder="Select PO No. & Date"
                 />
               </div>
 
@@ -623,7 +623,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   readOnly
                   onClick={() => setGodownModalOpen(true)}
                   className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
-                  placeholder="Select GRN Pending"
+                  placeholder="Select Godown"
                 />
               </div>
 

@@ -56,12 +56,13 @@ export const PurchaseOrderSchema = z.object({
   ordamt: z.coerce.number().optional(),
 
 
-  aprvstatus: z.string().optional(),
-  aprvremarks: z.string().optional(),
+  aprvstatus: z.string().trim().min(1, "Please select approval status"),
+  aprvremarks: z.string().trim().min(1, "This field is required"),
 
   itemdtl: z
     .array(PurchaseOrderItemSchema)
     .min(1, "At least one item is required"),
 });
 
-export type PurchaseOrderFormSchema = z.output<typeof PurchaseOrderSchema>;
+// export type PurchaseOrderFormSchema = z.output<typeof PurchaseOrderSchema>;
+export type PurchaseOrderFormSchema = z.infer<typeof PurchaseOrderSchema>;
