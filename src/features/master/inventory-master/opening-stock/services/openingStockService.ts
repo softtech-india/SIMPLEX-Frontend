@@ -144,21 +144,53 @@ class OpeningStockService {
     }
   }
 
-  async deleteOpeningStock(id: number): Promise<void> {
+  //   async deleteOpeningStock(id: number): Promise<void> {
+  //     try {
+  //       const response = await apiCall.delete<OpeningStockApiResponse>(
+  //         `${this.baseUrl}opstock`,
+  //         { userid: this.getUserId(), compid: this.getCompanyId(), id }
+  //       );
+
+  //       this.handleError(response);
+
+  //     } catch (error: any) {
+  //       console.error(`Error deleting deleteOpeningStock with id ${id}:`, error);
+  //       toast.error(error.message || "Failed to delete deleteOpeningStock");
+  //       throw error;
+  //     }
+  //   }
+
+  async deleteOpeningStock(
+    params: {
+      id: number;
+      userid: number;
+      compid: number;
+      branchid: number | string;
+      finid: number
+    }
+  ): Promise<void> {
     try {
+      const { id, userid, compid, branchid, finid } = params;
       const response = await apiCall.delete<OpeningStockApiResponse>(
         `${this.baseUrl}opstock`,
-        { userid: this.getUserId(), compid: this.getCompanyId(), id }
+        {
+          id,
+          userid,
+          compid,
+          branchid,
+          finid,
+        }
       );
 
       this.handleError(response);
 
     } catch (error: any) {
-      console.error(`Error deleting deleteOpeningStock with id ${id}:`, error);
-      toast.error(error.message || "Failed to delete deleteOpeningStock");
+      console.error(`Error deleting deleteOpening Stock:`, error);
+      toast.error(error.message || "Failed to delete deleteOpening Stock");
       throw error;
     }
   }
+
 }
 
 export const openingStockService = new OpeningStockService();

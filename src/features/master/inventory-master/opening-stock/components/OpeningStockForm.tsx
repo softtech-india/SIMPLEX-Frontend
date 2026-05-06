@@ -13,7 +13,7 @@ import { OpeningStockItems } from "./OpeningStockItems";
 import { OpeningStockFormSchema } from "../schemas/openingStock.schema";
 import { openingStockFormDefaults } from "../constants/openingStockFormFormDefaults";
 import SearchModal from "@/common/components/SearchModal";
-
+import { useConfirm } from "@/common/hooks/useConfirm";
 
 interface OpeningStockFormProps {
   visible: boolean;
@@ -32,6 +32,8 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
     branchId,
     finid,
   } = useUserStore();
+
+  const confirmDelete = useConfirm();
 
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
@@ -80,7 +82,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
   const watchedItems = useWatch({
     control,
     name: "itemdtl",
-  }) || 0;
+  }) || [];
 
   const totalQty = (watchedItems || []).reduce((sum, item) => {
     return sum + (Number(item?.qty1) || 0);
@@ -205,9 +207,22 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
   // Submit handler
   const handleFormSubmit = async (data: OpeningStockFormSchema) => {
     try {
+
       if (isDeleteMode) {
-        if (!window.confirm("Delete this OpeningStock?")) return;
-        await deleteMutation.mutateAsync(formOpeningStockId);
+        const ok = await confirmDelete({
+          title: "Delete Opening Stock",
+          message: "Are you sure you want to delete this Opening Stock?",
+        });
+
+        if (!ok) return;
+
+        await deleteMutation.mutateAsync({
+          id: formOpeningStockId,
+          userid: Number(userId),
+          compid: Number(companyId),
+          branchid: toolbarBranchId,
+          finid: Number(finid),
+        });
         onClose();
         return;
       }
@@ -224,10 +239,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
         rate: avgRate,
         value: totprodval,
         itemdtl,
-
       };
-
-      console.log("FINAL SUBMIT PAYLOAD:", JSON.stringify(payload, null, 2));
 
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
@@ -247,6 +259,16 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
     } catch (error) {
       console.error("Submit error:", error);
     }
+  };
+
+  const getButtonLabel = () => {
+    if (isSubmitting) {
+      if (isDeleteMode) return "Deleting...";
+      return "Saving...";
+    }
+
+    if (isDeleteMode) return "Delete";
+    return "Save";
   };
 
   // Debug validation issues 
@@ -288,8 +310,8 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
 
                 <input
                   type="text"
-                  readOnly
                   value={productname || ""}
+                  readOnly
                   onClick={() => {
                     setProductModalOpen(true);
                   }}
@@ -342,6 +364,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
                 <input
                   type="text"
                   value={formSelectedBranch}
+                  readOnly
                   className={`inputField border-gray-400 bg-gray-100`}
                 />
               </div>
@@ -451,9 +474,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
               disabled={isSubmitting}
               className="primary-btn disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting
-                ? isDeleteMode ? "Deleting..." : "Saving..."
-                : isDeleteMode ? "Delete" : "Save"}
+              {getButtonLabel()}
             </button>
           )}
           <button

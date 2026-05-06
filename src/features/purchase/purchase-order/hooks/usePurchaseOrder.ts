@@ -145,19 +145,22 @@ export function useUpdatePurchaseOrder() {
   });
 }
 
-
 export function useDeletePurchaseOrder() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => purchaseOrderService.deletePurchaseOrder(id),
+    mutationFn: (params: {
+      id: number;
+      userid: number;
+      compid: number;
+    }) => purchaseOrderService.deletePurchaseOrder(params),
 
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: PURCHASE_ORDER_KEYS.list() });
-      toast.success(data.message);
+      toast.success(data?.message || "Deleted successfully");
     },
 
-    onError: (err: Error) => {
+    onError: (err: any) => {
       toast.error(err.message || "Failed to delete purchase order");
     },
   });

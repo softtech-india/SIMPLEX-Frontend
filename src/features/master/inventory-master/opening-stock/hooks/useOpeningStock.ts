@@ -21,24 +21,16 @@ type UseOpeningStockByIdParams = {
 
 export const OPENING_STOCK_KEYS = {
   all: ["opening-stock"] as const,
-
   lists: () => [...OPENING_STOCK_KEYS.all, "list"] as const,
-
-  list: (params?: Record<string, any>) =>
-    [...OPENING_STOCK_KEYS.lists(), params ?? {}] as const,
-
+  list: (params?: Record<string, any>) => [...OPENING_STOCK_KEYS.lists(), params ?? {}] as const,
   details: () => [...OPENING_STOCK_KEYS.all, "detail"] as const,
-
-  detail: (id: number) =>
-    [...OPENING_STOCK_KEYS.details(), id] as const,
+  detail: (id: number) => [...OPENING_STOCK_KEYS.details(), id] as const,
 };
 
 export function useOpeningStockList(params: GetOpeningStockParams) {
   return useQuery({
     queryKey: OPENING_STOCK_KEYS.list(params),
-
-    queryFn: () =>
-      openingStockService.getAllOpeningStocks(params),
+    queryFn: () =>  openingStockService.getAllOpeningStocks(params),
 
     staleTime: 0,
     gcTime: 0,
@@ -48,7 +40,6 @@ export function useOpeningStockList(params: GetOpeningStockParams) {
     refetchOnReconnect: true,
   });
 }
-
 
 
 export function useOpeningStockById(params: UseOpeningStockByIdParams) {
@@ -64,7 +55,7 @@ export function useOpeningStockById(params: UseOpeningStockByIdParams) {
         finid: params.finid,
       }),
 
-    enabled: !!params.id, // only run when id exists
+    enabled: !!params.id, 
 
     staleTime: 0,
     gcTime: 0,
@@ -122,19 +113,24 @@ export function useUpdateOpeningStock() {
   });
 }
 
-
 export function useDeleteOpeningStock() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => openingStockService.deleteOpeningStock(id),
+    mutationFn: (params: {
+      id: number;
+      userid: number;
+      compid: number;
+      branchid: number | string;
+      finid: number;
+    }) => openingStockService.deleteOpeningStock(params),
 
     onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: OPENING_STOCK_KEYS.list() });
-      toast.success(data.message);
+      queryClient.invalidateQueries({ queryKey: OPENING_STOCK_KEYS.list(), });
+      toast.success(data?.message || "Deleted successfully");
     },
 
-    onError: (err: Error) => {
+    onError: (err: any) => {
       toast.error(err.message || "Failed to delete opening stock");
     },
   });
