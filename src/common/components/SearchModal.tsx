@@ -99,11 +99,16 @@ export default function SearchModal({
         //setList(response.data || []);
 
         const rawData = response.data || [];
-
         const filteredData = rawData.filter((row: any) => {
-          if (row.productid === currentId) return true;
+          const rowId = row.id ?? row.productid;
 
-          return !(excludeIds ?? []).includes(row.productid);
+          // If this row has an ID that's in excludeIds, filter it out
+          if (excludeIds?.includes(rowId)) {
+            return false;
+          }
+
+          // Keep the row if it doesn't match excludeIds
+          return true;
         });
 
         setList(filteredData);

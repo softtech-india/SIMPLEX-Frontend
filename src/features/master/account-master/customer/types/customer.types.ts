@@ -12,7 +12,7 @@ export interface Customer {
   stateid: number;
   pin: string;
   phone: string;
-  mobile: string;
+  mobile?: string;
   email?: string;
   pan: string;
   crdays: number;
