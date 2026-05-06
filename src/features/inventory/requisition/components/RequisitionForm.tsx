@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Popup } from "devextreme-react/popup";
 import { useQuery } from "@tanstack/react-query";
-import { useRequisitionById, useCreateRequisition, useUpdateRequisition, useDeleteRequisition, useApproveRequisition } from "../hooks/useRequisition";
+import { useRequisitionById, useCreateRequisition, useUpdateRequisition, useDeleteRequisition } from "../hooks/useRequisition";
 import { RequisitionFormType, OperationMode } from "../types/requisition.types";
 import { RequisitionFormSchema } from "../schemas/requisition.schema";
 import { requisitionFormDefaults } from "../constants/requisitionFormDefaults";
@@ -42,11 +42,11 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
   const [toBranchModalOpen, setToBranchModalOpen] = useState(false);
   const [godownModalOpen, setGodownModalOpen] = useState(false);
   const [toGodownModalOpen, setToGodownModalOpen] = useState(false);
+  const [filteredBranchOptions, setFilteredBranchOptions] = useState<any[]>([]);
 
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
   const isDeleteMode = mode === "Delete";
-  const isApproveMode = mode === "Approve";
   const isReadOnly = mode === "View" || mode === "Print";
 
   const { data: Requisition, isLoading: isLoadingRequisition } =
@@ -61,9 +61,8 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
   const createMutation = useCreateRequisition();
   const updateMutation = useUpdateRequisition();
   const deleteMutation = useDeleteRequisition();
-  const approveMutation = useApproveRequisition();
 
-  const isSubmitting = createMutation.isPending || approveMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
+  const isSubmitting = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   const {
     control,
@@ -91,8 +90,11 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
     return sum + (Number(item?.qty) || 0);
   }, 0) || 0;
 
+
+
   // Reset form 
   useEffect(() => {
+
     if (!visible) return;
 
     setTimeout(() => {
@@ -117,17 +119,22 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
         reqno: Requisition.reqno ?? "",
         totqty: Number(Requisition.totqty ?? 0),
         godownid: Number(Requisition.godownid ?? 0),
+        godownName: Requisition.godownnm ?? '',  // Changed: map godownnm to godownName
         tobranchid: Number(Requisition.tobranchid ?? 0),
+        toBranchName: Requisition.tobranchnm ?? '',  // Changed: map tobranchnm to toBranchName
         togodownid: Number(Requisition.togodownid ?? 0),
+        togodownName: Requisition.togodownnm ?? '',  // Changed: map togodownnm to togodownName
         rem1: Requisition.rem1 ?? "",
         rem2: Requisition.rem2 ?? "",
         itemdtl:
           Requisition.itemdtl?.map((item, index) => ({
             tag: item.tag ?? "I",
             dtlid: item.dtlid ?? index + 1,
-            pcategoryid: item.pcategoryid,
-            pcategorynm: item.pcategorynm,
-            qty: Number(item.qty ?? 0)
+            productid: item.productid,
+            qty: Number(item.qty ?? 0),
+            productnm: item.productnm ?? "", // ADD THIS - map product name
+            pcategoryid: item.pcategoryid, // ADD THIS - map brand/category ID
+            pcategorynm: item.pcategorynm ?? "",
           })) ?? [],
       });
     }
@@ -158,7 +165,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
         })) || [];
 
       setTimeout(() => {
-        if (options.length > 0) {
+        if (options.length > 0 && !watch("vnumid")) {
           setValue("vnumid", options[0].value);
         }
       }, 0);
@@ -171,31 +178,38 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
     (s: any) => s.value === watch("vnumid")
   );
 
-  // Branch Options
-  const { data: BranchOptions = [] } = useQuery({
+  const { data: BranchOptionsArray = [] } = useQuery({
     queryKey: ["BranchOptions", userId, companyId],
     queryFn: () => requisitionService.getAllBranches(),
     staleTime: 0,
     enabled: !!userId && !!companyId && !!visible,
     retry: 1,
     refetchOnWindowFocus: false,
-
-    select: (data) =>
-      (data ?? []).map((s: any) => ({
-        value: s.id,
-        label: s.name,
-      })),
+    select: (data) => {
+      const filtered = (data ?? [])
+        .map((s: any) => ({
+          value: s.id,
+          label: s.name,
+        }));
+      return filtered;
+    },
   });
 
-  // Godown Options
-  const { data: GodownOptions = [] } = useQuery({
-    queryKey: ["GodownOptions", userId, companyId, toolbarBranchId],
-    queryFn: () => requisitionService.getAllGodowns(toolbarBranchId),
+  // Create a Map from the array for lookups (ID -> Name)
+  const BranchOptionsMap = new Map(
+    BranchOptionsArray.map(option => [Number(option.value), option.label])
+  );
+
+  // Godown Options - Fixed to use current branch ID from form or toolbar
+  const currentBranchIdForGodown = toolbarBranchId;
+
+  const { data: GodownOptionsArray = [], isLoading: isLoadingGodowns } = useQuery({
+    queryKey: ["GodownOptions", userId, companyId, currentBranchIdForGodown],
+    queryFn: () => requisitionService.getAllGodowns(currentBranchIdForGodown),
     staleTime: 0,
-    enabled: !!userId && !!companyId && !!visible && !!toolbarBranchId,
+    enabled: !!userId && !!companyId && !!visible && !!currentBranchIdForGodown,
     retry: 1,
     refetchOnWindowFocus: false,
-
     select: (data) =>
       (data ?? []).map((s: any) => ({
         value: s.id,
@@ -203,33 +217,39 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
       })),
   });
 
-  // To Godown Options
-  const { data: ToGodownOptions = [] } = useQuery({
-    queryKey: ["ToGodownOptions", userId, companyId, watch("tobranchid")],
-    queryFn: () => requisitionService.getAllGodowns(watch("tobranchid")),
+  const GodownOptionsMap = new Map(
+    GodownOptionsArray.map(option => [Number(option.value), option.label])
+  );
+
+  const currentToBranchId = watch("tobranchid");
+  const { data: ToGodownOptionsArray = [], isLoading: isLoadingToGodowns } = useQuery({
+    queryKey: ["ToGodownOptions", userId, companyId, currentToBranchId],
+    queryFn: () => requisitionService.getAllGodowns(currentToBranchId),
     staleTime: 0,
-    enabled: !!userId && !!companyId && !!visible && !!watch("tobranchid"),
+    enabled: !!userId && !!companyId && !!visible && !!currentToBranchId && currentToBranchId !== 0,
     retry: 1,
     refetchOnWindowFocus: false,
-
     select: (data) =>
-      (data ?? []).map((s: any) => ({
-        value: s.id,
-        label: s.name,
-      })),
+      (data ?? [])
+        .map((s: any) => ({
+          value: s.id,
+          label: s.name,
+        })),
   });
 
-  const selectedBranchName = BranchOptions.find(
-    (b: any) => b.value === watch("tobranchid")
-  )?.label || "";
 
-  const selectedGodownName = GodownOptions.find(
-    (g: any) => g.value === watch("godownid")
-  )?.label || "";
+  const ToGodownOptionsMap = new Map(
+    ToGodownOptionsArray.map(option => [Number(option.value), option.label])
+  );
 
-  const selectedToGodownName = ToGodownOptions.find(
-    (g: any) => g.value === watch("togodownid")
-  )?.label || "";
+  // Get current values from form state
+  const currentGodownId = watch("godownid");
+  const currentToBranchIdValue = watch("tobranchid");
+  const currentToGodownId = watch("togodownid");
+
+
+
+  const currentBranchName = formSelectedBranch || BranchOptionsMap.get(Number(toolbarBranchId)) || "";
 
   // Search Modal Handlers
   const baseSearchParams = {
@@ -245,18 +265,35 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
     { value: "name", label: "Name" },
   ];
 
+  // Branch Modal Handler
   const handleBranchSelect = (row: any) => {
     setValue("tobranchid", row.id);
+    setValue("toBranchName", row.name);
     setBranchModalOpen(false);
+    setValue("togodownid", 0);
   };
 
+  // To Branch Modal Handler
+  const handleToBranchSelect = (row: any) => {
+    setValue("tobranchid", row.id);
+    setValue("toBranchName", row.name); // This should already be there
+    setToBranchModalOpen(false);
+    setValue("togodownid", 0);
+    setValue("togodownName", ""); // Clear to godown name when branch changes
+  };
+
+  // Godown Modal Handler (From Godown)
   const handleGodownSelect = (row: any) => {
     setValue("godownid", row.id);
+    setValue("godownName", row.name);
     setGodownModalOpen(false);
   };
 
+  // To Godown Modal Handler
   const handleToGodownSelect = (row: any) => {
+
     setValue("togodownid", row.id);
+    setValue("togodownName", row.name);
     setToGodownModalOpen(false);
   };
 
@@ -270,7 +307,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
       return {
         tag: item?.tag || "I",
         dtlid: item?.dtlid || index + 1,
-        pcategoryid: Number(item.pcategoryid ?? 0),
+        productid: Number(item.productid ?? 0),
         qty: Number(qty),
       };
     });
@@ -314,32 +351,25 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
         return;
       }
 
-      const approvePayload: RequisitionFormType = {
-        ...payload,
-        id: formRequisitionId,
-      };
 
-      if (isApproveMode) {
-        await approveMutation.mutateAsync(approvePayload);
-        reset(requisitionFormDefaults);
-        onClose();
-        return;
-      }
+
+
 
     } catch (error) {
       console.error("Submit error:", error);
     }
   };
+  const godownName = watch("godownName");
+  const toBranchName = watch("toBranchName");
+  const togodownName = watch("togodownName");
 
   const getButtonLabel = () => {
     if (isSubmitting) {
       if (isDeleteMode) return "Deleting...";
-      if (isApproveMode) return "Approving...";
       return "Saving...";
     }
 
     if (isDeleteMode) return "Delete";
-    if (isApproveMode) return "Approve";
     return "Save";
   };
 
@@ -347,8 +377,8 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
     console.error("Validation errors:", err);
   };
 
-  // Get current branch name for display
-  const currentBranchName = formSelectedBranch || BranchOptions.find((b: any) => b.value === toolbarBranchId)?.label || "";
+  // Loading state - Fixed variable name conflict
+  const isLoading = isLoadingRequisition || isLoadingGodowns || (currentToBranchId && currentToBranchId !== 0 && isLoadingToGodowns);
 
   return (
     <Popup
@@ -380,6 +410,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
                   name="vnumid"
                   control={control}
                   options={seriesNoOptions}
+                  isDisabled={isReadOnly}
                 />
               </div>
 
@@ -389,7 +420,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
                   name="vnummethod"
                   control={control}
                   options={numMethodOptions}
-                  isDisabled={selectedSeries?.manualallow === "N"}
+                  isDisabled={isReadOnly || selectedSeries?.manualallow === "N"}
                 />
               </div>
 
@@ -434,15 +465,17 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
             </h2>
 
             <div className="flex flex-wrap gap-4 items-end">
-              <div className="w-64">
+              <div className="w-98">
                 <label className="block text-gray-700 font-medium mb-1">
                   From Godown <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  value={selectedGodownName}
+                  value={godownName || ''}
                   readOnly
-                  onClick={() => setGodownModalOpen(true)}
+                  onClick={() => {
+                    if (!isReadOnly) setGodownModalOpen(true);
+                  }}
                   className={`inputField w-full cursor-pointer ${errors?.godownid
                     ? "border-red-500"
                     : "border-gray-400"
@@ -454,15 +487,17 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
                 )}
               </div>
 
-              <div className="w-64">
+              <div className="w-102">
                 <label className="block text-gray-700 font-medium mb-1">
                   To Branch <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  value={selectedBranchName}
+                  value={toBranchName || ''}
                   readOnly
-                  onClick={() => setToBranchModalOpen(true)}
+                  onClick={() => {
+                    if (!isReadOnly) setToBranchModalOpen(true);
+                  }}
                   className={`inputField w-full cursor-pointer ${errors?.tobranchid
                     ? "border-red-500"
                     : "border-gray-400"
@@ -474,17 +509,18 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
                 )}
               </div>
 
-              <div className="w-64">
+              <div className="w-102">
                 <label className="block text-gray-700 font-medium mb-1">
                   To Godown <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  value={selectedToGodownName}
+                  value={togodownName}
                   readOnly
                   onClick={() => {
-                    const toBranchId = watch("tobranchid");
-                    if (!toBranchId) {
+                    if (isReadOnly) return;
+                    const toBranchIdValue = watch("tobranchid");
+                    if (!toBranchIdValue || toBranchIdValue === 0) {
                       toast.error("Please select To Branch first");
                       return;
                     }
@@ -517,8 +553,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
                     append({
                       tag: "I",
                       dtlid: fields.length + 1,
-                      pcategoryid: 0,
-                      pcategorynm: '',
+                      productid: 0,
                       qty: 0
                     })
                   }
@@ -552,7 +587,8 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
             </div>
 
             <div className="flex flex-wrap gap-4 items-center border-t pt-3">
-              <div className="w-68" />
+              <div className="w-96" />
+              <div className="w-92" />
               <div className="w-28 relative">
                 <span className="absolute -left-20 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-700 whitespace-nowrap">
                   Total Qty
@@ -619,7 +655,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
 
         <LoadPanel
           shadingColor="rgba(0,0,0,0.4)"
-          visible={isSubmitting || isLoadingRequisition}
+          visible={!!(isSubmitting || isLoading)}
           showIndicator
         />
 
@@ -641,7 +677,8 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
           baseParams={baseSearchParams}
           columns={searchColumns}
           searchFields={searchFields}
-          onSelect={handleBranchSelect}
+          onSelect={handleToBranchSelect}
+          excludeIds={[Number(branchId)]}  // This will now work
         />
 
         <SearchModal

@@ -39,7 +39,7 @@ export default function RequisitionModule() {
       userid: Number(userId),
       compid: Number(companyId),
       skip: 0,
-      take: 200,
+      take: 10000,
       branchid: Number(toolbarBranchId) || Number(branchId),
       finid: Number(finid),
       startdt: fromDate || "",
@@ -99,7 +99,6 @@ export default function RequisitionModule() {
   const handleDeleteClick = useCallback(() => openForm('Delete'), [openForm]);
   const handleViewClick = useCallback(() => openForm('View'), [openForm]);
   const handlePrintClick = useCallback(() => openForm('Print'), [openForm]);
-  const handleApproveClick = useCallback(() => openForm('Approve'), [openForm]);
 
   const handleRefresh = useCallback(() => {
     refetch();
@@ -140,7 +139,6 @@ export default function RequisitionModule() {
             permissions={permissions}
             onAdd={handleAddClick}
             onEdit={handleEditClick}
-            onApprove={handleApproveClick}
             onDelete={handleDeleteClick}
             onRefresh={handleRefresh}
             onView={handleViewClick}

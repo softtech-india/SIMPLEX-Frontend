@@ -3,10 +3,7 @@ import { z } from "zod";
 export const RequisitionItemSchema = z.object({
   tag: z.string().optional(),
   dtlid: z.coerce.number().optional(),
-
-  pcategoryid: z.coerce.number().min(1, "Please select a category"),
-  pcategorynm: z.string().optional(),
-
+  productid: z.coerce.number().min(1, "Please select a productid"),
   qty: z.coerce
     .number()
     .min(1, "Quantity should be greater than 0"),
@@ -29,13 +26,17 @@ export const RequisitionSchema = z.object({
     .number()
     .min(1, "Please select a godown"),
 
+  godownName: z.coerce.string().optional(),
+
   tobranchid: z.coerce
     .number()
     .min(1, "Please select a branch"),
 
+  toBranchName: z.coerce.string().optional(),
   togodownid: z.coerce
     .number()
     .min(1, "Please select a godown"),
+  togodownName: z.coerce.string().optional(),
 
   rem1: z.string().optional(),
   rem2: z.string().optional(),
@@ -46,10 +47,6 @@ export const RequisitionSchema = z.object({
     .array(RequisitionItemSchema)
     .min(1, "At least one item is required"),
 
-  entryby: z.coerce.number().optional(),
-  entrydt: z.string().optional(),
-  updateby: z.coerce.number().optional(),
-  updatedt: z.string().optional(),
 });
 
 export type RequisitionFormSchema = z.output<typeof RequisitionSchema>;

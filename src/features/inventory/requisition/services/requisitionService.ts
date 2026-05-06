@@ -174,24 +174,6 @@ class RequisitionService {
     }
   }
 
-  async approveRequisition(data: RequisitionFormType): Promise<RequisitionApiResponse> {
-    try {
-      const response = await apiCall.put<RequisitionApiResponse>(
-        `${this.baseUrl}requisition/approve`,
-        data,
-        { userid: this.getUserId() }
-      );
-
-      this.handleError(response);
-
-      return response;
-
-    } catch (error: any) {
-      console.error("Error creating purchaseOrder:", error);
-      toast.error(error.message || "Failed to create purchaseOrder");
-      throw error;
-    }
-  }
 
 
 }

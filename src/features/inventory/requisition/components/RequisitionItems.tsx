@@ -36,55 +36,125 @@ export const RequisitionItems: React.FC<RequisitionItemsProps> = ({
   fieldsLength,
 }) => {
   const item = watchedItems?.[index];
-  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const qty = Number(item?.qty) || 0;
+  const rate = Number(item?.rate) || 0;
+  const value = qty * rate;
 
-  // Model Search Category Modal Handlers
-  const baseCategoryParams = {
+  const [brandModalOpen, setBrandModalOpen] = useState(false);
+  const [productModalOpen, setProductModalOpen] = useState(false);
+
+  // Get all selected product IDs except the current one
+  const selectedProductIds = watchedItems
+    ?.map((item: any) => item?.productid)
+    ?.filter((id: number) => id && id !== item?.productid);
+
+  // Model Search Brand Modal Handlers
+  const baseBrandParams = {
     userid: userId,
     compid: companyId,
   };
 
-  const searchCategoryColumns = [
-    { key: "name", label: "Category Name" },
+  const searchBrandColumns = [
+    { key: "name", label: "Brand Name" },
   ];
 
-  const searchCategoryFields = [
+  const searchBrandFields = [
     { value: "name", label: "Name" },
   ];
 
-  const handleCategorySelect = (row: any) => {
+  const handleBrandSelect = (row: any) => {
     setValue(`itemdtl.${index}.pcategoryid`, row.id);
     setValue(`itemdtl.${index}.pcategorynm`, row.name);
-    setCategoryModalOpen(false);
+    setValue(`itemdtl.${index}.productid`, null);
+    setValue(`itemdtl.${index}.productnm`, "");
+    setBrandModalOpen(false);
+  };
+
+  // Model Search product Modal Handlers
+  const baseProductParams = {
+    userid: userId,
+    compid: companyId,
+    brand: item?.pcategoryid,
+  };
+
+  const searchProductFields = [
+    { value: "productname", label: "Name" },
+    { value: "pclsname", label: "Class" },
+    { value: "group", label: "Group" },
+  ];
+
+  const searchProductColumns = [
+    { key: "productname", label: "Product" },
+    { key: "classnm", label: "Class" },
+    { key: "subclassnm", label: "Sub Class" },
+    { key: "unit", label: "Unit" },
+    { key: "mrp", label: "Mrp" },
+  ];
+
+  const handleProductSelect = (row: any) => {
+    // Check if product already exists in other rows
+    const alreadyExists = watchedItems?.some(
+      (item: any, idx: number) => idx !== index && item?.productid === row.id
+    );
+
+    if (alreadyExists) {
+      // You can show a toast message here
+      console.error("Product already selected");
+      return;
+    }
+
+    setValue(`itemdtl.${index}.productid`, row.id);
+    setValue(`itemdtl.${index}.productnm`, row.productname);
+    setProductModalOpen(false);
   };
 
   return (
     <div className="flex flex-wrap gap-4 items-end">
+
       <div className="w-68">
         <label className="block text-gray-700 text-sm font-medium mb-1">
-          Category <span className="text-red-500">*</span>
+          Brand
         </label>
+
         <input
           type="text"
           value={item?.pcategorynm || ""}
           readOnly
-          onClick={() => setCategoryModalOpen(true)}
-          className={`inputField w-full cursor-pointer ${errors?.itemdtl?.[index]?.pcategoryid
+          onClick={() => setBrandModalOpen(true)}
+          className="inputField w-full cursor-pointer border border-gray-400"
+          placeholder="Select Brand"
+        />
+      </div>
+
+      <div className="w-120">
+        <label className="block text-gray-700 text-sm font-medium mb-1">
+          Product
+        </label>
+
+        <input
+          type="text"
+          value={item?.productnm || ""}
+          readOnly
+          onClick={() => {
+            if (!item?.pcategoryid) return;
+            setProductModalOpen(true);
+          }}
+          className={`inputField w-full cursor-pointer ${errors?.itemdtl?.[index]?.productid
             ? "border-red-500"
             : "border-gray-400"
             }`}
-          placeholder="Select Category"
+          placeholder="Select Product"
         />
-        {errors?.itemdtl?.[index]?.pcategoryid && (
+        {errors?.itemdtl?.[index]?.productid && (
           <p className="text-xs text-red-500 mt-1">
-            {errors.itemdtl[index].pcategoryid.message}
+            {errors.itemdtl[index].productid.message}
           </p>
         )}
       </div>
 
       <div className="w-28">
         <label className="block text-gray-700 text-sm font-medium mb-1">
-          Quantity <span className="text-red-500">*</span>
+          Quantity
         </label>
         <input
           type="number"
@@ -120,15 +190,27 @@ export const RequisitionItems: React.FC<RequisitionItemsProps> = ({
         </div>
       )}
 
-      {/* MODAL */}
+      {/* MODALS */}
       <SearchModal
-        open={categoryModalOpen}
-        onClose={() => setCategoryModalOpen(false)}
+        open={brandModalOpen}
+        onClose={() => setBrandModalOpen(false)}
         endpoint="category"
-        baseParams={baseCategoryParams}
-        columns={searchCategoryColumns}
-        searchFields={searchCategoryFields}
-        onSelect={handleCategorySelect}
+        baseParams={baseBrandParams}
+        columns={searchBrandColumns}
+        searchFields={searchBrandFields}
+        onSelect={handleBrandSelect}
+      />
+
+      <SearchModal
+        open={productModalOpen}
+        onClose={() => setProductModalOpen(false)}
+        endpoint="product"
+        baseParams={baseProductParams}
+        columns={searchProductColumns}
+        searchFields={searchProductFields}
+        onSelect={handleProductSelect}
+        excludeIds={selectedProductIds}
+        currentId={item?.productid}
       />
     </div>
   );

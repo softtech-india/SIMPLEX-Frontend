@@ -98,28 +98,6 @@ export function useCreateRequisition() {
   });
 }
 
-export function useApproveRequisition() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: RequisitionFormType) =>
-      requisitionService.approveRequisition(data),
-
-    onSuccess: (data) => {
-      if (data.success) {
-        queryClient.invalidateQueries({ queryKey: REQUISITION_KEYS.list() });
-        toast.success(data.message);
-      } else {
-        toast.error(data.message || "Failed to approve requisition order");
-      }
-    },
-
-    onError: (err: Error) => {
-      toast.error(err.message || "Error while approving requisition order");
-    },
-  });
-}
-
 
 export function useUpdateRequisition() {
   const queryClient = useQueryClient();
@@ -146,7 +124,7 @@ export function useUpdateRequisition() {
 }
 
 
-export function useDeleteRequisition() {
+export const useDeleteRequisition = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -154,11 +132,13 @@ export function useDeleteRequisition() {
 
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: REQUISITION_KEYS.list() });
-      toast.success(data.message);
+      // Handle both response structures
+      const successMessage = data?.message || data?.data?.message || "Requisition deleted successfully";
+      toast.success(successMessage);
     },
 
     onError: (err: Error) => {
-      toast.error(err.message || "Failed to delete requisition order");
+      toast.error(err.message || "Failed to delete requisition");
     },
   });
-}
+};

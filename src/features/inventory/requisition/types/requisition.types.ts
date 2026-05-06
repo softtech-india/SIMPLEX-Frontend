@@ -3,7 +3,15 @@ export interface RequisitionItem {
   dtlid?: number;
   pcategoryid?: number;
   pcategorynm?: string;
+  productid?: number;
+  productnm?: string;
   qty?: number;
+  rate?: number;
+  value?: number;
+  altunimethod?: string;
+  altunitfactor?: number;
+  alterunitfactortype?: string;
+  rateon?: number;
 }
 
 export interface Requisition {
@@ -16,8 +24,11 @@ export interface Requisition {
   reqdt?: string;
   reqno?: string;
   godownid: number;
+  godownnm?: string;  // Changed from godownName to match API
   tobranchid: number;
+  tobranchnm?: string;  // Changed from toBranchName to match API
   togodownid: number;
+  togodownnm?: string;  // Changed from togodownName to match API
   rem1?: string;
   rem2?: string;
   totqty?: number;
@@ -38,4 +49,4 @@ export interface RequisitionApiResponse {
   data: Requisition[];
 }
 
-export type OperationMode = "Add" | "Edit" | "Delete" | "View" | "Print" | "Approve";
+export type OperationMode = "Add" | "Edit" | "Delete" | "View" | "Print";
