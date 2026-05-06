@@ -2,6 +2,7 @@
 import { forwardRef } from 'react';
 import { PurchaseOrder } from '../types/purchaseOrder.types';
 import CustomDataGrid from '@/common/components/sharedComponents/CustomDataGrid';
+import { CheckCircle, XCircle } from 'lucide-react';
 
 interface PurchaseOrderDataGridProps {
   dataSource: PurchaseOrder[];
@@ -17,8 +18,33 @@ export const PurchaseOrderDataGrid = forwardRef<any, PurchaseOrderDataGridProps>
   ({ dataSource, onSelectionChanged, onExporting, height = 600 }, ref) => {
 
     const columns = [
-      { dataField: "orderno", caption: "Order No.", width: 120, headerFilter: true },
-      { dataField: "orderdt", caption: "Order date", dataType: "date", format: "dd-MM-yyyy", width: 120,},
+      { dataField: "orderno", caption: "Order No.", width: 150, headerFilter: true },
+      {
+        dataField: "aprvstatus", caption: "Approve", width: 90, headerFilter: true,
+        cellRender: (data: any) => {
+          const value = data.value;
+
+          const isApproved =
+            value === "Approved" || value === "A" || value === true;
+
+          return (
+            <div className='flex gap-2' >
+              {isApproved ? (
+                <>
+                  <CheckCircle color="green" size={18} />
+                  <span className='text-green-600 font-bold'> Approve </span>
+                </>
+              ) : (
+                <>
+                  {/* <XCircle color="yellow" size={18} /> */}
+                  <span className='text-yellow-600 font-bold'> Pending </span>
+                </>
+              )}
+            </div>
+          );
+        },
+      },
+      { dataField: "orderdt", caption: "Order date", dataType: "date", format: "dd-MM-yyyy", width: 120, },
       { dataField: "vendor", caption: "Vendor", width: 200, headerFilter: true },
       { dataField: "qty1", caption: "Quantity", width: 80, headerFilter: true },
       { dataField: "totprodval", caption: "Total Value", width: 100, headerFilter: true },

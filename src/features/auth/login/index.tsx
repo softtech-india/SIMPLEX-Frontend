@@ -38,6 +38,7 @@ interface LoginResponseSuccess {
       usercode: string;
       salesmanid: string;
       compid: string;
+      compnm: string;
       name: string;
       stateid: string;
       branchid: string;
@@ -108,13 +109,12 @@ export default function Login() {
       storageService.setItem("companyName", user.name);
       storageService.setItem("isLoggedIn", "true");
 
-      // Update stores branchid
       useCompanyStore.getState().setCompanyData({
         companyId: user.compid,
+        companyName: user.compnm,
         branchId: user.branchid,
-       // financialYearId: user.finid,
+        branchName: user.branchnm
       });
-
 
       useUserStore.getState().setUserData({
         userId: user.userid,

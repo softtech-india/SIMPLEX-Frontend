@@ -1,0 +1,140 @@
+import { GetStaticProps } from "next";
+import { Popup } from "devextreme-react/popup";
+import DataGrid, {
+  Column,
+  Selection,
+  Scrolling,
+} from "devextreme-react/data-grid";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useRouter } from "next/router";
+
+import { fetchCompanySelectionList } from "@/api/master/ledger-api";
+import { storageService } from "@/common/utility/storageService";
+import useUserStore from "@/store/userStore";
+import useCompanyStore from "@/store/useCompanyStore";
+
+interface CompanyPageProps {
+  pageTitle: string;
+}
+
+export const getStaticProps: GetStaticProps<CompanyPageProps> = async () => {
+  return {
+    props: {
+      pageTitle: "Company Selection",
+    },
+  };
+};
+
+export default function CompanyPage({ pageTitle }: CompanyPageProps) {
+  const { userId } = useUserStore();
+  const router = useRouter();
+
+  const [visible, setVisible] = useState(true);
+
+  const onClose = () => {
+    setVisible(false);
+    router.push("/dashboard");
+  };
+
+  const { data: companies = [], isLoading, refetch } = useQuery({
+    queryKey: ["CompanySelection", userId],
+    queryFn: () => fetchCompanySelectionList(userId),
+
+    enabled: !!userId,
+
+    // 🔥 Prevent stale/ghost rendering issues
+    staleTime: 0,
+    gcTime: 0, // (React Query v5) replaces cacheTime
+
+    retry: 1,
+    refetchOnWindowFocus: false,
+
+    // 🔥 IMPORTANT: ensures fresh fetch when popup/page reopens
+    refetchOnMount: "always",
+
+    select: (data) =>
+      (data ?? []).map((s: any) => ({
+        compid: s.compid,
+        compname: s.compname,
+        compadd1: s.compadd1,
+        compgstin: s.compgstin,
+        branchid: s.branchid,
+        branchnm: s.branchnm,
+        userid: s.userid,
+        finid: s.finid,
+      })),
+  });
+
+
+  const handleSelectCompany = (selected: any) => {
+    if (!selected) return;
+
+    // 🔹 Persist
+    storageService.setItem("companyId", selected.compid);
+    storageService.setItem("companyName", selected.compname);
+
+    // 🔹 Company Store
+    useCompanyStore.getState().setCompanyData({
+      companyId: selected.compid,
+      companyName: selected.compname,
+      branchId: selected.branchid,
+      branchName: selected.branchnm,
+    });
+
+    // 🔹 User Store
+    useUserStore.getState().setUserData({
+      companyId: selected.compid,
+      branchId: selected.branchid,
+      finid: selected.finid,
+      branchnm: selected.branchnm,
+    });
+
+    router.push("/dashboard");
+  };
+
+  return (
+    <Popup
+      visible={visible}
+      onHiding={onClose}
+      title="Company Selection"
+      width="70vw"
+      height="80vh"
+      dragEnabled
+      showTitle
+      showCloseButton
+    >
+      <div className="h-full flex flex-col">
+        <div className="flex-1 p-3">
+          <DataGrid
+            dataSource={companies}
+            keyExpr="compid"
+            showBorders
+            hoverStateEnabled
+            focusedRowEnabled
+            columnAutoWidth
+            onRowDblClick={(e: any) => handleSelectCompany(e.data)}
+            onRowClick={(e: any) => {
+              // 🔹 Enter key support (optional UX boost)
+              if (e.event?.detail === 2) return; // ignore dblclick duplicate
+            }}
+          >
+            <Selection mode="single" />
+            <Scrolling mode="virtual" />
+
+            <Column dataField="compname" caption="Company Name" />
+            <Column dataField="compadd1" caption="Address" />
+            <Column dataField="compgstin" caption="GSTIN" />
+          </DataGrid>
+        </div>
+
+        {/* Footer */}
+        <div className="border-t p-3 flex justify-end bg-gray-50">
+          <button onClick={onClose} className="secondary-btn">
+            Exit
+          </button>
+        </div>
+      </div>
+    </Popup>
+  );
+}

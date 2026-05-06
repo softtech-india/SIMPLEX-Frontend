@@ -48,7 +48,8 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
     branchId,
     finid,
   } = useUserStore();
-  const confirm = useConfirm();
+
+  const confirmDelete = useConfirm();
 
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
@@ -246,23 +247,6 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
     (s: any) => s.value === watch("vnumid")
   );
 
-  // Vendor
-  const { data: VendorspOptions = [] } = useQuery({
-    queryKey: ["VendorspOptions", userId, companyId],
-    queryFn: () => fetchVendorList(userId, companyId),
-    staleTime: 0,
-    enabled: !!userId && !!companyId && !!visible,
-    retry: 1,
-    refetchOnWindowFocus: false,
-
-    select: (data) =>
-      (data ?? []).map((s: any) => ({
-        value: s.id,
-        label: s.name,
-      })),
-  });
-
-
   // Model Search Vendor Modal Handlers
   const baseVendorParams = {
     userid: userId,
@@ -284,22 +268,6 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
   };
 
   const vendorName = watch("vendorName") || watch("vendornm");
-
-  // Godown
-  const { data: GodownOptions = [] } = useQuery({
-    queryKey: ["GodownOptions", userId, companyId],
-    queryFn: () => fetchGodownList(userId, companyId, toolbarBranchId),
-    staleTime: 0,
-    enabled: !!userId && !!companyId && !!toolbarBranchId && !!visible,
-    retry: 1,
-    refetchOnWindowFocus: false,
-
-    select: (data) =>
-      (data ?? []).map((s: any) => ({
-        value: s.id,
-        label: s.name,
-      })),
-  });
 
   // Model Search Godown Modal Handlers
   const baseGodownParams = {
@@ -385,61 +353,6 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
   };
 
   // Submit handler
-
-  // const handleConfirm = async () => {
-  //   try {
-
-  //     const proceedSave = async () => {
-  //       // confirm payload 
-  //       const confirmItems: ConfirmItems[] = (watchedItems || []).map((item: any) => ({
-  //         tag: item.tag || "I",
-  //         dtlid: item.dtlid,
-  //         productid: item.productid,
-  //         qty1: Number(item.scanqty) || 0,
-  //       }));
-
-  //       const confirmPayload: ConfirmGrn = {
-  //         id: formGoodReceivedNoteId,
-  //         compid: Number(companyId),
-  //         qty1: totalScanQty,
-  //         totprodval: totalScanValue,
-  //         itemdtl: confirmItems,
-  //       };
-
-  //       await confirmMutation.mutateAsync(confirmPayload);
-
-  //       toast.success("Confirmed successfully");
-  //     };
-
-  //     if (totalScanQty === 0) {
-  //       toast.error("Scanned quantity is 0. Cannot proceed with save."); return;
-  //     }
-
-  //     if (totalScanQty < totalQty) {
-  //       toast.warning(
-  //         `Scanned quantity (${totalScanQty}) is less than total quantity (${totalQty}). Continue?`,
-  //         {
-  //           action: {
-  //             label: "OK",
-  //             onClick: proceedSave,
-  //           },
-  //           cancel: {
-  //             label: "Cancel",
-  //             onClick: () => { },
-  //           },
-  //         }
-  //       );
-  //       return;
-  //     }
-
-  //     await proceedSave();
-
-  //   } catch (error) {
-  //     console.error("Confirm error:", error);
-  //     toast.error("Something went wrong while confirming");
-  //   }
-  // };
-
   const handleConfirm = async () => {
     try {
       const proceedSave = async () => {
@@ -506,7 +419,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
     try {
 
       if (isDeleteMode) {
-        const ok = await confirm({
+        const ok = await confirmDelete({
           title: "Delete Good Received Note",
           message: "Are you sure you want to delete this GRN?",
         });
@@ -537,8 +450,6 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
 
       };
 
-      // console.log("FINAL SUBMIT PAYLOAD for GRN:", JSON.stringify(data, null, 2));
-
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(goodReceivedNoteFormDefaults);
@@ -567,11 +478,6 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
   const selectedProductIds = watchedItems
     ?.map((item: any) => item?.productid)
     ?.filter(Boolean);
-
-
-  // useEffect(() => {
-  //   console.log('watchedItems :', watchedItems);
-  // }, [watchedItems])
 
   const getButtonLabel = () => {
     if (isSubmitting) {
@@ -608,7 +514,6 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
       >
         <div className="flex-1 overflow-y-auto p-2 space-y-2">
 
-          {/* Good Received Note Info */}
           <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
 
             <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
@@ -662,17 +567,6 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                 />
               </div>
 
-              {/* <div className="w-110">
-                <label className="block text-gray-700 font-medium mb-1">Vendor <span className="text-red-500">*</span> </label>
-                <FormSelect
-                  name="vendorid"
-                  control={control}
-                  options={VendorspOptions}
-                  isDisabled={isReadOnly}
-                  className={`${errors?.vendorid ? "border-red-500" : "border-gray-300"}`}
-                />
-              </div> */}
-
               <div className="w-110">
                 <label className="block text-gray-700 font-medium mb-1">Vendor <span className="text-red-500">*</span> </label>
                 <input
@@ -720,17 +614,6 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                 />
               </div>
 
-              {/* <div className="w-80">
-                <label className="block text-gray-700 font-medium mb-1">Godown <span className="text-red-500">*</span></label>
-                <FormSelect
-                  name="godownid"
-                  control={control}
-                  options={GodownOptions}
-                  isDisabled={isReadOnly}
-                  className={`${errors?.godownid ? "border-red-500" : "border-gray-300"}`}
-                />
-              </div> */}
-
               <div className="w-80">
                 <label className="block text-gray-700 font-medium mb-1"> Godown <span className="text-red-500">*</span> </label>
                 <input
@@ -743,7 +626,6 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   placeholder="Select GRN Pending"
                 />
               </div>
-
 
               {(mode === 'Confirmed') && (
                 <>
@@ -770,7 +652,6 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   </div>
                 </>
               )}
-
 
             </div>
           </section>
@@ -891,7 +772,6 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                 </>
               )}
 
-
               <div className="w-12" />
 
             </div>
@@ -910,7 +790,6 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
             </div>
 
           </section>
-
 
         </div>
 

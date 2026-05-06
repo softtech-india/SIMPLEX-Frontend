@@ -5,7 +5,6 @@ import { Popup } from "devextreme-react/popup";
 import LoadPanel from "devextreme-react/load-panel";
 import { useQuery } from "@tanstack/react-query";
 import { usePurchaseOrderById, useCreatePurchaseOrder, useUpdatePurchaseOrder, useDeletePurchaseOrder, useApprovePurchaseOrder } from "../hooks/usePurchaseOrder";
-import { fetchVendorList } from "@/api/master/ledger-api";
 import { PurchaseOrderFormType, OperationMode } from "../types/purchaseOrder.types";
 import { PurchaseOrderFormSchema } from "../schemas/purchaseOrder.schema";
 import { pruchaseOrderFormDefaults } from "../constants/pruchaseOrderFormDefaults";
@@ -19,7 +18,7 @@ import { useWatch } from "react-hook-form";
 import { formatDateForInput } from "@/helpers/dateUtils";
 import SearchModal from "@/common/components/SearchModal";
 import { toast } from "sonner";
-
+import { useConfirm } from "@/common/hooks/useConfirm";
 
 interface PurchaseOrderFormProps {
   visible: boolean;
@@ -38,6 +37,8 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
     branchId,
     finid,
   } = useUserStore();
+
+  const confirmDelete = useConfirm();
 
   const [vendoeodalOpen, setVendoeodalOpen] = useState(false);
 
@@ -162,8 +163,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
   const voucherType = "PO";
   const { data: seriesNoOptions = [] } = useQuery({
     queryKey: ["fetchSeriesList", userId, companyId, toolbarBranchId, voucherType],
-    queryFn: () =>
-      fetchSeriesList(userId, companyId, toolbarBranchId, voucherType, finid),
+    queryFn: () =>  fetchSeriesList(userId, companyId, toolbarBranchId, voucherType, finid),
     staleTime: 0,
     enabled: !!companyId && !!toolbarBranchId && !!userId && !!visible,
     retry: 1,
@@ -191,23 +191,6 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
   const selectedSeries = seriesNoOptions.find(
     (s: any) => s.value === watch("vnumid")
   );
-
-
-  // Vendor
-  const { data: VendorspOptions = [] } = useQuery({
-    queryKey: ["VendorspOptions", userId, companyId],
-    queryFn: () => fetchVendorList(userId, companyId),
-    staleTime: 0,
-    enabled: !!userId && !!companyId && !!visible,
-    retry: 1,
-    refetchOnWindowFocus: false,
-
-    select: (data) =>
-      (data ?? []).map((s: any) => ({
-        value: s.id,
-        label: s.name,
-      })),
-  });
 
   // Model Search Vendoe Modal Handlers
   const baseVendoeParams = {
@@ -268,9 +251,20 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
 
   const handleFormSubmit = async (data: PurchaseOrderFormSchema) => {
     try {
+
       if (isDeleteMode) {
-        if (!window.confirm("Delete this PurchaseOrder?")) return;
-        await deleteMutation.mutateAsync(formPurchaseOrderId);
+        const ok = await confirmDelete({
+          title: "Delete Purchase Order",
+          message: "Are you sure you want to delete this Purchase Order?",
+        });
+
+        if (!ok) return;
+
+        await deleteMutation.mutateAsync({
+          id: formPurchaseOrderId,
+          userid: Number(userId),
+          compid: Number(companyId),
+        });
         onClose();
         return;
       }
@@ -381,12 +375,9 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
       >
         <div className="flex-1 overflow-y-auto p-2 space-y-2">
 
-          {/* Purchase Order Info */}
           <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
 
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
-              Purchase Order Information
-            </h2>
+            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50"> Purchase Order Information </h2>
 
             <div className="flex flex-wrap gap-4 items-end">
 
@@ -437,16 +428,6 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                   </p>
                 )} */}
               </div>
-
-              {/* <div className="w-110">
-                <label className="block text-gray-700 font-medium mb-1">Vendor</label>
-                <FormSelect
-                  name="vendorid"
-                  control={control}
-                  options={VendorspOptions}
-                  className={`${errors?.vendorid ? "border-red-500" : "border-gray-400"}`}
-                />
-              </div> */}
 
               <div className="w-110">
                 <label className="block text-gray-700 font-medium mb-1">Vendor <span className="text-red-500">*</span> </label>

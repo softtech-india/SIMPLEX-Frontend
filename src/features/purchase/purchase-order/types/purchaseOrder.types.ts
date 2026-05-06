@@ -71,7 +71,7 @@ export interface PurchaseOrderFormType
   extends Partial<
     Omit<
       PurchaseOrder,
-       | "entryby" | "entrydt" | "updateby" | "updatedt"
+      | "entryby" | "entrydt" | "updateby" | "updatedt"
     >
   > { }
 

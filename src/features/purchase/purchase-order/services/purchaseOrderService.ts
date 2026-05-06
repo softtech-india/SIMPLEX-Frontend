@@ -130,18 +130,29 @@ class PurchaseOrderService {
     }
   }
 
-  async deletePurchaseOrder(id: number): Promise<void> {
+  async deletePurchaseOrder(
+    params: {
+      id: number;
+      userid: number;
+      compid: number;
+    }
+  ): Promise<void> {
     try {
+      const { id, userid, compid } = params;
       const response = await apiCall.delete<PurchaseOrderApiResponse>(
         `${this.baseUrl}po`,
-        { userid: this.getUserId(), compid: this.getCompanyId(), id }
+        {
+          id,
+          userid,
+          compid,
+        }
       );
 
       this.handleError(response);
 
     } catch (error: any) {
-      console.error(`Error deleting purchaseOrder with id ${id}:`, error);
-      toast.error(error.message || "Failed to delete purchaseOrder");
+      console.error(`Error deleting purchaseOrder with id ${params.id}:`, error);
+      toast.error(error.message || "Failed to delete purchase Order");
       throw error;
     }
   }
@@ -165,7 +176,7 @@ class PurchaseOrderService {
     }
   }
 
-  
+
 }
 
 export const purchaseOrderService = new PurchaseOrderService();

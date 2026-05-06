@@ -1,4 +1,5 @@
 'user client'
+import useCompanyStore from '@/store/useCompanyStore';
 import { Menu, X, LogOut, User } from 'lucide-react';
 
 interface TopBarProps {
@@ -18,6 +19,9 @@ export default function TopBar({
   onToggleDesktopSidebar,
   onLogout,
 }: TopBarProps) {
+
+  const { companyName } = useCompanyStore();
+
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-40 shadow-sm">
       <div className="h-full flex items-center justify-between px-4">
@@ -58,7 +62,7 @@ export default function TopBar({
             </div> */}
 
             <span className="hidden sm:block text-lg font-semibold text-gray-700">
-              Simplex Electrical Engineering Pvt Ltd
+              {companyName || 'NA'}
             </span>
           </div>
 
