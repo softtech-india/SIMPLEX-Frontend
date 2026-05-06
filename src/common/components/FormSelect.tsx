@@ -29,17 +29,17 @@ export function FormSelect<T extends FieldValues, V = string | number>({
   isLoading = false,
   className,
 }: FormSelectProps<T, V>) {
-
-
   return (
     <Controller
       name={name}
       control={control}
       render={({ field, fieldState }) => {
-        const selectedOption =
-          options.find(
-            (opt) => String(opt.value) === String(field.value)
-          ) || null;
+        // const selectedOption =
+        //   options.find(
+        //     (opt) => String(opt.value) === String(field.value)
+        //   ) || null;
+
+        const selectedOption = options.find((opt) => opt.value === field.value) || null;
 
         return (
           <div className="flex flex-col gap-1">
@@ -47,26 +47,46 @@ export function FormSelect<T extends FieldValues, V = string | number>({
               options={options}
               value={selectedOption}
               onChange={(val: Option<V> | null) => {
-                field.onChange(val?.value ?? null); // ✅ update form
-                onChange?.(val);                   // ✅ trigger your logic (HSN → GST)
+                // IMPORTANT: use "" instead of null for validation
+                field.onChange(val?.value ?? "");
+                onChange?.(val);
               }}
               onBlur={field.onBlur}
               isDisabled={isDisabled}
               isClearable={isClearable}
               isLoading={isLoading}
               placeholder={placeholder}
-              className={className}
               classNamePrefix="react-select"
+              className={className}
               menuPortalTarget={
                 typeof window !== "undefined" ? document.body : null
               }
               menuPosition="fixed"
               styles={{
+                control: (base, state) => ({
+                  ...base,
+                  borderColor: fieldState.error
+                    ? "red"
+                    : state.isFocused
+                      ? "#2563eb"
+                      : "#9ca3af",
+                  "&:hover": {
+                    borderColor: fieldState.error
+                      ? "red"
+                      : "#6b7280",
+                  },
+                  boxShadow: fieldState.error
+                    ? "0 0 0 1px red"
+                    : state.isFocused
+                      ? "0 0 0 1px #2563eb"
+                      : base.boxShadow,
+                }),
                 menuPortal: (base) => ({ ...base, zIndex: 9999 }),
                 menu: (base) => ({ ...base, zIndex: 9999 }),
               }}
             />
 
+            {/* ✅ Error message */}
             {fieldState.error && (
               <span className="text-red-500 text-sm">
                 {fieldState.error.message}
