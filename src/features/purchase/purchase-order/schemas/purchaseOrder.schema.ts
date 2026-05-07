@@ -2,32 +2,34 @@ import { z } from "zod";
 
 export const PurchaseOrderItemSchema = z.object({
   tag: z.string().optional(),
-  dtlid: z.coerce.number().optional(),
+  dtlid: z.number().optional(),
 
-  productid: z.coerce.number().min(1, "Please select a product"),
-  qty1: z.coerce.number("Quantity is required").min(1, "Quantity should be greater than 0"),
+  productid: z.number().min(1, "Please select a product"),
 
-  qty2: z.coerce.number().optional(),
-  rate: z.coerce.number().optional(),
-  value: z.coerce.number().optional(),
+  qty1: z.number().min(1, "Quantity should be greater than 0"),
+  qty2: z.number().optional(),
+  
+  rate: z.number().optional(),
+  value: z.number().optional(),
 
   altunimethod: z.string().optional(),
-  altunitfactor: z.coerce.number().optional(),
+  altunitfactor: z.number().optional(),
   alterunitfactortype: z.string().optional(),
-  rateon: z.coerce.number().optional(),
+  rateon: z.number().optional(),
 });
 
-export const PurchaseOrderSchema = z.object({
-  compid: z.coerce.number().optional(),
-  branchid: z.coerce.number().optional(),
-  finid: z.coerce.number().optional(),
-  vnumid: z.coerce.number(' This field is required'),
-  vnummethod: z.string(' This field is required'),
+export const PurchaseOrderBaseSchema = z.object({
+  compid: z.number().optional(),
+  branchid: z.number().optional(),
+  finid: z.number().optional(),
+
+  vnumid: z.number().min(1, "This field is required"),
+  vnummethod: z.string().min(1, "This field is required"),
 
   orderdt: z.string().optional(),
   orderno: z.string().optional(),
 
-  vendorid: z.coerce.number().min(1, "Please select a vendor"),
+  vendorid: z.number().min(1, "Please select a vendor"),
   vendornm: z.string().optional(),
   vendorName: z.string().optional(),
 
@@ -48,21 +50,39 @@ export const PurchaseOrderSchema = z.object({
   rem1: z.string().optional(),
   rem2: z.string().optional(),
 
-  qty1: z.coerce.number().optional(),
-  qty2: z.coerce.number().optional(),
+  qty1: z.number().optional(),
+  qty2: z.number().optional(),
 
-  totprodval: z.coerce.number().optional(),
-  afttax: z.coerce.number().optional(),
-  ordamt: z.coerce.number().optional(),
+  totprodval: z.number().optional(),
+  afttax: z.number().optional(),
+  ordamt: z.number().optional(),
 
+  aprvstatus: z.string().optional(),
+  aprvremarks: z.string().optional(),
 
-  aprvstatus: z.string().trim().min(1, "Please select approval status"),
-  aprvremarks: z.string().trim().min(1, "This field is required"),
-
-  itemdtl: z
-    .array(PurchaseOrderItemSchema)
-    .min(1, "At least one item is required"),
+  itemdtl: z.array(PurchaseOrderItemSchema).min(1, "At least one item is required"),
 });
 
-// export type PurchaseOrderFormSchema = z.output<typeof PurchaseOrderSchema>;
-export type PurchaseOrderFormSchema = z.infer<typeof PurchaseOrderSchema>;
+export const getPurchaseOrderSchema = (isApproveMode: boolean) =>
+  PurchaseOrderBaseSchema.superRefine((data, ctx) => {
+    if (isApproveMode) {
+      if (!data.aprvstatus?.trim()) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["aprvstatus"],
+          message: "Please select approval status",
+        });
+      }
+
+      if (!data.aprvremarks?.trim()) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["aprvremarks"],
+          message: "This field is required",
+        });
+      }
+    }
+  });
+
+export type PurchaseOrderFormSchema =
+  z.infer<typeof PurchaseOrderBaseSchema>;

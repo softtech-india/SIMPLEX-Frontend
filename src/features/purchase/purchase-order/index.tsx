@@ -138,9 +138,9 @@ export default function PurchaseOrderModule() {
     });
   }, [purchaseOrderList]);
 
-  useEffect(() => {
-    console.log("formSelectedBranch :", formSelectedBranch);
-  }, [formSelectedBranch]);
+  // useEffect(() => {
+  //   console.log("formSelectedBranch :", formSelectedBranch);
+  // }, [formSelectedBranch]);
 
   return (
     <>

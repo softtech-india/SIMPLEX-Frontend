@@ -73,7 +73,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
     watch,
     setValue,
     formState: { errors },
-  } = usePurchaseOrderForm();
+  } = usePurchaseOrderForm(isApproveMode);
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -253,7 +253,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
 
   const handleFormSubmit = async (data: PurchaseOrderFormSchema) => {
     try {
-      console.log("aprvstatus value 1:", data.aprvstatus);
+
       if (isDeleteMode) {
         const ok = await confirmDelete({
           title: "Delete Purchase Order",
@@ -320,8 +320,6 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
       };
 
       if (isApproveMode) {
-
-        console.log("aprvstatus value 2:", data.aprvstatus);
 
         // if (data.aprvstatus === '') {
         //   toast.error("Please select approval status");
@@ -434,19 +432,23 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
               </div>
 
               <div className="w-110">
-                <label className="block text-gray-700 font-medium mb-1">Vendor <span className="text-red-500">*</span> </label>
+                <label className="block text-gray-700 font-medium mb-1">Vendor <strong className="text-red-500"> * </strong> </label>
                 <input
                   type="text"
                   value={vendorName || ''}
                   disabled={isReadOnly}
                   readOnly
                   onClick={() => setVendoeodalOpen(true)}
-                  className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
+                  className={`inputField w-full border border-gray-300 
+                    ${errors.vendorid && !vendorName ? "border-red-500" : "border-gray-400"}
+                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
+                  }
                   placeholder="Select Vendor"
                 />
+                {errors.vendorid && !vendorName && <p className="text-red-500 mt-1 text-sm">{errors.vendorid.message}</p>}
               </div>
 
-              <div className="w-48">
+              {/* <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Enquiry No</label>
                 <input
                   type="text"
@@ -455,9 +457,9 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                   placeholder="Enter enquiry no."
                   className={`inputField ${errors.enqno ? "" : "border-gray-400"}`}
                 />
-              </div>
+              </div> */}
 
-              <div className="w-48">
+              {/* <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Enquiry Date</label>
                 <input
                   type="date"
@@ -465,21 +467,21 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                   disabled={isReadOnly}
                   className={`inputField ${errors.enqdt ? "" : "border-gray-400"}`}
                 />
-              </div>
+              </div> */}
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Quotation No</label>
+                <label className="block text-gray-700 font-medium mb-1">Proforma invoice no.</label>
                 <input
                   type="text"
                   {...register("quotno")}
                   disabled={isReadOnly}
-                  placeholder="Enter quotation no."
+                  placeholder="Enter Proforma invoice no."
                   className={`inputField ${errors.quotno ? "" : "border-gray-400"}`}
                 />
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Quotation Date</label>
+                <label className="block text-gray-700 font-medium mb-1">Proforma invoice date</label>
                 <input
                   type="date"
                   {...register("quotdt")}
@@ -502,7 +504,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
           </section>
 
           {/* Delivery & Payment */}
-          <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
+          {/* <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
             <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
               Delivery & Payment Details
             </h2>
@@ -564,7 +566,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
               </div>
 
             </div>
-          </section>
+          </section> */}
 
           {/* Item Details */}
           <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
@@ -697,7 +699,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <div >
-                    <label className="block text-gray-700 font-medium mb-1">Status <span className="text-red-500">*</span> </label>
+                    <label className="block text-gray-700 font-medium mb-1">Approve Status <strong className="text-red-500"> * </strong> </label>
                     <FormSelect
                       name="aprvstatus"
                       control={control}
@@ -706,7 +708,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                     {/* {errors.aprvstatus && <p className="text-red-500 mt-1 text-sm">{errors.aprvstatus.message}</p>} */}
                   </div>
                   <div>
-                    <label className="block text-gray-700 font-medium mb-1">Approve Remark <span className="text-red-500">*</span> </label>
+                    <label className="block text-gray-700 font-medium mb-1">Approve Remark <strong className="text-red-500"> * </strong> </label>
                     <input
                       {...register("aprvremarks")}
                       placeholder="Approve remark "

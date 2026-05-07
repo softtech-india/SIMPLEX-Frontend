@@ -98,10 +98,7 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
     <div className="flex flex-wrap gap-4 items-end">
 
       <div className="w-68">
-        <label className="block text-gray-700 text-sm font-medium mb-1">
-          Brand
-        </label>
-
+        <label className="block text-gray-700 font-medium mb-1"> Brand <strong className="text-red-500"> * </strong> </label>
         <input
           type="text"
           value={item?.pcategorynm || ""}
@@ -113,10 +110,7 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
       </div>
 
       <div className="w-120">
-        <label className="block text-gray-700 text-sm font-medium mb-1">
-          Product
-        </label>
-
+        <label className="block text-gray-700 font-medium mb-1"> Product <strong className="text-red-500"> * </strong> </label>
         <input
           type="text"
           value={item?.productnm || ""}
@@ -125,57 +119,42 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
             if (!item?.pcategoryid) return;
             setProductModalOpen(true);
           }}
-          className={`inputField w-full cursor-pointer ${errors?.itemdtl?.[index]?.productid
-            ? "border-red-500"
-            : "border-gray-400"
-            }`}
+          className={`
+            inputField w-full cursor-pointer 
+            ${errors?.itemdtl?.[index]?.productid && !item?.productid ? "border-red-500" : "border-gray-400"}
+          `}
           placeholder="Select Product"
         />
-        {errors?.itemdtl?.[index]?.productid && (
-          <p className="text-xs text-red-500 mt-1">
-            {errors.itemdtl[index].productid.message}
-          </p>
+        {errors?.itemdtl?.[index]?.productid && !item?.productid && (
+          <p className="text-xs text-red-500 mt-1">  {errors.itemdtl[index].productid.message} </p>
         )}
       </div>
 
       <div className="w-28">
-        <label className="block text-gray-700 text-sm font-medium mb-1">
-          Quantity
-        </label>
+        <label className="block text-gray-700 font-medium mb-1"> Quantity <strong className="text-red-500"> * </strong> </label>
         <input
           type="number"
-          {...register(`itemdtl.${index}.qty1`)}
+          {...register(`itemdtl.${index}.qty1`, {  valueAsNumber: true })}
           disabled={isReadOnly}
-          className={`inputField ${errors?.itemdtl?.[index]?.qty1
-            ? "border-red-500"
-            : "border-gray-400"
-            }`}
+          className={`inputField ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-400"}`}
         />
         {errors?.itemdtl?.[index]?.qty1 && (
-          <p className="text-xs text-red-500 mt-1">
-            {errors.itemdtl[index].qty1.message}
-          </p>
+          <p className="text-xs text-red-500 mt-1"> {errors.itemdtl[index].qty1.message}</p>
         )}
       </div>
 
-      {/* RATE */}
       <div className="w-28">
-        <label className="block text-gray-700 text-sm font-medium mb-1">
-          Rate
-        </label>
+        <label className="block text-gray-700 font-medium mb-1"> Rate</label>
         <input
           type="number"
-          {...register(`itemdtl.${index}.rate`)}
+          {...register(`itemdtl.${index}.rate`, {  valueAsNumber: true })}
           disabled={isReadOnly}
           className="inputField border-gray-400 "
         />
       </div>
 
-      {/* VALUE */}
       <div className="w-28">
-        <label className="block text-gray-700 text-sm font-medium mb-1">
-          Value
-        </label>
+        <label className="block text-gray-700 font-medium mb-1"> Value</label>
         <input
           type="number"
           value={value}
@@ -184,7 +163,6 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
         />
       </div>
 
-      {/* REMOVE */}
       {!isReadOnly && (
         <div className="w-12 flex justify-center">
           <button
