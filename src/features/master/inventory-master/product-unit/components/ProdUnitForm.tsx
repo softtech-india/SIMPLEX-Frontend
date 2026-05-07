@@ -57,7 +57,7 @@ export function ProdUnitForm({ visible, onClose, ProdUnitId, mode }: ProdUnitFor
   const { data: gstUnits = [] } = useQuery({
     queryKey: ["gstUnits", userId],
     queryFn: () => prodUnitService.getAllGstUnits(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     retry: 1,
     refetchOnWindowFocus: false,
   });

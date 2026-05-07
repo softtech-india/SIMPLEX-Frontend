@@ -18,19 +18,17 @@ export const VoucherNumberingDataGrid = forwardRef<any, VoucherNumberingDataGrid
 
     const columns = useMemo(() => [
       { dataField: 'name', caption: 'Name', width: 200, headerFilter: true },
-      { dataField: 'prefix', caption: 'Prefix', width: 120, headerFilter: true },
-      { dataField: 'suffix', caption: 'Suffix', width: 120, headerFilter: true },
-      { dataField: 'lastno', caption: 'Last No.', width: 120, headerFilter: true },
-      { dataField: 'maxlength', caption: 'Max Length', width: 120, headerFilter: true },
-      { dataField: 'manualallow', caption: 'Manual Allow', width: 120, headerFilter: true },
+      { dataField: 'prefix', caption: 'Prefix', width: 100, headerFilter: true },
+      { dataField: 'suffix', caption: 'Suffix', width: 100, headerFilter: true },
+      { dataField: 'lastno', caption: 'Last No.', width: 100, headerFilter: true },
+      { dataField: 'maxlength', caption: 'Max Length', width: 100, headerFilter: true },
+      { dataField: 'manualallow', caption: 'Manual Allow', width: 100, headerFilter: true },
       { dataField: 'futuredateallow', caption: 'Future Date Allow', width: 120, headerFilter: true },
       { dataField: 'status', caption: 'Status', width: 80, headerFilter: true },
-      { dataField: 'voucherid', caption: 'Voucher Id', width: 120, headerFilter: true },
-
-      { dataField: 'entryby', caption: 'Entry User', width: 120 },
-      { dataField: 'entrydt', caption: 'Entry Date', width: 130, dataType: 'date' },
-      { dataField: 'updateby', caption: 'Update User', width: 120 },
-      { dataField: 'updatedt', caption: 'Update Date', width: 130, dataType: 'date' },
+      { dataField: 'entryby', caption: 'Entry User', width: 140 },
+      { dataField: 'entrydt', caption: 'Entry Date', width: 160, dataType: 'date' },
+      { dataField: 'updateby', caption: 'Update User', width: 140 },
+      { dataField: 'updatedt', caption: 'Update Date', width: 160, dataType: 'date' },
     ], []);
 
     return (

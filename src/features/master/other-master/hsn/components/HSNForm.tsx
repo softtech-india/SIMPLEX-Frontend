@@ -59,7 +59,7 @@ export function HSNForm({ visible, onClose, HSNId, mode }: HSNFormProps) {
   const { data: gsts = [] } = useQuery({
     queryKey: ["gsts", userId],
     queryFn: () => hSNService.getAllGSTs(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     retry: 1,
     refetchOnWindowFocus: false,
   });

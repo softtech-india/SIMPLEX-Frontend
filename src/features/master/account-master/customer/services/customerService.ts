@@ -36,7 +36,7 @@ class CustomerService {
         { userid: this.getUserId(), compid: this.getCompanyId(), nature: "CU" }
       );
 
-      this.handleError(response);
+     this.handleError(response);
       return response.data || [];
 
     } catch (error: any) {
