@@ -16,15 +16,15 @@ export const OpeningStockDataGrid = forwardRef<any, OpeningStockDataGridProps>(
   ({ dataSource, onSelectionChanged, onExporting, height = 600 }, ref) => {
 
     const columns = [
-      { dataField: "pcategorynm", caption: "Category ", width: 120, headerFilter: true },
-      { dataField: "productnm", caption: "productnm", width: 200, headerFilter: true },
-      { dataField: "qty1", caption: "Quantity", width: 80, headerFilter: true },
+      { dataField: "pcategorynm", caption: "Brand", width: 150, headerFilter: true },
+      { dataField: "productnm", caption: "Product Name", width: 350, headerFilter: true },
+      { dataField: "qty1", caption: "Quantity", width: 90, headerFilter: true },
       { dataField: "rate", caption: "Rate", width: 100, headerFilter: true },
-      { dataField: "value", caption: "Value", width: 100, headerFilter: true },
-      { dataField: 'entryby', caption: 'Entry User', width: 120 },
-      { dataField: 'entrydt', caption: 'Entry Date', width: 150, dataType: 'date' },
-      { dataField: 'updateby', caption: 'Update User', width: 120 },
-      { dataField: 'updatedt', caption: 'Update Date', width: 150, dataType: 'date' },
+      { dataField: "value", caption: "Value", width: 120, headerFilter: true },
+      { dataField: 'entryby', caption: 'Entry User', width: 140 },
+      { dataField: 'entrydt', caption: 'Entry Date', width: 160, dataType: 'date' },
+      { dataField: 'updateby', caption: 'Update User', width: 140 },
+      { dataField: 'updatedt', caption: 'Update Date', width: 160, dataType: 'date' },
     ];
 
     return (

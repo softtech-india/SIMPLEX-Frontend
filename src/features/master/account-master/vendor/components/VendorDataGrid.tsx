@@ -18,18 +18,15 @@ export const VendorDataGrid = forwardRef<any, VendorDataGridProps>(
 
     const columns = [
       // Core Info
-      { dataField: "code", caption: "Code", width: 140, headerFilter: true },
-      { dataField: "name", caption: "Name", width: 200, headerFilter: true },
+      { dataField: "code", caption: "Code", width: 120, headerFilter: true },
+      { dataField: "name", caption: "Name", width: 220, headerFilter: true },
       { dataField: "subledgertypenm", caption: "Type", width: 130, headerFilter: true },
       { dataField: "ledgergroupnm", caption: "Ledger Group", width: 160, headerFilter: true },
-      { dataField: "status", caption: "Status", width: 100, headerFilter: true },
-
+      
       // Address Info
-      { dataField: "addr1", caption: "Address 1", width: 150 },
-      { dataField: "addr2", caption: "Address 2", width: 150 },
-      { dataField: "addr3", caption: "Address 3", width: 150 },
-      { dataField: "pin", caption: "PIN Code", width: 110 },
-      { dataField: "nl", caption: "Area / Locality", width: 150 },
+      { dataField: "addr", caption: "Address", width: 200 },
+      { dataField: "pin", caption: "PIN Code", width: 80 },
+      { dataField: "nl", caption: "Near Location", width: 150 },
 
       // Contact Info
       { dataField: "mobile", caption: "Mobile", width: 120 },
@@ -40,6 +37,8 @@ export const VendorDataGrid = forwardRef<any, VendorDataGridProps>(
       { dataField: "gstin", caption: "GSTIN", width: 160, headerFilter: true },
       { dataField: "gstregtypedesc", caption: "GST Type", width: 130, headerFilter: true },
       { dataField: "pan", caption: "PAN", width: 130, headerFilter: true },
+
+      { dataField: "status", caption: "Status", width: 100, headerFilter: true },
 
       // Credit & Compliance
       { dataField: "crdays", caption: "Credit Days", width: 120 },

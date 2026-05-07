@@ -129,7 +129,7 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode }: Custome
     queryKey: ["cities", userId, stateId],
     queryFn: () => fetchCityList(userId, stateId),
     enabled: !!stateId && stateId > 0,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     retry: 1,
     refetchOnWindowFocus: false,
     select: (data) =>
@@ -146,7 +146,7 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode }: Custome
     queryKey: ["subledgertype", userId, companyId],
     queryFn: () => customerService.getAllSubLedgers(),
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     retry: 1,
     refetchOnWindowFocus: false,
     select: (data) =>

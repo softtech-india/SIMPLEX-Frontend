@@ -17,15 +17,15 @@ export const HSNDataGrid = forwardRef<any, HSNDataGridProps>(
   ({ dataSource, onSelectionChanged, onExporting, height = 600 }, ref) => {
 
     const columns = useMemo(() => [
-      { dataField: 'hsn', caption: 'HSN', width: 300, headerFilter: true },
+      { dataField: 'hsn', caption: 'HSN', width: 200, headerFilter: true },
       { dataField: 'description', caption: 'Description', width: 300, headerFilter: true },
-      { dataField: 'gst', caption: 'GST', width: 300, headerFilter: true },
+      { dataField: 'gst', caption: 'GST', width: 180, headerFilter: true },
       { dataField: 'typeDesc', caption: 'Type', width: 120, headerFilter: true },
 
-      { dataField: 'entryby', caption: 'Entry User', width: 120 },
-      { dataField: 'entrydt', caption: 'Entry Date', width: 130, dataType: 'date' },
-      { dataField: 'updateby', caption: 'Update User', width: 120 },
-      { dataField: 'updatedt', caption: 'Update Date', width: 130, dataType: 'date' },
+      { dataField: 'entryby', caption: 'Entry User', width: 140 },
+      { dataField: 'entrydt', caption: 'Entry Date', width: 160, dataType: 'date' },
+      { dataField: 'updateby', caption: 'Update User', width: 140 },
+      { dataField: 'updatedt', caption: 'Update Date', width: 160, dataType: 'date' },
     ], []);
 
     return (

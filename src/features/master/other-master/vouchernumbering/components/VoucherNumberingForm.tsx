@@ -87,7 +87,7 @@ export function VoucherNumberingForm({ visible, onClose, VoucherNumberingId, mod
   //   queryKey: ["cities", userId, stateId],
   //   queryFn: () => fetchCityList(userId, stateId),
   //   enabled: !!stateId && stateId > 0,
-  //   staleTime: 5 * 60 * 1000,
+  //   staleTime: 0,
   //   retry: 1,
   //   refetchOnWindowFocus: false,
   //   select: (data) =>
@@ -101,7 +101,7 @@ export function VoucherNumberingForm({ visible, onClose, VoucherNumberingId, mod
   //   queryKey: ["branches", userId],
   //   queryFn: () => godownService.getAllBranches(),
   //   enabled: true,
-  //   staleTime: 5 * 60 * 1000,
+  //   staleTime: 0,
   //   retry: 1,
   //   refetchOnWindowFocus: false,
   //   select: (data) =>

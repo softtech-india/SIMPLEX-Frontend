@@ -84,7 +84,7 @@ export function UserForm({ visible, onClose, formUserId, mode }: UserFormProps) 
   const { data: userGroupList = [] } = useQuery({
     queryKey: ["userGroupList", userId],
     queryFn: () => fetchUserGroupList(userId),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     retry: 1,
     enabled: visible,
   });

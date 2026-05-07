@@ -142,7 +142,7 @@ export function VendorForm({ visible, onClose, formVendorId, mode }: VendorFormP
     queryKey: ["cities", userId, stateId],
     queryFn: () => fetchCityList(userId, stateId),
     enabled: !!stateId && stateId > 0,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     retry: 1,
     refetchOnWindowFocus: false,
     select: (data) =>
@@ -157,7 +157,7 @@ export function VendorForm({ visible, onClose, formVendorId, mode }: VendorFormP
     queryKey: ["corpgroup", userId, companyId],
     queryFn: () => vendorService.getAllCorpGroups(),
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     retry: 1,
     refetchOnWindowFocus: false,
     select: (data) =>
@@ -172,7 +172,7 @@ export function VendorForm({ visible, onClose, formVendorId, mode }: VendorFormP
     queryKey: ["accpostledger", userId, companyId],
     queryFn: () => vendorService.getAllVendors(),
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     retry: 1,
     refetchOnWindowFocus: false,
     select: (data) =>
@@ -187,7 +187,7 @@ export function VendorForm({ visible, onClose, formVendorId, mode }: VendorFormP
     queryKey: ["subledgertype", userId, companyId],
     queryFn: () => vendorService.getAllSubLedgers(),
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     retry: 1,
     refetchOnWindowFocus: false,
     select: (data) =>
@@ -204,7 +204,7 @@ export function VendorForm({ visible, onClose, formVendorId, mode }: VendorFormP
     queryKey: ["tdssecid", userId, companyId],
     queryFn: () => vendorService.getAlltdsSections(),
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     retry: 1,
     refetchOnWindowFocus: false,
     select: (data) =>

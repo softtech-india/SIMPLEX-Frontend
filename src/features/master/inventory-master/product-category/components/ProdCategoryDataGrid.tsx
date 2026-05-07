@@ -17,11 +17,11 @@ export const ProdCategoryDataGrid = forwardRef<any, ProdCategoryDataGridProps>(
   ({ dataSource, onSelectionChanged, onExporting, height = 600 }, ref) => {
 
     const columns = useMemo(() => [
-      { dataField: 'name', caption: 'Name', width: 300, headerFilter: true },
-      { dataField: 'entryby', caption: 'Entry User', width: 120 },
-      { dataField: 'entrydt', caption: 'Entry Date', width: 130, dataType: 'date' },
-      { dataField: 'updateby', caption: 'Update User', width: 120 },
-      { dataField: 'updatedt', caption: 'Update Date', width: 130, dataType: 'date' },
+      { dataField: 'name', caption: 'Name', width: 600, headerFilter: true },
+      { dataField: 'entryby', caption: 'Entry User', width: 140 },
+      { dataField: 'entrydt', caption: 'Entry Date', width: 160, dataType: 'date' },
+      { dataField: 'updateby', caption: 'Update User', width: 140 },
+      { dataField: 'updatedt', caption: 'Update Date', width: 160, dataType: 'date' },
     ], []);
 
     return (
