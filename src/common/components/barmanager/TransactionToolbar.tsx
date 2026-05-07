@@ -1,23 +1,14 @@
 'use client';
 
 import useIsMobile from "@/common/hooks/useIsMobile";
-import {
-  RefreshCw,
-  Plus,
-  Edit2,
-  Trash2,
-  Eye,
-  Printer,
-  File,
-  Share2,
-  Lock,
-  CircleCheckBig
-} from "lucide-react";
+import { RefreshCw, Plus, Edit2, Trash2, Eye, Printer, File, Share2, Lock, CircleCheckBig } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { MenuItem } from "@/common/components/filter/MenuItem";
 import { Permissions } from "@/common/types/privilege.types";
 import { ToolbarSelect } from "./ToolbarSelect";
 import InlineSelectField from "../InlineSelectField";
+import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
+import { SHORTCUTS } from "@/common/constants/shortcuts";
 
 
 type ToolbarSelect = {
@@ -113,6 +104,20 @@ export function TransactionToolbar({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+
+  // handle Sortcuts 
+  useKeyboardShortcuts({
+    [SHORTCUTS.ADD]: () => { if (canAdd && onAdd) onAdd(); },
+    [SHORTCUTS.EDIT]: () => { if (canEdit && onEdit && !isEditDisabled) onEdit(); },
+    [SHORTCUTS.DELETE]: () => { if (canDelete && onDelete && !isDeleteDisabled) onDelete(); },
+    [SHORTCUTS.REFRESH]: () => { onRefresh?.(); },
+    [SHORTCUTS.VIEW]: () => { if (canView && onView) onView(); },
+    [SHORTCUTS.EXPORT]: () => { if (canExport && onExport) onExport(); },
+    [SHORTCUTS.PRINT]: () => { if (canPrint && onPrint) onPrint(); },
+    [SHORTCUTS.CONFIRM]: () => { if (onConfirmed && !isRowConfirmed) onConfirmed(); },
+    [SHORTCUTS.APPROVE]: () => { if (onApprove && !isRowApproved) onApprove(); },
+  });
 
   if (isMobile) {
     return (

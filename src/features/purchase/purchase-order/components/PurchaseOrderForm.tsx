@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Popup } from "devextreme-react/popup";
 import LoadPanel from "devextreme-react/load-panel";
 import { useQuery } from "@tanstack/react-query";
@@ -19,6 +19,8 @@ import { formatDateForInput } from "@/helpers/dateUtils";
 import SearchModal from "@/common/components/SearchModal";
 import { toast } from "sonner";
 import { useConfirm } from "@/common/hooks/useConfirm";
+import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
+import { SHORTCUTS } from "@/common/constants/shortcuts";
 
 interface PurchaseOrderFormProps {
   visible: boolean;
@@ -41,12 +43,22 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
   const confirmDelete = useConfirm();
 
   const [vendoeodalOpen, setVendoeodalOpen] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
   const isDeleteMode = mode === "Delete";
   const isApproveMode = mode === "Approve";
   const isReadOnly = mode === "View" || mode === "Print";
+
+  // handle Sortcuts 
+  useKeyboardShortcuts(
+    {
+      [SHORTCUTS.SAVE]: () => { formRef.current?.requestSubmit(); },
+      [SHORTCUTS.EXIT]: () => { onClose(); },
+    },
+    visible
+  );
 
   const { data: PurchaseOrder, isLoading: isLoadingPurchaseOrder } =
     usePurchaseOrderById({
@@ -372,6 +384,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
       showCloseButton={false}
     >
       <form
+        ref={formRef}
         onSubmit={handleSubmit(handleFormSubmit, onError)}
         className="flex flex-col h-full"
       >
@@ -730,7 +743,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
             <button
               type="submit"
               disabled={isSubmitting}
-              className="primary-btn disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`${isDeleteMode ? 'delete-btn' : 'primary-btn'} disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               {getButtonLabel()}
             </button>
