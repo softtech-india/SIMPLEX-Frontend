@@ -17,11 +17,15 @@ export const GodownTransferItemSchema = z.object({
   qty: z.coerce
     .number()
     .min(1, "Quantity should be greater than 0"),
+  balanceqty: z.coerce
+    .number()
+    .optional(),
 
   rate: z.coerce.number().optional(),
 
   value: z.coerce.number().optional(),
 
+  unit: z.string().optional(),
   altunimethod: z.string().optional(),
 
   altunitfactor: z.coerce.number().optional(),
@@ -50,7 +54,7 @@ export const GodownTransferSchema = z.object({
 
   gtdt: z.string().optional(),
 
-  reqno: z.number().optional(),
+  reqno: z.string().optional(),
   reqName: z.string().optional(),
 
   gtno: z.string().optional(),
@@ -78,7 +82,6 @@ export const GodownTransferSchema = z.object({
 
   rem: z.string().optional(),
 
-  rem2: z.string().optional(),
 
   reqid: z.coerce.number().optional(),
 
@@ -90,11 +93,11 @@ export const GodownTransferSchema = z.object({
     .array(GodownTransferItemSchema)
     .min(1, "At least one item is required"),
 
-  entryby: z.coerce.number().optional(),
+  entryby: z.number().optional(),
 
   entrydt: z.string().optional(),
 
-  updateby: z.coerce.number().optional(),
+  updateby: z.number().optional(),
 
   updatedt: z.string().optional(),
 });

@@ -6,8 +6,10 @@ export interface GodownTransferItem {
   productid?: number;
   productnm?: string;
   qty?: number;
+  balanceqty?: number;
   rate?: number;
   value?: number;
+  unit?: string;
   altunimethod?: string;
   altunitfactor?: number;
   alterunitfactortype?: string;
@@ -23,7 +25,7 @@ export interface GodownTransfer {
   vnummethod?: string;
   reqdt?: string;
   gtdt?: string;
-  reqno?: number;
+  reqno?: string;
   gtno?: string;
   godownid: number;
   godownnm?: string;
@@ -32,7 +34,6 @@ export interface GodownTransfer {
   togodownid: number;
   togodownnm?: string;
   rem?: string;
-  rem2?: string;
   reqid?: number;
   totqty?: number;
   totval?: number;

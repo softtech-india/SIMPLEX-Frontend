@@ -1,9 +1,9 @@
 import { forwardRef } from 'react';
-import { Requisition } from '../types/godowntransfer.types';
+import { GodownTransfer } from '../types/godowntransfer.types';
 import CustomDataGrid from '@/common/components/sharedComponents/CustomDataGrid';
 
-interface RequisitionDataGridProps {
-  dataSource: Requisition[];
+interface GodownTransferDataGridProps {
+  dataSource: GodownTransfer[];
   onSelectionChanged: (e: any) => void;
   onExporting: (e: any) => void;
   showFilterRow?: boolean;
@@ -12,18 +12,21 @@ interface RequisitionDataGridProps {
   height?: number | string;
 }
 
-export const RequisitionDataGrid = forwardRef<any, RequisitionDataGridProps>(
+export const GodownTransferDataGrid = forwardRef<any, GodownTransferDataGridProps>(
   ({ dataSource, onSelectionChanged, onExporting, height = 600 }, ref) => {
 
     const columns = [
       { dataField: "reqno", caption: "Requisition No.", width: 150, headerFilter: true },
-      { dataField: "reqdt", caption: "Date", dataType: "date", format: "dd-MM-yyyy", width: 100 },
+      { dataField: "gtno", caption: "Godown Transfer No.", width: 150, headerFilter: true },
+      { dataField: "reqdt", caption: "Req Date", dataType: "date", format: "dd-MM-yyyy", width: 100 },
 
+      { dataField: "godownnm", caption: "From Godown", width: 150, headerFilter: true },
+      { dataField: "gtdt", caption: "Transfer Date", dataType: "date", format: "dd-MM-yyyy", width: 100 },
       { dataField: "tobranchnm", caption: "To Branch", width: 150, headerFilter: true },
       { dataField: "togodownnm", caption: "To Godown", width: 120, headerFilter: true },
       { dataField: "totqty", caption: "Total Quantity", width: 100, headerFilter: true },
-      { dataField: "reqstatusdesc", caption: "Status", width: 150, headerFilter: true },
-      { dataField: "rem1", caption: "Remarks", width: 200, headerFilter: true },
+      { dataField: "recvstatusdesc", caption: "Status", width: 150, headerFilter: true },
+      { dataField: "rem", caption: "Remarks", width: 200, headerFilter: true },
       { dataField: 'entryby', caption: 'Entry User', width: 120 },
       { dataField: 'entrydt', caption: 'Entry Date', width: 150, dataType: 'date' },
       { dataField: 'updateby', caption: 'Update User', width: 120 },
@@ -45,4 +48,4 @@ export const RequisitionDataGrid = forwardRef<any, RequisitionDataGridProps>(
   }
 );
 
-RequisitionDataGrid.displayName = 'RequisitionDataGrid';
+GodownTransferDataGrid.displayName = 'GodownTransferDataGrid';

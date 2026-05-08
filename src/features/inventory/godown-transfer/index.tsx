@@ -11,7 +11,7 @@ import { fetchBranchList } from "@/api/master/ledger-api";
 import { useQuery } from '@tanstack/react-query';
 import useUserStore from '@/store/userStore';
 import { currentDate } from '@/helpers/dateUtils';
-import { RequisitionDataGrid } from './components/RequisitionDataGrid';
+import { GodownTransferDataGrid } from './components/RequisitionDataGrid';
 import { GodownTransferForm } from './components/GodownTransferForm';
 import { LoadPanel } from 'devextreme-react';
 
@@ -184,7 +184,7 @@ export default function GodownTransferModule() {
 
         {!isMobile && (
           <div className="w-full px-2 sm:px-2 md:px-2 lg:px-2 max-w-full lg:max-w-355 bg-white rounded-xl shadow-sm border border-gray-200 p-2 overflow-x-auto my-4">
-            <RequisitionDataGrid
+            <GodownTransferDataGrid
               dataSource={godownTransferList}
               onSelectionChanged={handleSelectionChanged}
               showFilterRow

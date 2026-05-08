@@ -4,7 +4,6 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
-
 import { GodownTransferFormType } from "../types/godowntransfer.types";
 
 import { toast } from "sonner";
@@ -28,6 +27,13 @@ type UseGodownTransferByIdParams = {
   branchid: number | string;
   finid: number;
 };
+
+// Add delete params interface
+export interface DeleteGodownTransferParams {
+  id: number;
+  userid: number;
+  compid: number;
+}
 
 export const GODOWN_TRANSFER_KEYS = {
   all: ["godown-transfer"] as const,
@@ -98,17 +104,14 @@ export function useCreateGodownTransfer() {
 
   return useMutation({
     mutationFn: (data: GodownTransferFormType) =>
-      godownTransferService.createGodownTransfer(
-        data
-      ),
+      godownTransferService.createGodownTransfer(data),
 
     onSuccess: (data) => {
       if (data.success) {
         queryClient.invalidateQueries({
-          queryKey: GODOWN_TRANSFER_KEYS.list(),
+          queryKey: GODOWN_TRANSFER_KEYS.lists(),
         });
 
-        toast.success(data.message);
       } else {
         toast.error(
           data.message ||
@@ -137,22 +140,18 @@ export function useUpdateGodownTransfer() {
       id: number;
       data: GodownTransferFormType;
     }) =>
-      godownTransferService.updateGodownTransfer(
-        id,
-        data
-      ),
+      godownTransferService.updateGodownTransfer(id, data),
 
     onSuccess: (data) => {
       if (data.success) {
         queryClient.invalidateQueries({
-          queryKey: GODOWN_TRANSFER_KEYS.list(),
+          queryKey: GODOWN_TRANSFER_KEYS.lists(),
         });
 
         queryClient.invalidateQueries({
           queryKey: GODOWN_TRANSFER_KEYS.details(),
         });
 
-        toast.success(data.message);
       } else {
         toast.error(
           data.message ||
@@ -174,14 +173,16 @@ export const useDeleteGodownTransfer = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) =>
-      godownTransferService.deleteGodownTransfer(
-        id
-      ),
+    mutationFn: ({ id, userid, compid }: DeleteGodownTransferParams) =>
+      godownTransferService.deleteGodownTransfer(id),
 
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({
-        queryKey: GODOWN_TRANSFER_KEYS.list(),
+        queryKey: GODOWN_TRANSFER_KEYS.lists(),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: GODOWN_TRANSFER_KEYS.details(),
       });
 
       const successMessage =
@@ -189,14 +190,8 @@ export const useDeleteGodownTransfer = () => {
         data?.data?.message ||
         "Godown transfer deleted successfully";
 
-      toast.success(successMessage);
     },
 
-    onError: (err: Error) => {
-      toast.error(
-        err.message ||
-        "Failed to delete godown transfer"
-      );
-    },
+
   });
 };

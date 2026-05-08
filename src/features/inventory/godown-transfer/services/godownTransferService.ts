@@ -139,9 +139,6 @@ class GodownTransferService {
           ? error.message
           : String(error);
 
-      toast.error(
-        `Error fetching godown transfer: ${message}`
-      );
 
       throw new Error(message);
     }

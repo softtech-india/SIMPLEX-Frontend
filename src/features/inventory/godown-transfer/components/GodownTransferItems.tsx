@@ -243,7 +243,7 @@ export const GodownTransferItems: React.FC<GodownTransferItemsProps> = ({
 
       <div className="w-14">
         <label className="block text-gray-700 text-sm font-medium mb-1">
-          Bal. Qty
+          Balance
         </label>
         <input
           type="number"
