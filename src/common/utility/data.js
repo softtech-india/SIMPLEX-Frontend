@@ -997,3 +997,106 @@ export const manualallowType = [
         name: 'No',
     }
 ];
+
+export const billType = [
+    {
+        id: 'SA',
+        gType: "S",
+        name: 'Sale',
+    },
+    {
+        id: 'PU',
+        gType: "P",
+        name: 'Purchase',
+    }
+]
+
+export const taxRegion = [
+    {
+        id: 'L',
+        name: 'Local',
+    },
+    {
+        id: 'C',
+        name: 'Central',
+    }
+];
+export const transactionType = [
+    {
+        id: 'OT',
+        name: 'Other',
+    },
+    {
+        id: 'ST',
+        name: 'Stock Transfer',
+    },
+    {
+        id: 'SZ',
+        name: 'SEZ-with Payment',
+    },
+    {
+        id: 'SW',
+        name: 'SEZ-without Payment',
+    },
+    {
+        id: 'EX',
+        name: 'Export-with Payment',
+    },
+    {
+        id: 'EW',
+        name: 'Export-without Payment',
+    },
+    {
+        id: 'DE',
+        name: 'Deemed Export',
+    },
+];
+
+export const taxApplicable = [
+    {
+        id: 'ST',
+        name: 'Single Tax',
+    },
+    {
+        id: 'IT',
+        name: 'Itemwise tax',
+    },
+    {
+        id: 'IM',
+        name: 'Itemwise Miscellaneous',
+    },
+    {
+        id: 'ITM',
+        name: 'Itemwise tax & Miscellaneous',
+    },
+];
+export const isTaxInclude = [
+    {
+        id: "Y",
+        name: "Yes"
+    },
+    {
+        id: "N",
+        name: "No"
+    }
+]
+export const isDefault = [
+    {
+        id: "Y",
+        name: "Yes"
+    },
+    {
+        id: "N",
+        name: "No"
+    }
+]
+export const StatusOfBillType = [
+    {
+        id: "Y",
+        name: "Yes"
+    },
+    {
+        id: "N",
+        name: "No"
+    }
+]
