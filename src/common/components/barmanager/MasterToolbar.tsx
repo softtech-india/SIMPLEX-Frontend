@@ -14,6 +14,8 @@ import {
 import { useState, useRef, useEffect } from "react";
 import { MenuItem } from "@/common/components/filter/MenuItem";
 import { Permissions } from "@/common/types/privilege.types";
+import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
+import { SHORTCUTS } from "@/common/constants/shortcuts";
 
 interface MasterToolbarProps {
   title: string;
@@ -59,6 +61,17 @@ export function MasterToolbar({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // handle Sortcuts 
+  useKeyboardShortcuts({
+    [SHORTCUTS.ADD]: () => { if (canAdd && onAdd) onAdd(); },
+    [SHORTCUTS.EDIT]: () => { if (canEdit && onEdit) onEdit(); },
+    [SHORTCUTS.DELETE]: () => { if (canDelete && onDelete) onDelete(); },
+    [SHORTCUTS.REFRESH]: () => { onRefresh?.(); },
+    [SHORTCUTS.VIEW]: () => { if (canView && onView) onView(); },
+    [SHORTCUTS.EXPORT]: () => { if (canExport && onExport) onExport(); },
+    [SHORTCUTS.PRINT]: () => { if (canPrint && onPrint) onPrint(); },
+  });
 
   if (isMobile) {
     return (

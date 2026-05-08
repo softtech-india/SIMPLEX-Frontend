@@ -2,10 +2,10 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import LoadPanel from 'devextreme-react/load-panel';
-import { PurchaseOrderDataGrid } from './components/PurchaseOrderDataGrid';
-import { PurchaseOrderForm } from './components/PurchaseOrderForm';
-import { usePurchaseOrderList } from './hooks/usePurchaseOrder';
-import { PurchaseOrder, OperationMode } from './types/purchaseOrder.types';
+import { SaleOrderDataGrid } from './components/SaleOrderDataGrid';
+import { SaleOrderForm } from './components/SaleOrderForm';
+import { useSaleOrderList } from './hooks/useSaleOrder';
+import { SaleOrder, OperationMode } from './types/saleOrder.types';
 import useIsMobile from "@/common/hooks/useIsMobile";
 import { TransactionToolbar } from '@/common/components/barmanager/TransactionToolbar';
 import { usePrivileges } from '@/common/hooks/usePrivileges';
@@ -16,7 +16,7 @@ import useUserStore from '@/store/userStore';
 import { currentDate, formatDate } from '@/helpers/dateUtils';
 
 
-export default function PurchaseOrderModule() {
+export default function SaleOrderModule() {
 
   // Hooks
   const isMobile = useIsMobile()
@@ -24,10 +24,10 @@ export default function PurchaseOrderModule() {
   const { userId, companyId, branchId, finid, branchnm } = useUserStore();
 
   // State 
-  const [selectedRow, setselectedRow] = useState<PurchaseOrder | null>(null);
+  const [selectedRow, setselectedRow] = useState<SaleOrder | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formMode, setFormMode] = useState<OperationMode>('Add');
-  const [formPurchaseOrderId, setFormPurchaseOrderId] = useState(0);
+  const [formSaleOrderId, setFormSaleOrderId] = useState(0);
   const [toolbarBranchId, setToolbarBranchId] = useState<string | null>(null);
   const [formSelectedBranch, setFormSelectedBranch] = useState<string | null>(null);
 
@@ -36,8 +36,8 @@ export default function PurchaseOrderModule() {
 
   const isRowApproved = selectedRow?.aprvstatus === "A";
 
-  const { data: purchaseOrderList = [], isLoading, refetch } =
-    usePurchaseOrderList({
+  const { data: SaleOrderList = [], isLoading, refetch } =
+    useSaleOrderList({
       userid: Number(userId),
       compid: Number(companyId),
       skip: 0,
@@ -81,10 +81,10 @@ export default function PurchaseOrderModule() {
     if (mode !== 'Add' && !selectedRow) return;
 
     if (mode === 'Add') {
-      setFormPurchaseOrderId(0);
+      setFormSaleOrderId(0);
       setselectedRow(null);
     } else {
-      setFormPurchaseOrderId(selectedRow?.id ?? 0);
+      setFormSaleOrderId(selectedRow?.id ?? 0);
     }
 
     setFormMode(mode);
@@ -93,7 +93,7 @@ export default function PurchaseOrderModule() {
 
   const handleFormClose = useCallback(() => {
     setIsFormOpen(false);
-    setFormPurchaseOrderId(0);
+    setFormSaleOrderId(0);
   }, []);
 
   // Toolbar handlers
@@ -113,7 +113,7 @@ export default function PurchaseOrderModule() {
 
   const handleRefresh = useCallback(() => {
     refetch();
-    setFormPurchaseOrderId(0);
+    setFormSaleOrderId(0);
     setselectedRow(null);
     setToolbarBranchId(null);
     setFromDate(currentDate);
@@ -121,22 +121,22 @@ export default function PurchaseOrderModule() {
   }, [refetch]);
 
   const handleExport = useCallback(() => {
-    if (!purchaseOrderList || purchaseOrderList.length === 0) return;
+    if (!SaleOrderList || SaleOrderList.length === 0) return;
 
     // Generate columns dynamically from first row keys
-    const columns: ExcelColumn[] = Object.keys(purchaseOrderList[0]).map((key) => ({
+    const columns: ExcelColumn[] = Object.keys(SaleOrderList[0]).map((key) => ({
       header: key.charAt(0).toUpperCase() + key.slice(1),
       key,
       width: 20,
     }));
 
     exportToExcel({
-      data: purchaseOrderList,
+      data: SaleOrderList,
       columns,
-      fileName: "Purchase order List.xlsx",
-      sheetName: "Purchase order",
+      fileName: "Sale order List.xlsx",
+      sheetName: "Sale order",
     });
-  }, [purchaseOrderList]);
+  }, [SaleOrderList]);
 
   // useEffect(() => {
   //   console.log("formSelectedBranch :", formSelectedBranch);
@@ -144,12 +144,12 @@ export default function PurchaseOrderModule() {
 
   return (
     <>
-      <div className="purchase-order-module ">
+      <div className="Sale-order-module ">
 
         <div className="bg-white rounded-xl shadow-sm border mt-2">
 
           <TransactionToolbar
-            title="Purchse Orders"
+            title="Sale Orders"
             // periodTitle='Period: 2026-2027'
             permissions={permissions}
             onAdd={handleAddClick}
@@ -203,8 +203,8 @@ export default function PurchaseOrderModule() {
 
         {!isMobile && (
           <div className="w-full px-2 sm:px-2 md:px-2 lg:px-2 max-w-full lg:max-w-355 bg-white rounded-xl shadow-sm border border-gray-200 p-2 overflow-x-auto my-4">
-            <PurchaseOrderDataGrid
-              dataSource={purchaseOrderList}
+            <SaleOrderDataGrid
+              dataSource={SaleOrderList}
               onSelectionChanged={handleSelectionChanged}
               showFilterRow
               showColumnChooser
@@ -216,10 +216,10 @@ export default function PurchaseOrderModule() {
         )}
 
 
-        <PurchaseOrderForm
+        <SaleOrderForm
           visible={isFormOpen}
           onClose={handleFormClose}
-          formPurchaseOrderId={formPurchaseOrderId}
+          formSaleOrderId={formSaleOrderId}
           formSelectedBranch={formSelectedBranch || branchnm}
           toolbarBranchId={Number(toolbarBranchId) || Number(branchId)}
           mode={formMode}

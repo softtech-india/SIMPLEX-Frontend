@@ -71,7 +71,7 @@ export function GodownForm({ visible, onClose, GodownId, mode }: GodownFormProps
   // const { data: gsts = [] } = useQuery({
   //   queryKey: ["gsts", userId],
   //   queryFn: () => godownService.getAllGSTs(),
-  //   staleTime: 5 * 60 * 1000,
+  //   staleTime: 0,
   //   retry: 1,
   //   refetchOnWindowFocus: false,
   // });
@@ -106,7 +106,7 @@ export function GodownForm({ visible, onClose, GodownId, mode }: GodownFormProps
     queryKey: ["cities", userId, stateId],
     queryFn: () => fetchCityList(userId, stateId),
     enabled: !!stateId && stateId > 0,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     retry: 1,
     refetchOnWindowFocus: false,
     select: (data) =>
@@ -120,7 +120,7 @@ export function GodownForm({ visible, onClose, GodownId, mode }: GodownFormProps
     queryKey: ["branches", userId],
     queryFn: () => godownService.getAllBranches(),
     enabled: true,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     retry: 1,
     refetchOnWindowFocus: false,
     select: (data) =>

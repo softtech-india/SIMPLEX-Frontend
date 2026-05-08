@@ -79,7 +79,7 @@ export function BranchForm({ visible, onClose, BranchId, mode }: BranchFormProps
   const { data: states = [] } = useQuery({
     queryKey: ["states", userId],
     queryFn: () => fetchStateList(userId),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     retry: 1,
     refetchOnWindowFocus: false,
   });
@@ -90,7 +90,7 @@ export function BranchForm({ visible, onClose, BranchId, mode }: BranchFormProps
     queryKey: ["cities", userId, selectedStateId],
     queryFn: () => fetchCityList(userId, selectedStateId || 0),
     enabled: !!selectedStateId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     retry: 1,
     refetchOnWindowFocus: false,
   });

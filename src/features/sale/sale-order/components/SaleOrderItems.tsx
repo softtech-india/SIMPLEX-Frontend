@@ -1,10 +1,10 @@
 import { Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SearchModal from "@/common/components/SearchModal";
 import { toast } from "sonner";
 
 
-type PurchaseOrderItemsProps = {
+type SaleOrderItemsProps = {
   index: number;
   field: { id: string };
   control: any;
@@ -23,7 +23,7 @@ type PurchaseOrderItemsProps = {
   currentId?: number;
 };
 
-export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
+export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
   index,
   field,
   control,
@@ -38,8 +38,10 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
   visible,
   isReadOnly,
   fieldsLength,
+
   excludeIds,
   currentId
+
 }) => {
   const item = watchedItems?.[index];
   const qty = Number(item?.qty1) || 0;
@@ -93,13 +95,12 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
   ];
 
   const handleProductSelect = (row: any) => {
-
     const alreadyExists = watchedItems?.some(
       (item: any) => item?.productid === row.id
     );
 
     if (alreadyExists) {
-      toast.error("Product already selected");
+      toast.error("Brand already selected");
       return;
     }
 
@@ -204,6 +205,7 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
         columns={searchBrandColumns}
         searchFields={searchBrandFields}
         onSelect={handleBrandSelect}
+
       />
 
       <SearchModal

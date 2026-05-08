@@ -58,7 +58,7 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
   const { data: gsts = [] } = useQuery({
     queryKey: ["gsts", userId],
     queryFn: () => productService.getAllGSTs(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     retry: 1,
     refetchOnWindowFocus: false,
   });
@@ -66,7 +66,7 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
   const { data: hsns = [] } = useQuery({
     queryKey: ["hsns", userId],
     queryFn: () => productService.getAllHSNs(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     retry: 1,
     refetchOnWindowFocus: false,
   });
@@ -74,7 +74,7 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
   const { data: categories = [] } = useQuery({
     queryKey: ["categories", userId],
     queryFn: () => productService.getAllCategories(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     retry: 1,
     refetchOnWindowFocus: false,
   });
@@ -82,7 +82,7 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
   const { data: prodClasses = [] } = useQuery({
     queryKey: ["prodClasses", userId],
     queryFn: () => productService.getAllProdClasses(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     retry: 1,
     refetchOnWindowFocus: false,
   });
@@ -90,7 +90,7 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
   const { data: prodGroups = [] } = useQuery({
     queryKey: ["prodGroups", userId],
     queryFn: () => productService.getAllProdGroups(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     retry: 1,
     refetchOnWindowFocus: false,
   });
@@ -98,7 +98,7 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
   const { data: prodUnits = [] } = useQuery({
     queryKey: ["prodUnits", userId],
     queryFn: () => productService.getAllProdUnits(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     retry: 1,
     refetchOnWindowFocus: false,
   });

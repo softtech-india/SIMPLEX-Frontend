@@ -4,6 +4,7 @@ import { persist } from "zustand/middleware";
 interface UserState {
   userId: string;
   companyId: string;
+  companyName: string;
   branchId: string;
   branchnm: string;
   finid: string;
@@ -20,6 +21,7 @@ const useUserStore = create<UserState>()(
     (set) => ({
       userId: "",
       companyId: "",
+      companyName: "",
       branchId: "",
       branchnm: "",
       finid: "",
@@ -37,6 +39,7 @@ const useUserStore = create<UserState>()(
         set({
           userId: "",
           companyId: "",
+          companyName: "",
           branchId: "",
           branchnm: "",
           finid: "",
