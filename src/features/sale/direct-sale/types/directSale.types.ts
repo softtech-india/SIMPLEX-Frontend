@@ -1,0 +1,105 @@
+export interface DirectSaleItem {
+    tag?: string;
+    sl?: number;
+    dtlid?: number;
+    pcategoryid?: number;
+    pcategorynm?: string;
+    productid?: number;
+    productnm?: string;
+    qty1?: number;
+    rate?: number;
+    value?: number;
+    discpct?: number;
+    discamt?: number;
+    netval?: number;
+    taxablerate?: number;
+    taxableval?: number;
+    taxid?: number;
+    taxval?: number;
+    finalval?: number;
+    stockval?: number;
+    cgstpct?: number;
+    cgstval?: number;
+    cgstledgerid?: number;
+    sgstpct?: number;
+    sgstval?: number;
+    sgstledgerid?: number;
+    igstpct?: number;
+    igstval?: number;
+    igstledgerid?: number;
+    hsnid?: number;
+    hsnno?: string;
+    mrp?: number;
+}
+
+export interface DirectSale {
+    id: number;
+
+    compid?: number | string;
+    branchid?: number | string;
+    finid?: number;
+    vnumid?: number;
+    vnummethod?: string;
+
+    billdt?: string;
+    billno?: string;
+    billtypeid?: number;
+    billTypename?: string;
+
+    customerid?: number;
+    customernm?: string;
+
+    cashcrtype?: string;
+    crdays?: number;
+
+    saledgerid?: number;
+    narration?: string;
+
+    qty1?: number;
+    qtyrateval?: number;
+
+    discval?: number;
+    netval?: number;
+    beftaxval?: number;
+    taxableval?: number;
+    taxval?: number;
+    amtwithtaxval?: number;
+    afttaxval?: number;
+    billamt?: number;
+    sgstval?: number;
+    cgstval?: number;
+    igstval?: number;
+
+    smid?: number;
+    salemanName?: string;
+
+    godownid?: number;
+    godownName?: string;
+
+    billtime?: string;
+
+    aprvstatus?: string;
+
+    itemdtl?: DirectSaleItem[];
+
+    entryby?: number;
+    entrydt?: string;
+    updateby?: number;
+    updatedt?: string;
+}
+
+export interface DirectSaleFormType
+    extends Partial<
+        Omit<
+            DirectSale,
+            | "entryby" | "entrydt" | "updateby" | "updatedt"
+        >
+    > { }
+
+export interface DirectSaleApiResponse {
+    success: boolean;
+    message: string;
+    data: DirectSale[];
+}
+
+export type OperationMode = "Add" | "Edit" | "Delete" | "View" | "Print" | "Approve";
