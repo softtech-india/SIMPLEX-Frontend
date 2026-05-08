@@ -1,17 +1,22 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+
 import {
-  PurchaseOrderSchema,
+  getPurchaseOrderSchema,
+  PurchaseOrderBaseSchema,
   PurchaseOrderFormSchema,
 } from "../schemas/purchaseOrder.schema";
+
 import { pruchaseOrderFormDefaults } from "../constants/pruchaseOrderFormDefaults";
-import { Resolver } from "react-hook-form";
 
 export const usePurchaseOrderForm = (
+  isApproveMode: boolean,
   defaultValues?: Partial<PurchaseOrderFormSchema>
 ) => {
-  const form = useForm<PurchaseOrderFormSchema>({
-    resolver: zodResolver(PurchaseOrderSchema) as Resolver<PurchaseOrderFormSchema>,
+  const schema = getPurchaseOrderSchema(isApproveMode);
+
+  return useForm<PurchaseOrderFormSchema>({
+    resolver: zodResolver(schema),
 
     defaultValues: {
       ...pruchaseOrderFormDefaults,
@@ -22,6 +27,4 @@ export const usePurchaseOrderForm = (
     mode: "onChange",
     shouldUnregister: false,
   });
-
-  return form;
 };

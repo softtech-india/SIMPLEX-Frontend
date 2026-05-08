@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const PurchaseOrderItemSchema = z.object({
+export const SaleOrderItemSchema = z.object({
   tag: z.string().optional(),
   dtlid: z.number().optional(),
 
@@ -18,7 +18,7 @@ export const PurchaseOrderItemSchema = z.object({
   rateon: z.number().optional(),
 });
 
-export const PurchaseOrderBaseSchema = z.object({
+export const SaleOrderBaseSchema = z.object({
   compid: z.number().optional(),
   branchid: z.number().optional(),
   finid: z.number().optional(),
@@ -29,23 +29,11 @@ export const PurchaseOrderBaseSchema = z.object({
   orderdt: z.string().optional(),
   orderno: z.string().optional(),
 
-  vendorid: z.number().min(1, "Please select a vendor"),
-  vendornm: z.string().optional(),
-  vendorName: z.string().optional(),
+  customerid: z.number().min(1, "Please select a customer"),
+  customernm: z.string().optional(),
 
-  enqno: z.string().optional(),
-  enqdt: z.string().optional(),
-
-  quotno: z.string().optional(),
-  quotdt: z.string().optional(),
-
-  delvplace: z.string().optional(),
-  transportmode: z.string().optional(),
-
-  paymentterms: z.string().optional(),
-  paymentmode: z.string().optional(),
-
-  delvdays: z.string().optional(),
+  partyordno: z.string().optional(),
+  partyorddt: z.string().optional(),
 
   rem1: z.string().optional(),
   rem2: z.string().optional(),
@@ -60,11 +48,11 @@ export const PurchaseOrderBaseSchema = z.object({
   aprvstatus: z.string().optional(),
   aprvremarks: z.string().optional(),
 
-  itemdtl: z.array(PurchaseOrderItemSchema).min(1, "At least one item is required"),
+  itemdtl: z.array(SaleOrderItemSchema).min(1, "At least one item is required"),
 });
 
-export const getPurchaseOrderSchema = (isApproveMode: boolean) =>
-  PurchaseOrderBaseSchema.superRefine((data, ctx) => {
+export const getSaleOrderSchema = (isApproveMode: boolean) =>
+  SaleOrderBaseSchema.superRefine((data, ctx) => {
     if (isApproveMode) {
       if (!data.aprvstatus?.trim()) {
         ctx.addIssue({
@@ -84,5 +72,5 @@ export const getPurchaseOrderSchema = (isApproveMode: boolean) =>
     }
   });
 
-export type PurchaseOrderFormSchema =
-  z.infer<typeof PurchaseOrderBaseSchema>;
+export type SaleOrderFormSchema =
+  z.infer<typeof SaleOrderBaseSchema>;

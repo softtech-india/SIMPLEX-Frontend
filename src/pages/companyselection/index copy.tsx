@@ -72,12 +72,12 @@ export default function CompanyPage({ pageTitle }: CompanyPageProps) {
       storageService.setItem("companyId", selected.compid);
       storageService.setItem("companyName", selected.compnm);
 
-      useCompanyStore.getState().setCompanyData({
-        companyId: selected.compid,
-        companyName: selected.compname,
-        branchId: selected.branchid,
-        branchName: selected.branchname
-      });
+      // useCompanyStore.getState().setCompanyData({
+      //   companyId: selected.compid,
+      //   companyName: selected.compname,
+      //   branchId: selected.branchid,
+      //   branchName: selected.branchname
+      // });
 
       useUserStore.getState().setUserData({
         companyId: selected.compid,

@@ -66,13 +66,13 @@ export function FormSelect<T extends FieldValues, V = string | number>({
                 control: (base, state) => ({
                   ...base,
                   borderColor: fieldState.error
-                    ? "red"
+                    ? "#fb2c36"
                     : state.isFocused
                       ? "#2563eb"
                       : "#9ca3af",
                   "&:hover": {
                     borderColor: fieldState.error
-                      ? "red"
+                      ? "#fb2c36"
                       : "#6b7280",
                   },
                   boxShadow: fieldState.error

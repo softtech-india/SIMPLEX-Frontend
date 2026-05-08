@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Popup } from "devextreme-react/popup";
 import LoadPanel from "devextreme-react/load-panel";
 import { useQuery } from "@tanstack/react-query";
@@ -21,6 +21,8 @@ import SearchModal from "@/common/components/SearchModal";
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { useQrScanner } from "@/hooks/useQrScanner";
 import { toast } from "sonner";
+import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
+import { SHORTCUTS } from "@/common/constants/shortcuts";
 
 
 interface GoodReceivedNoteProps {
@@ -50,12 +52,22 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
   } = useUserStore();
 
   const confirmDelete = useConfirm();
+  const formRef = useRef<HTMLFormElement>(null);
 
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
   const isDeleteMode = mode === "Delete";
   const isConfiemMode = mode === "Confirmed";
   const isReadOnly = mode === "View" || mode === "Print" || mode === "Confirmed";
+
+  // handle Sortcuts 
+  useKeyboardShortcuts(
+    {
+      [SHORTCUTS.SAVE]: () => { formRef.current?.requestSubmit(); },
+      [SHORTCUTS.EXIT]: () => { onClose(); },
+    },
+    visible
+  );
 
   const [grnPendingModalOpen, setGrnPendingModalOpen] = useState(false);
   const [vendorModalOpen, setVendorModalOpen] = useState(false);
@@ -203,7 +215,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
             scanqty: item.scanqty || 0,
             shortqty: item.shortqty || 0,
             excessqty: item.excessqty || 0,
-            actualprodval: item.excessqty || 0,
+            actualprodval: item.actualprodval || 0,
           })) ?? [],
       });
     }
@@ -509,6 +521,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
       showCloseButton={false}
     >
       <form
+        ref={formRef}
         onSubmit={handleSubmit(handleFormSubmit, onError)}
         className="flex flex-col h-full"
       >
@@ -799,7 +812,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
             <button
               type="submit"
               disabled={isSubmitting}
-              className="primary-btn disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`${isDeleteMode ? 'delete-btn' : 'primary-btn'} disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               {getButtonLabel()}
             </button>

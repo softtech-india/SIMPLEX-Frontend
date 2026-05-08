@@ -4,16 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import { Popup } from "devextreme-react/popup";
 import LoadPanel from "devextreme-react/load-panel";
 import { useQuery } from "@tanstack/react-query";
-import { usePurchaseOrderById, useCreatePurchaseOrder, useUpdatePurchaseOrder, useDeletePurchaseOrder, useApprovePurchaseOrder } from "../hooks/usePurchaseOrder";
-import { PurchaseOrderFormType, OperationMode } from "../types/purchaseOrder.types";
-import { PurchaseOrderFormSchema } from "../schemas/purchaseOrder.schema";
-import { pruchaseOrderFormDefaults } from "../constants/pruchaseOrderFormDefaults";
-import { usePurchaseOrderForm } from "../hooks/usePurchaseOrderForm";
+import { useSaleOrderById, useCreateSaleOrder, useUpdateSaleOrder, useDeleteSaleOrder, useApproveSaleOrder } from "../hooks/useSaleOrder";
+import { SaleOrderFormType, OperationMode } from "../types/saleOrder.types";
+import { SaleOrderFormSchema } from "../schemas/saleOrder.schema";
+import { pruchaseOrderFormDefaults } from "../constants/saleOrderFormDefaults";
+import { useSaleOrderForm } from "../hooks/useSaleOrderForm";
 import { useFieldArray } from "react-hook-form";
 import { fetchSeriesList } from "@/api/purchase/purchase-api";
 import useUserStore from "@/store/userStore";
 import { FormSelect } from "@/common/components/FormSelect";
-import { PurchaseOrderItems } from "./PurchaseOrderItems";
+import { SaleOrderItems } from "./SaleOrderItems";
 import { useWatch } from "react-hook-form";
 import { formatDateForInput } from "@/helpers/dateUtils";
 import SearchModal from "@/common/components/SearchModal";
@@ -22,16 +22,16 @@ import { useConfirm } from "@/common/hooks/useConfirm";
 import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
 import { SHORTCUTS } from "@/common/constants/shortcuts";
 
-interface PurchaseOrderFormProps {
+interface SaleOrderFormProps {
   visible: boolean;
   onClose: () => void;
-  formPurchaseOrderId: number;
+  formSaleOrderId: number;
   mode: OperationMode;
   formSelectedBranch: string;
   toolbarBranchId: number;
 }
 
-export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode, formSelectedBranch, toolbarBranchId }: PurchaseOrderFormProps) {
+export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSelectedBranch, toolbarBranchId }: SaleOrderFormProps) {
 
   const {
     userId,
@@ -42,7 +42,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
 
   const confirmDelete = useConfirm();
 
-  const [vendoeodalOpen, setVendoeodalOpen] = useState(false);
+  const [customerModalOpen, setCustomerModalOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   const isEditMode = mode === "Edit";
@@ -60,19 +60,19 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
     visible
   );
 
-  const { data: PurchaseOrder, isLoading: isLoadingPurchaseOrder } =
-    usePurchaseOrderById({
-      id: formPurchaseOrderId,
+  const { data: SaleOrder, isLoading: isLoadingSaleOrder } =
+    useSaleOrderById({
+      id: formSaleOrderId,
       userid: Number(userId),
       compid: Number(companyId),
       branchid: toolbarBranchId,
       finid: Number(finid),
     });
 
-  const createMutation = useCreatePurchaseOrder();
-  const updateMutation = useUpdatePurchaseOrder();
-  const deleteMutation = useDeletePurchaseOrder();
-  const approveMutation = useApprovePurchaseOrder();
+  const createMutation = useCreateSaleOrder();
+  const updateMutation = useUpdateSaleOrder();
+  const deleteMutation = useDeleteSaleOrder();
+  const approveMutation = useApproveSaleOrder();
 
   const isSubmitting = createMutation.isPending || approveMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
@@ -85,7 +85,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
     watch,
     setValue,
     formState: { errors },
-  } = usePurchaseOrderForm(isApproveMode);
+  } = useSaleOrderForm(isApproveMode);
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -122,33 +122,31 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
       return;
     }
 
-    if (PurchaseOrder) {
+    if (SaleOrder) {
       reset({
         ...pruchaseOrderFormDefaults,
 
-        ...PurchaseOrder,
+        ...SaleOrder,
 
         aprvstatus: "",
 
-        orderdt: PurchaseOrder.orderdt ? formatDateForInput(PurchaseOrder.orderdt) : "",
-        enqdt: PurchaseOrder.enqdt ? formatDateForInput(PurchaseOrder.enqdt) : "",
-        quotdt: PurchaseOrder.quotdt ? formatDateForInput(PurchaseOrder.quotdt) : "",
+        orderdt: SaleOrder.orderdt ? formatDateForInput(SaleOrder.orderdt) : "",
+        partyordno: SaleOrder.partyordno ? formatDateForInput(SaleOrder.partyordno) : "",
+        partyorddt: SaleOrder.partyorddt ? formatDateForInput(SaleOrder.partyorddt) : "",
 
-        compid: Number(PurchaseOrder.compid ?? 0),
-        branchid: Number(PurchaseOrder.branchid ?? 0),
-        finid: Number(PurchaseOrder.finid ?? 0),
-        vnumid: Number(PurchaseOrder.vnumid ?? 0),
-        vendorid: Number(PurchaseOrder.vendorid ?? 0),
-        vendornm: PurchaseOrder.vendornm,
+        compid: Number(SaleOrder.compid ?? 0),
+        branchid: Number(SaleOrder.branchid ?? 0),
+        finid: Number(SaleOrder.finid ?? 0),
+        vnumid: Number(SaleOrder.vnumid ?? 0),
 
-        qty1: Number(PurchaseOrder.qty1 ?? 0),
-        qty2: Number(PurchaseOrder.qty2 ?? 0),
-        totprodval: Number(PurchaseOrder.totprodval ?? 0),
-        afttax: Number(PurchaseOrder.afttax ?? 0),
-        ordamt: Number(PurchaseOrder.ordamt ?? 0),
+        qty1: Number(SaleOrder.qty1 ?? 0),
+        qty2: Number(SaleOrder.qty2 ?? 0),
+        totprodval: Number(SaleOrder.totprodval ?? 0),
+        afttax: Number(SaleOrder.afttax ?? 0),
+        ordamt: Number(SaleOrder.ordamt ?? 0),
 
         itemdtl:
-          PurchaseOrder.itemdtl?.map((item, index) => ({
+          SaleOrder.itemdtl?.map((item, index) => ({
             tag: item.tag ?? "I",
             dtlid: item.dtlid ?? index + 1,
             pcategoryid: item.pcategoryid,
@@ -166,7 +164,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
           })) ?? [],
       });
     }
-  }, [PurchaseOrder, isAddMode, reset, visible, setFocus]);
+  }, [SaleOrder, isAddMode, reset, visible, setFocus]);
 
   const numMethodOptions = [
     { label: "Auto", value: "A" },
@@ -174,7 +172,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
   ];
 
   // Series No Options
-  const voucherType = "PO";
+  const voucherType = "SO";
   const { data: seriesNoOptions = [] } = useQuery({
     queryKey: ["fetchSeriesList", userId, companyId, toolbarBranchId, voucherType],
     queryFn: () => fetchSeriesList(userId, companyId, toolbarBranchId, voucherType, finid),
@@ -206,27 +204,27 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
     (s: any) => s.value === watch("vnumid")
   );
 
-  // Model Search Vendoe Modal Handlers
-  const baseVendoeParams = {
+  // Model Search Customer Modal Handlers
+  const baseCustomerParams = {
     userid: userId,
     compid: companyId,
   };
 
-  const searchVendoeColumns = [
+  const searchCustomerColumns = [
     { key: "name", label: "name." },
   ];
 
-  const searchVendoeFields = [
+  const searchCustomerFields = [
     { value: "name", label: "Name" },
   ];
 
-  const handleVendoeSelect = (row: any) => {
-    setValue("vendorid", row.id);
-    setValue("vendorName", row.name);
-    setVendoeodalOpen(false);
+  const handleCustomerSelect = (row: any) => {
+    setValue("customerid", row.id);
+    setValue("customernm", row.name);
+    setCustomerModalOpen(false);
   };
 
-  const vendorName = watch("vendorName") || watch("vendornm");
+  const customerName = watch("customernm")
 
   const calculateTotals = (items: any[] = []) => {
     let qty1 = 0;
@@ -263,19 +261,19 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
     { value: "R", label: "Rejected" },
   ];
 
-  const handleFormSubmit = async (data: PurchaseOrderFormSchema) => {
+  const handleFormSubmit = async (data: SaleOrderFormSchema) => {
     try {
 
       if (isDeleteMode) {
         const ok = await confirmDelete({
-          title: "Delete Purchase Order",
-          message: "Are you sure you want to delete this Purchase Order?",
+          title: "Delete Sale Order",
+          message: "Are you sure you want to delete this Sale Order?",
         });
 
         if (!ok) return;
 
         await deleteMutation.mutateAsync({
-          id: formPurchaseOrderId,
+          id: formSaleOrderId,
           userid: Number(userId),
           compid: Number(companyId),
         });
@@ -285,7 +283,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
 
       const { qty1, totprodval, itemdtl } = calculateTotals(data.itemdtl || []);
 
-      const payload: PurchaseOrderFormType = {
+      const payload: SaleOrderFormType = {
         ...data,
         compid: companyId,
         branchid: toolbarBranchId,
@@ -298,6 +296,8 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
 
       };
 
+      // console.log("FINAL SUBMIT PAYLOAD:", JSON.stringify(payload, null, 2));
+
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(pruchaseOrderFormDefaults);
@@ -307,15 +307,15 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
 
       if (isEditMode) {
         await updateMutation.mutateAsync({
-          id: formPurchaseOrderId,
+          id: formSaleOrderId,
           data: payload,
         });
         onClose();
       }
 
-      const approvePayload: PurchaseOrderFormType = {
+      const approvePayload: SaleOrderFormType = {
         ...data,
-        id: formPurchaseOrderId,
+        id: formSaleOrderId,
         compid: companyId,
         branchid: toolbarBranchId,
         qty1: Number(qty1),
@@ -339,6 +339,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
       console.error("Submit error:", error);
     }
   };
+
 
   const selectedProductIds = watchedItems
     ?.map((item: any) => item?.productid)
@@ -366,7 +367,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
     <Popup
       visible={visible}
       onHiding={onClose}
-      title={`${mode} Purchase Order`}
+      title={`${mode} Sale Order`}
       width="90vw"
       height="90vh"
       dragEnabled
@@ -382,7 +383,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
 
           <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
 
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50"> Purchase Order Information </h2>
+            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50"> Sale Order Information </h2>
 
             <div className="flex flex-wrap gap-4 items-end">
 
@@ -427,69 +428,43 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                     ${selectedSeries?.manualallow === "N" ? "bg-gray-100 cursor-not-allowed" : ""}
                   `}
                 />
-                {/* {selectedSeries?.manualallow === "N" && (
-                  <p className="text-xs text-gray-400 ">
-                    Order number is system generated 
-                  </p>
-                )} */}
               </div>
 
               <div className="w-110">
-                <label className="block text-gray-700 font-medium mb-1">Vendor <strong className="text-red-500"> * </strong> </label>
+                <label className="block text-gray-700 font-medium mb-1"> Customer <strong className="text-red-500"> * </strong> </label>
                 <input
                   type="text"
-                  value={vendorName || ''}
+                  value={customerName || ''}
                   disabled={isReadOnly}
                   readOnly
-                  onClick={() => setVendoeodalOpen(true)}
+                  onClick={() => setCustomerModalOpen(true)}
                   className={`inputField w-full border border-gray-300 
-                    ${errors.vendorid && !vendorName ? "border-red-500" : "border-gray-400"}
+                    ${errors.customerid && !customerName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
                   }
-                  placeholder="Select Vendor"
+                  placeholder="Select Customer"
                 />
-                {errors.vendorid && !vendorName && <p className="text-red-500 mt-1 text-sm">{errors.vendorid.message}</p>}
+                {errors.customerid && !customerName && <p className="text-red-500 mt-1 text-sm">{errors.customerid.message}</p>}
               </div>
 
-              {/* <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Enquiry No</label>
-                <input
-                  type="text"
-                  {...register("enqno")}
-                  disabled={isReadOnly}
-                  placeholder="Enter enquiry no."
-                  className={`inputField ${errors.enqno ? "" : "border-gray-400"}`}
-                />
-              </div> */}
-
-              {/* <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Enquiry Date</label>
-                <input
-                  type="date"
-                  {...register("enqdt")}
-                  disabled={isReadOnly}
-                  className={`inputField ${errors.enqdt ? "" : "border-gray-400"}`}
-                />
-              </div> */}
-
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Proforma invoice no.</label>
+                <label className="block text-gray-700 font-medium mb-1">Party order no.</label>
                 <input
                   type="text"
-                  {...register("quotno")}
+                  {...register("partyordno")}
                   disabled={isReadOnly}
-                  placeholder="Enter Proforma invoice no."
-                  className={`inputField ${errors.quotno ? "" : "border-gray-400"}`}
+                  placeholder="Enter Party order no."
+                  className={`inputField ${errors.partyordno ? "" : "border-gray-400"}`}
                 />
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Proforma invoice date</label>
+                <label className="block text-gray-700 font-medium mb-1">Party order date</label>
                 <input
                   type="date"
-                  {...register("quotdt")}
+                  {...register("partyorddt")}
                   disabled={isReadOnly}
-                  className={`inputField ${errors.quotdt ? "" : "border-gray-400"}`}
+                  className={`inputField ${errors.partyorddt ? "" : "border-gray-400"}`}
                 />
               </div>
 
@@ -505,71 +480,6 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
 
             </div>
           </section>
-
-          {/* Delivery & Payment */}
-          {/* <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
-              Delivery & Payment Details
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Delivery Place</label>
-                <input
-                  type="text"
-                  placeholder="Delivery Place"
-                  {...register("delvplace")}
-                  disabled={isReadOnly}
-                  className={`inputField ${errors.delvplace ? "" : "border-gray-400"}`}
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Transport Mode </label>
-                <input
-                  type="text"
-                  placeholder="Transport Mode"
-                  {...register("transportmode")}
-                  disabled={isReadOnly}
-                  className={`inputField ${errors.transportmode ? "" : "border-gray-400"}`}
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Delivery Days </label>
-                <input
-                  type="text"
-                  placeholder="Delivery Days"
-                  {...register("delvdays")}
-                  disabled={isReadOnly}
-                  className={`inputField ${errors.delvdays ? "" : "border-gray-400"}`}
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Payment Term </label>
-                <input
-                  type="text"
-                  placeholder="Payment Terms"
-                  {...register("paymentterms")}
-                  disabled={isReadOnly}
-                  className={`inputField ${errors.paymentterms ? "" : "border-gray-400"}`}
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Payment Mode </label>
-                <input
-                  type="text"
-                  placeholder="Payment Mode"
-                  {...register("paymentmode")}
-                  disabled={isReadOnly}
-                  className={`inputField ${errors.paymentmode ? "" : "border-gray-400"}`}
-                />
-              </div>
-
-            </div>
-          </section> */}
 
           {/* Item Details */}
           <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
@@ -606,7 +516,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
 
             <div className="space-y-2">
               {fields.map((field, index) => (
-                <PurchaseOrderItems
+                <SaleOrderItems
                   key={field.id}
                   index={index}
                   field={field}
@@ -753,18 +663,18 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
 
         <LoadPanel
           shadingColor="rgba(0,0,0,0.4)"
-          visible={isSubmitting || isLoadingPurchaseOrder}
+          visible={isSubmitting || isLoadingSaleOrder}
           showIndicator
         />
 
         <SearchModal
-          open={vendoeodalOpen}
-          onClose={() => setVendoeodalOpen(false)}
-          endpoint="vendor"
-          baseParams={baseVendoeParams}
-          columns={searchVendoeColumns}
-          searchFields={searchVendoeFields}
-          onSelect={handleVendoeSelect}
+          open={customerModalOpen}
+          onClose={() => setCustomerModalOpen(false)}
+          endpoint="customer"
+          baseParams={baseCustomerParams}
+          columns={searchCustomerColumns}
+          searchFields={searchCustomerFields}
+          onSelect={handleCustomerSelect}
         />
 
       </form>
