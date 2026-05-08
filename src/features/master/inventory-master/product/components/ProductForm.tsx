@@ -325,7 +325,7 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pb-4 border-b-3 border-[#7f7db0]">
                 {/* Product Code */}
                 <div>
-                  <label className="block text-gray-700 font-medium mb-1">Product Code<span className="text-red-500">*</span></label>
+                  <label className="block text-gray-700 font-medium mb-1">Product Code</label>
                   <input
                     type="text"
                     {...register("productcode")}

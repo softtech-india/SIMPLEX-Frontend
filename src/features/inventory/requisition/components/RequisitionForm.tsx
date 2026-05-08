@@ -678,7 +678,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
           columns={searchColumns}
           searchFields={searchFields}
           onSelect={handleToBranchSelect}
-          excludeIds={[Number(branchId)]}  // This will now work
+          excludeIds={[Number(toolbarBranchId)]}
         />
 
         <SearchModal
