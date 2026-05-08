@@ -1,7 +1,7 @@
 import { GetStaticProps } from "next";
 import PageHead from "@/common/components/PageHead";
 import BreadcrumbHeader, { BreadcrumbItem } from "@/common/components/Breadcrumb";
-
+import SaleOrderModule from "@/features/sale/sale-order";
 
 interface SaleOrderPageProps {
   pageTitle: string;
@@ -26,7 +26,7 @@ export default function SaleOrderPage({ pageTitle }: SaleOrderPageProps) {
       <PageHead title={pageTitle} description="List of Sale Order" />
       <BreadcrumbHeader title={pageTitle} breadcrumbs={breadcrumbs} />
       <div>
-
+        <SaleOrderModule />
       </div>
     </>
   );

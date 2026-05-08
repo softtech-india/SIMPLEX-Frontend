@@ -1,6 +1,7 @@
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
-import SearchModal from "../../../../common/components/SearchModal";
+import SearchModal from "@/common/components/SearchModal";
+import { toast } from "sonner";
 
 
 type PurchaseOrderItemsProps = {
@@ -18,6 +19,8 @@ type PurchaseOrderItemsProps = {
   visible: boolean;
   isReadOnly: boolean;
   fieldsLength: number;
+  excludeIds?: number[];
+  currentId?: number;
 };
 
 export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
@@ -35,6 +38,8 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
   visible,
   isReadOnly,
   fieldsLength,
+  excludeIds,
+  currentId
 }) => {
   const item = watchedItems?.[index];
   const qty = Number(item?.qty1) || 0;
@@ -88,6 +93,16 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
   ];
 
   const handleProductSelect = (row: any) => {
+
+    const alreadyExists = watchedItems?.some(
+      (item: any) => item?.productid === row.id
+    );
+
+    if (alreadyExists) {
+      toast.error("Product already selected");
+      return;
+    }
+
     setValue(`itemdtl.${index}.productid`, row.id);
     setValue(`itemdtl.${index}.productnm`, row.productname);
     setProductModalOpen(false);
@@ -134,7 +149,7 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
         <label className="block text-gray-700 font-medium mb-1"> Quantity <strong className="text-red-500"> * </strong> </label>
         <input
           type="number"
-          {...register(`itemdtl.${index}.qty1`, {  valueAsNumber: true })}
+          {...register(`itemdtl.${index}.qty1`, { valueAsNumber: true })}
           disabled={isReadOnly}
           className={`inputField ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-400"}`}
         />
@@ -147,7 +162,7 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
         <label className="block text-gray-700 font-medium mb-1"> Rate</label>
         <input
           type="number"
-          {...register(`itemdtl.${index}.rate`, {  valueAsNumber: true })}
+          {...register(`itemdtl.${index}.rate`, { valueAsNumber: true })}
           disabled={isReadOnly}
           className="inputField border-gray-400 "
         />
@@ -199,6 +214,8 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
         columns={searchProductColumns}
         searchFields={searchProductFields}
         onSelect={handleProductSelect}
+        excludeIds={excludeIds}
+        currentId={currentId}
       />
     </div>
   );

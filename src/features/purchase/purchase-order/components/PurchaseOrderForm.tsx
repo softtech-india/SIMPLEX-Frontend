@@ -298,8 +298,6 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
 
       };
 
-      // console.log("FINAL SUBMIT PAYLOAD:", JSON.stringify(payload, null, 2));
-
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(pruchaseOrderFormDefaults);
@@ -326,22 +324,10 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
         finid: Number(finid),
         afttax: 0,
         ordamt: totprodval,
-        // aprvstatus: data.aprvstatus,
-        // aprvremarks: data.aprvremarks?.trim() || "",
         itemdtl,
       };
 
       if (isApproveMode) {
-
-        // if (data.aprvstatus === '') {
-        //   toast.error("Please select approval status");
-        //   return;
-        // }
-
-        // if (!data.aprvremarks?.trim()) {
-        //   toast.error("Please enter remark for rejection");
-        //   return;
-        // }
 
         await approveMutation.mutateAsync(approvePayload)
         reset(pruchaseOrderFormDefaults);
@@ -353,6 +339,10 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
       console.error("Submit error:", error);
     }
   };
+
+  const selectedProductIds = watchedItems
+    ?.map((item: any) => item?.productid)
+    ?.filter(Boolean);
 
   const getButtonLabel = () => {
     if (isSubmitting) {
@@ -632,6 +622,9 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                   visible={visible}
                   isReadOnly={isReadOnly}
                   fieldsLength={fields.length}
+
+                  excludeIds={selectedProductIds}
+                  currentId={watchedItems?.[index]?.productid}
                 />
               ))}
             </div>

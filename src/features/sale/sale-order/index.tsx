@@ -149,7 +149,7 @@ export default function SaleOrderModule() {
         <div className="bg-white rounded-xl shadow-sm border mt-2">
 
           <TransactionToolbar
-            title="Purchse Orders"
+            title="Sale Orders"
             // periodTitle='Period: 2026-2027'
             permissions={permissions}
             onAdd={handleAddClick}

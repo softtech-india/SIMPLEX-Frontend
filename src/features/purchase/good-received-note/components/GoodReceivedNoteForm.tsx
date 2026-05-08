@@ -215,7 +215,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
             scanqty: item.scanqty || 0,
             shortqty: item.shortqty || 0,
             excessqty: item.excessqty || 0,
-            actualprodval: item.excessqty || 0,
+            actualprodval: item.actualprodval || 0,
           })) ?? [],
       });
     }

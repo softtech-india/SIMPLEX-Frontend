@@ -3,7 +3,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
   getSaleOrderSchema,
-  SaleOrderBaseSchema,
   SaleOrderFormSchema,
 } from "../schemas/saleOrder.schema";
 

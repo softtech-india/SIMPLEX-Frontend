@@ -138,8 +138,6 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
         branchid: Number(SaleOrder.branchid ?? 0),
         finid: Number(SaleOrder.finid ?? 0),
         vnumid: Number(SaleOrder.vnumid ?? 0),
-        vendorid: Number(SaleOrder.vendorid ?? 0),
-        vendornm: SaleOrder.vendornm,
 
         qty1: Number(SaleOrder.qty1 ?? 0),
         qty2: Number(SaleOrder.qty2 ?? 0),
@@ -226,7 +224,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
     setCustomerModalOpen(false);
   };
 
-  const customerName = watch("customernm") 
+  const customerName = watch("customernm")
 
   const calculateTotals = (items: any[] = []) => {
     let qty1 = 0;
@@ -342,6 +340,11 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
     }
   };
 
+
+  const selectedProductIds = watchedItems
+    ?.map((item: any) => item?.productid)
+    ?.filter(Boolean);
+
   const getButtonLabel = () => {
     if (isSubmitting) {
       if (isDeleteMode) return "Deleting...";
@@ -445,18 +448,18 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Proforma invoice no.</label>
+                <label className="block text-gray-700 font-medium mb-1">Party order no.</label>
                 <input
                   type="text"
                   {...register("partyordno")}
                   disabled={isReadOnly}
-                  placeholder="Enter Proforma invoice no."
+                  placeholder="Enter Party order no."
                   className={`inputField ${errors.partyordno ? "" : "border-gray-400"}`}
                 />
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Proforma invoice date</label>
+                <label className="block text-gray-700 font-medium mb-1">Party order date</label>
                 <input
                   type="date"
                   {...register("partyorddt")}
@@ -529,6 +532,9 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
                   visible={visible}
                   isReadOnly={isReadOnly}
                   fieldsLength={fields.length}
+
+                  excludeIds={selectedProductIds}
+                  currentId={watchedItems?.[index]?.productid}
                 />
               ))}
             </div>

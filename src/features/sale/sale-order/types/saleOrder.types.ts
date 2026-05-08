@@ -27,10 +27,6 @@ export interface SaleOrder {
   orderdt?: string;
   orderno?: string;
 
-  vendorid?: number;
-  vendornm?: string;
-  vendorName?: string;
-
   customerid?: number;
   customernm?: string;
 

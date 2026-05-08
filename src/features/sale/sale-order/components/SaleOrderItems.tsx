@@ -1,6 +1,7 @@
 import { Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SearchModal from "@/common/components/SearchModal";
+import { toast } from "sonner";
 
 
 type SaleOrderItemsProps = {
@@ -18,6 +19,8 @@ type SaleOrderItemsProps = {
   visible: boolean;
   isReadOnly: boolean;
   fieldsLength: number;
+  excludeIds?: number[];
+  currentId?: number;
 };
 
 export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
@@ -35,6 +38,10 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
   visible,
   isReadOnly,
   fieldsLength,
+
+  excludeIds,
+  currentId
+
 }) => {
   const item = watchedItems?.[index];
   const qty = Number(item?.qty1) || 0;
@@ -88,6 +95,15 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
   ];
 
   const handleProductSelect = (row: any) => {
+    const alreadyExists = watchedItems?.some(
+      (item: any) => item?.productid === row.id
+    );
+
+    if (alreadyExists) {
+      toast.error("Brand already selected");
+      return;
+    }
+
     setValue(`itemdtl.${index}.productid`, row.id);
     setValue(`itemdtl.${index}.productnm`, row.productname);
     setProductModalOpen(false);
@@ -134,7 +150,7 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
         <label className="block text-gray-700 font-medium mb-1"> Quantity <strong className="text-red-500"> * </strong> </label>
         <input
           type="number"
-          {...register(`itemdtl.${index}.qty1`, {  valueAsNumber: true })}
+          {...register(`itemdtl.${index}.qty1`, { valueAsNumber: true })}
           disabled={isReadOnly}
           className={`inputField ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-400"}`}
         />
@@ -147,7 +163,7 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
         <label className="block text-gray-700 font-medium mb-1"> Rate</label>
         <input
           type="number"
-          {...register(`itemdtl.${index}.rate`, {  valueAsNumber: true })}
+          {...register(`itemdtl.${index}.rate`, { valueAsNumber: true })}
           disabled={isReadOnly}
           className="inputField border-gray-400 "
         />
@@ -189,6 +205,7 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
         columns={searchBrandColumns}
         searchFields={searchBrandFields}
         onSelect={handleBrandSelect}
+
       />
 
       <SearchModal
@@ -199,6 +216,8 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
         columns={searchProductColumns}
         searchFields={searchProductFields}
         onSelect={handleProductSelect}
+        excludeIds={excludeIds}
+        currentId={currentId}
       />
     </div>
   );

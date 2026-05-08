@@ -12,9 +12,6 @@ export const pruchaseOrderFormDefaults: SaleOrderFormSchema = {
   orderdt: today,
   orderno: "",
 
-  vendorid: 0,
-  vendornm: "",
-
   customerid: 0,
   customernm: "",
 
