@@ -124,7 +124,7 @@ const CustomDataGrid: React.FC<CustomDataGridProps> = ({
       onRowClick={onRowClick}
       onSelectionChanged={onSelectionChanged}
       onExporting={onExporting}
-      wordWrapEnabled={false}
+      wordWrapEnabled={true}
       remoteOperations={remoteOperations}
       selectedRowKeys={selectedRowKeys}
 

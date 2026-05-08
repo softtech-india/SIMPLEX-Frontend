@@ -10,8 +10,8 @@ interface GoodReceivedNoteProps {
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { name: "Purchase" },
-    { name: "Purchase Order" },
+    { name: "Inventory" },
+    { name: "Godown Transfer" },
 ];
 
 export const getStaticProps: GetStaticProps<GoodReceivedNoteProps> = async () => {

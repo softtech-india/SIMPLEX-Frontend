@@ -16,21 +16,21 @@ export const GodownTransferDataGrid = forwardRef<any, GodownTransferDataGridProp
   ({ dataSource, onSelectionChanged, onExporting, height = 600 }, ref) => {
 
     const columns = [
-      { dataField: "reqno", caption: "Requisition No.", width: 150, headerFilter: true },
-      { dataField: "gtno", caption: "Godown Transfer No.", width: 150, headerFilter: true },
-      { dataField: "reqdt", caption: "Req Date", dataType: "date", format: "dd-MM-yyyy", width: 100 },
-
+      
+      { dataField: "gtno", caption: "Transfer No.", width: 150, headerFilter: true },
+      { dataField: "gtdt", caption: "Date", dataType: "date", format: "dd-MM-yyyy", width: 100 },
       { dataField: "godownnm", caption: "From Godown", width: 150, headerFilter: true },
-      { dataField: "gtdt", caption: "Transfer Date", dataType: "date", format: "dd-MM-yyyy", width: 100 },
+      { dataField: "reqno", caption: "Requisition No.", width: 150, headerFilter: true },
+      { dataField: "reqdt", caption: "Date", dataType: "date", format: "dd-MM-yyyy", width: 100 },
       { dataField: "tobranchnm", caption: "To Branch", width: 150, headerFilter: true },
-      { dataField: "togodownnm", caption: "To Godown", width: 120, headerFilter: true },
-      { dataField: "totqty", caption: "Total Quantity", width: 100, headerFilter: true },
-      { dataField: "recvstatusdesc", caption: "Status", width: 150, headerFilter: true },
+      { dataField: "togodownnm", caption: "To Godown", width: 150, headerFilter: true },
+      { dataField: "totqty", caption: "Total Qty", width: 70, headerFilter: true },
+      { dataField: "recvstatusdesc", caption: "Receive Status", width: 90, headerFilter: true },
       { dataField: "rem", caption: "Remarks", width: 200, headerFilter: true },
-      { dataField: 'entryby', caption: 'Entry User', width: 120 },
-      { dataField: 'entrydt', caption: 'Entry Date', width: 150, dataType: 'date' },
-      { dataField: 'updateby', caption: 'Update User', width: 120 },
-      { dataField: 'updatedt', caption: 'Update Date', width: 120, dataType: 'date' },
+      { dataField: 'entryby', caption: 'Entry User', width: 140 },
+      { dataField: 'entrydt', caption: 'Entry Date', width: 160, },
+      { dataField: 'updateby', caption: 'Update User', width: 140 },
+      { dataField: 'updatedt', caption: 'Update Date', width: 160, },
     ];
 
     return (

@@ -11,7 +11,7 @@ import { fetchBranchList } from "@/api/master/ledger-api";
 import { useQuery } from '@tanstack/react-query';
 import useUserStore from '@/store/userStore';
 import { currentDate } from '@/helpers/dateUtils';
-import { GodownTransferDataGrid } from './components/RequisitionDataGrid';
+import { GodownTransferDataGrid } from './components/GodownTransferDataGrid';
 import { GodownTransferForm } from './components/GodownTransferForm';
 import { LoadPanel } from 'devextreme-react';
 
