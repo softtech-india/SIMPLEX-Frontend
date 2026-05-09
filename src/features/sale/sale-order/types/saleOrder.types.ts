@@ -33,7 +33,6 @@ export interface SaleOrder {
   partyordno?: string;
   partyorddt?: string;
 
-
   rem1?: string;
   rem2?: string;
 
@@ -49,7 +48,6 @@ export interface SaleOrder {
   aprvremarks?: string;
 
   itemdtl?: SaleOrderItem[];
-
 
   entryby?: number;
   entrydt?: string;
