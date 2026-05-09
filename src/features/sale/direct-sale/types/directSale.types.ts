@@ -2,12 +2,14 @@ export interface DirectSaleItem {
     tag?: string;
     sl?: number;
     dtlid?: number;
+
     pcategoryid?: number;
     pcategorynm?: string;
-    productid?: number;
+    productid: number;
     productnm?: string;
-    qty1?: number;
+    qty1: number;
     rate?: number;
+    
     value?: number;
     discpct?: number;
     discamt?: number;
@@ -82,6 +84,7 @@ export interface DirectSale {
     billtime?: string;
 
     aprvstatus?: string;
+    qrcode?: string;
 
     itemdtl?: DirectSaleItem[];
 

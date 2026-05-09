@@ -22,6 +22,8 @@ import { useConfirm } from "@/common/hooks/useConfirm";
 import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
 import { SHORTCUTS } from "@/common/constants/shortcuts";
 import { apiCall } from "@/utils/apiClient";
+import { useSaleQrScanner } from "@/hooks/useSaleQrScanner";
+import { fetchProductList } from "@/api/master/product-api";
 
 interface DirectSaleFormProps {
   visible: boolean;
@@ -81,6 +83,20 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
   const isSubmitting = createMutation.isPending || approveMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
+
+  const { data: productList = [] } = useQuery({
+    queryKey: ["fetchSeriesList", userId, companyId, toolbarBranchId],
+    queryFn: () => fetchProductList(userId, companyId, toolbarBranchId,),
+    staleTime: 0,
+    enabled: !!userId && !!companyId && !!toolbarBranchId && !!visible,
+    retry: 1,
+    refetchOnWindowFocus: true,
+  });
+
+  // useEffect(() => {
+  //   console.log('productList :', productList);
+  // }, [productList])
+
   const {
     control,
     register,
@@ -92,7 +108,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
     formState: { errors },
   } = useDirectSaleForm(isApproveMode);
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove,  } = useFieldArray({
     control,
     name: "itemdtl",
   });
@@ -113,6 +129,17 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
     return sum + qty * rate;
   }, 0) || 0;
+
+  const { scanInputRef, handleScan } = useSaleQrScanner({
+    watchedItems,
+    productList,
+    setValue,
+
+    onUpdateItems: (items) => {
+      setValue("itemdtl", items, { shouldValidate: true, });
+    },
+  
+  });
 
   // Reset form 
   useEffect(() => {
@@ -832,10 +859,9 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                 />
               </div>
 
-              {/* <div className="w-48 ">
-                <label className="block text-gray-700 font-medium mb-1">
-                  Scan QR Code <span className="text-red-500">*</span>
-                </label>
+
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1"> Scan QR Code <span className="text-red-500"> *</span> </label>
 
                 <input
                   type="text"
@@ -851,8 +877,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                     handleScan(e.target.value);
                   }}
                 />
-
-              </div> */}
+              </div>
 
             </div>
           </section>

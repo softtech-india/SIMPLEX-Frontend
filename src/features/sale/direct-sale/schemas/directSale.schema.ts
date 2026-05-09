@@ -100,6 +100,8 @@ export const DirectSaleBaseSchema = z.object({
 
   billtime: z.string().optional(),
 
+  qrcode:  z.string().optional(),
+
   itemdtl: z.array(DirectSaleItemSchema).min(1, "At least one item is required"),
 
 });
