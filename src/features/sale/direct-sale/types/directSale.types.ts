@@ -43,17 +43,15 @@ export interface DirectSale {
 
     billdt?: string;
     billno?: string;
-    billtypeid?: number;
+    
+    billtypeid: number;
     billTypename?: string;
 
-    customerid?: number;
+    customerid: number;
     customernm?: string;
 
     cashcrtype?: string;
     crdays?: number;
-
-    saledgerid?: number;
-    narration?: string;
 
     qty1?: number;
     qtyrateval?: number;
@@ -73,8 +71,13 @@ export interface DirectSale {
     smid?: number;
     salemanName?: string;
 
-    godownid?: number;
+    godownid: number;
     godownName?: string;
+
+    saledgerid: number;
+    saleledgerName?: string;
+
+    narration?: string;
 
     billtime?: string;
 
@@ -92,7 +95,7 @@ export interface DirectSaleFormType
     extends Partial<
         Omit<
             DirectSale,
-            | "entryby" | "entrydt" | "updateby" | "updatedt"
+            "id" | "entryby" | "entrydt" | "updateby" | "updatedt"
         >
     > { }
 

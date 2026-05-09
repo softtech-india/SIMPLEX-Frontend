@@ -62,7 +62,7 @@ export const DirectSaleBaseSchema = z.object({
   billdt: z.string().optional(),
   billno: z.string().optional(),
 
-  billtypeid: z.number().optional(),
+  billtypeid: z.number().min(1, "Please select a bill type"),
   billTypename: z.string().optional(),
 
   customerid: z.number().min(1, "Please select a customer"),
@@ -71,7 +71,6 @@ export const DirectSaleBaseSchema = z.object({
   cashcrtype: z.string().optional(),
   crdays: z.number().optional(),
 
-  saledgerid: z.number().optional(),
   narration: z.string().optional(),
 
   qty1: z.number().optional(),
@@ -90,23 +89,19 @@ export const DirectSaleBaseSchema = z.object({
   cgstval: z.number().optional(),
   igstval: z.number().optional(),
 
-  smid: z.number().optional(),
+  smid: z.number().min(1, "Please select a saleman"),
   salemanName: z.string().optional(),
 
-  godownid: z.number().optional(),
+  godownid: z.number().min(1, "Please select a godown"),
   godownName: z.string().optional(),
+
+  saledgerid: z.number().min(1, "Please select a sale ledger"),
+  saleledgerName: z.string().optional(),
 
   billtime: z.string().optional(),
 
-  itemdtl: z
-    .array(DirectSaleItemSchema)
-    .min(1, "At least one item is required"),
+  itemdtl: z.array(DirectSaleItemSchema).min(1, "At least one item is required"),
 
-  entryby: z.number().optional(),
-  entrydt: z.string().optional(),
-
-  updateby: z.number().optional(),
-  updatedt: z.string().optional(),
 });
 
 export const getDirectSaleSchema = (isApproveMode: boolean) =>

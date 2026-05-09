@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
 import { SHORTCUTS } from "@/common/constants/shortcuts";
+import { apiCall } from "@/utils/apiClient";
 
 interface DirectSaleFormProps {
   visible: boolean;
@@ -46,6 +47,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
   const [billTypeModalOpen, setBillTypeModalOpen] = useState(false);
   const [salemanModalOpen, setSalemanModalOpen] = useState(false);
   const [godownModalOpen, setGodownModalOpen] = useState(false);
+  const [saleLedgerModalOpen, setSaleLedgerModalOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   const isEditMode = mode === "Edit";
@@ -281,9 +283,13 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
   const customerName = watch("customernm")
 
   // Model Search Bill Type Modal Handlers
+  const BillTypeName = watch("billTypename");
+  const billTypeId = watch("billtypeid");
+
   const baseBillTypeParams = {
     userid: userId,
     compid: companyId,
+    billtype: "SA"
   };
 
   const searchBillTypeColumns = [
@@ -300,7 +306,31 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
     setBillTypeModalOpen(false);
   };
 
-  const BillTypeName = watch("billTypename")
+  useEffect(() => {
+    if (!visible || billTypeId) return;
+
+    const fetchDefaultBillType = async () => {
+      try {
+        const response: any = await apiCall.get(
+          process.env.NEXT_PUBLIC_PROJECT_API_ENDPOINT + "billtype",
+          baseBillTypeParams
+        );
+
+        const defaultBillType = response?.data?.find(
+          (item: any) => item.isdefault === "Y"
+        );
+
+        if (defaultBillType) {
+          setValue("billtypeid", defaultBillType.id);
+          setValue("billTypename", defaultBillType.name);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
+    fetchDefaultBillType();
+  }, [visible, billTypeId, userId, companyId, setValue]);
 
   // Model Search Saleman Modal Handlers
   const baseSalemanParams = {
@@ -341,12 +371,35 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
   ];
 
   const handleGodownSelect = (row: any) => {
-    setValue("smid", row.id);
+    setValue("godownid", row.id);
     setValue("godownName", row.name);
     setGodownModalOpen(false);
   };
 
   const GodownName = watch("godownName")
+
+  // Model Search SaleLedger Modal Handlers
+  const baseSaleLedgerParams = {
+    userid: userId,
+    compid: companyId,
+    grouptype: "S"
+  };
+
+  const searchSaleLedgerColumns = [
+    { key: "ledgername", label: "name." },
+  ];
+
+  const searchSaleLedgerFields = [
+    { value: "ledgername", label: "Ledger Name" },
+  ];
+
+  const handleSaleLedgerSelect = (row: any) => {
+    setValue("saledgerid", row.id);
+    setValue("saleledgerName", row.ledgername);
+    setSaleLedgerModalOpen(false);
+  };
+
+  const SaleLedgerName = watch("saleledgerName")
 
   const calculateTotals = (items: any[] = []) => {
     let qty1 = 0;
@@ -692,7 +745,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Bill Type</label>
+                <label className="block text-gray-700 font-medium mb-1">Bill Type <strong className="text-red-500"> * </strong></label>
                 <input
                   type="text"
                   value={BillTypeName || ''}
@@ -703,13 +756,30 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                     ${errors.billtypeid && !BillTypeName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
                   }
-                  placeholder="Select Customer"
+                  placeholder="Select bill type"
                 />
                 {errors.billtypeid && !BillTypeName && <p className="text-red-500 mt-1 text-sm">{errors.billtypeid.message}</p>}
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Saleman</label>
+                <label className="block text-gray-700 font-medium mb-1">Sale Ledger <strong className="text-red-500"> * </strong> </label>
+                <input
+                  type="text"
+                  value={SaleLedgerName || ''}
+                  disabled={isReadOnly}
+                  readOnly
+                  onClick={() => setSaleLedgerModalOpen(true)}
+                  className={`inputField w-full border border-gray-300 
+                    ${errors.saledgerid && !SaleLedgerName ? "border-red-500" : "border-gray-400"}
+                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
+                  }
+                  placeholder="Select sale ledger"
+                />
+                {errors.saledgerid && !SaleLedgerName && <p className="text-red-500 mt-1 text-sm">{errors.saledgerid.message}</p>}
+              </div>
+
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">Saleman <strong className="text-red-500"> * </strong> </label>
                 <input
                   type="text"
                   value={SalemanName || ''}
@@ -717,16 +787,16 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                   readOnly
                   onClick={() => setSalemanModalOpen(true)}
                   className={`inputField w-full border border-gray-300 
-                    ${errors.billtypeid && !SalemanName ? "border-red-500" : "border-gray-400"}
+                    ${errors.smid && !SalemanName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
                   }
-                  placeholder="Select Customer"
+                  placeholder="Select saleman"
                 />
-                {errors.billtypeid && !SalemanName && <p className="text-red-500 mt-1 text-sm">{errors.billtypeid.message}</p>}
+                {errors.smid && !SalemanName && <p className="text-red-500 mt-1 text-sm">{errors.smid.message}</p>}
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Godown</label>
+                <label className="block text-gray-700 font-medium mb-1">Godown <strong className="text-red-500"> * </strong></label>
                 <input
                   type="text"
                   value={GodownName || ''}
@@ -737,9 +807,19 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                     ${errors.godownid && !GodownName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
                   }
-                  placeholder="Select Customer"
+                  placeholder="Select godown"
                 />
                 {errors.godownid && !GodownName && <p className="text-red-500 mt-1 text-sm">{errors.godownid.message}</p>}
+              </div>
+
+              <div className="w-24">
+                <label className="block text-gray-700 font-medium mb-1">Time</label>
+                <input
+                  type="time"
+                  {...register("billtime")}
+                  disabled={isReadOnly}
+                  className={`inputField ${errors.billtime ? "text-red-500" : "border-gray-400"}`}
+                />
               </div>
 
               <div className="w-48">
@@ -751,6 +831,28 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                   className={`inputField border-gray-400 bg-gray-100 cursor-not-allowed `}
                 />
               </div>
+
+              {/* <div className="w-48 ">
+                <label className="block text-gray-700 font-medium mb-1">
+                  Scan QR Code <span className="text-red-500">*</span>
+                </label>
+
+                <input
+                  type="text"
+                  {...register("qrcode")}
+                  ref={(el) => {
+                    scanInputRef.current = el;
+                    register("qrcode").ref(el);
+                  }}
+                  className="inputField border-gray-300"
+                  onKeyDown={(e: any) => {
+                    if (e.key !== "Enter") return;
+                    e.preventDefault();
+                    handleScan(e.target.value);
+                  }}
+                />
+
+              </div> */}
 
             </div>
           </section>
@@ -940,7 +1042,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
           onSelect={handleBillTypeSelect}
         />
 
-        < SearchModal
+        <SearchModal
           open={salemanModalOpen}
           onClose={() => setSalemanModalOpen(false)}
           endpoint="salesman"
@@ -950,7 +1052,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
           onSelect={handleSalemanSelect}
         />
 
-        < SearchModal
+        <SearchModal
           open={godownModalOpen}
           onClose={() => setGodownModalOpen(false)}
           endpoint="godown"
@@ -958,6 +1060,16 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
           columns={searchGodownColumns}
           searchFields={searchGodownFields}
           onSelect={handleGodownSelect}
+        />
+
+        <SearchModal
+          open={saleLedgerModalOpen}
+          onClose={() => setSaleLedgerModalOpen(false)}
+          endpoint="ledger"
+          baseParams={baseSaleLedgerParams}
+          columns={searchSaleLedgerColumns}
+          searchFields={searchSaleLedgerFields}
+          onSelect={handleSaleLedgerSelect}
         />
 
       </form>

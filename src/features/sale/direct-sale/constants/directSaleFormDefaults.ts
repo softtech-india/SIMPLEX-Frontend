@@ -1,6 +1,10 @@
 import { DirectSaleFormSchema } from "../schemas/directSale.schema";
 
 const today = new Date().toISOString().split("T")[0];
+const currentTime = new Date().toLocaleTimeString("en-GB", {
+  hour: "2-digit",
+  minute: "2-digit",
+});
 
 export const directSaleFormDefaults: DirectSaleFormSchema = {
   id: 0,
@@ -22,7 +26,6 @@ export const directSaleFormDefaults: DirectSaleFormSchema = {
   cashcrtype: "",
   crdays: 0,
 
-  saledgerid: 0,
   narration: "",
 
   qty1: 0,
@@ -43,8 +46,9 @@ export const directSaleFormDefaults: DirectSaleFormSchema = {
 
   smid: 0,
   godownid: 0,
+  saledgerid: 0,
 
-  billtime: "",
+  billtime: currentTime,
 
   itemdtl: [
     {
@@ -96,8 +100,4 @@ export const directSaleFormDefaults: DirectSaleFormSchema = {
     },
   ],
 
-  entryby: 0,
-  entrydt: "",
-  updateby: 0,
-  updatedt: "",
 };
