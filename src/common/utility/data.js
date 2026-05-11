@@ -1100,3 +1100,13 @@ export const StatusOfBillType = [
         name: "No"
     }
 ]
+export const salesManStatus = [
+    {
+        id: "A",
+        name: "Active"
+    },
+    {
+        id: "C",
+        name: "Closed"
+    }
+]
