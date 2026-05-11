@@ -63,7 +63,7 @@ export const DirectSaleBaseSchema = z.object({
   billno: z.string().optional(),
 
   billtypeid: z.number().min(1, "Please select a bill type"),
-  billTypename: z.string().optional(),
+  billtypenm: z.string().optional(),
 
   customerid: z.number().min(1, "Please select a customer"),
   customernm: z.string().optional(),
@@ -90,17 +90,20 @@ export const DirectSaleBaseSchema = z.object({
   igstval: z.number().optional(),
 
   smid: z.number().min(1, "Please select a saleman"),
-  salemanName: z.string().optional(),
+  smnm: z.string().optional(),
 
   godownid: z.number().min(1, "Please select a godown"),
-  godownName: z.string().optional(),
+  godownnm: z.string().optional(),
 
   saledgerid: z.number().min(1, "Please select a sale ledger"),
-  saleledgerName: z.string().optional(),
+  saledgernm: z.string().optional(),
+
+  transporterid:  z.number().min(1, "Please select a transporter"),
+  transporternm: z.string().optional(),
 
   billtime: z.string().optional(),
 
-  qrcode:  z.string().optional(),
+  qrcode: z.string().optional(),
 
   itemdtl: z.array(DirectSaleItemSchema).min(1, "At least one item is required"),
 

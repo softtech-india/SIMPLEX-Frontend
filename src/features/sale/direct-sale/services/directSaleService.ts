@@ -132,9 +132,9 @@ class DirectSaleService {
 
   async deleteDirectSale(
     params: {
-      id: number;
       userid: number;
       compid: number;
+      id: number;
     }
   ): Promise<void> {
     try {
@@ -142,9 +142,9 @@ class DirectSaleService {
       const response = await apiCall.delete<DirectSaleApiResponse>(
         `${this.baseUrl}sale`,
         {
-          id,
           userid,
           compid,
+          id,
         }
       );
 

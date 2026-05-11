@@ -50,6 +50,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
   const [salemanModalOpen, setSalemanModalOpen] = useState(false);
   const [godownModalOpen, setGodownModalOpen] = useState(false);
   const [saleLedgerModalOpen, setSaleLedgerModalOpen] = useState(false);
+  const [transporterModalOpen, setTransporterModalOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   const isEditMode = mode === "Edit";
@@ -108,7 +109,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
     formState: { errors },
   } = useDirectSaleForm(isApproveMode);
 
-  const { fields, append, remove,  } = useFieldArray({
+  const { fields, append, remove, } = useFieldArray({
     control,
     name: "itemdtl",
   });
@@ -138,7 +139,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
     onUpdateItems: (items) => {
       setValue("itemdtl", items, { shouldValidate: true, });
     },
-  
+
   });
 
   // Reset form 
@@ -310,7 +311,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
   const customerName = watch("customernm")
 
   // Model Search Bill Type Modal Handlers
-  const BillTypeName = watch("billTypename");
+  const BillTypeName = watch("billtypenm");
   const billTypeId = watch("billtypeid");
 
   const baseBillTypeParams = {
@@ -329,7 +330,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
   const handleBillTypeSelect = (row: any) => {
     setValue("billtypeid", row.id);
-    setValue("billTypename", row.name);
+    setValue("billtypenm", row.name);
     setBillTypeModalOpen(false);
   };
 
@@ -349,7 +350,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
         if (defaultBillType) {
           setValue("billtypeid", defaultBillType.id);
-          setValue("billTypename", defaultBillType.name);
+          setValue("billtypenm", defaultBillType.name);
         }
       } catch (e) {
         console.error(e);
@@ -376,11 +377,11 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
   const handleSalemanSelect = (row: any) => {
     setValue("smid", row.id);
-    setValue("salemanName", row.name);
+    setValue("smnm", row.name);
     setSalemanModalOpen(false);
   };
 
-  const SalemanName = watch("salemanName")
+  const SalemanName = watch("smnm")
 
   // Model Search Godown Modal Handlers
   const baseGodownParams = {
@@ -399,11 +400,11 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
   const handleGodownSelect = (row: any) => {
     setValue("godownid", row.id);
-    setValue("godownName", row.name);
+    setValue("godownnm", row.name);
     setGodownModalOpen(false);
   };
 
-  const GodownName = watch("godownName")
+  const GodownName = watch("godownnm")
 
   // Model Search SaleLedger Modal Handlers
   const baseSaleLedgerParams = {
@@ -422,23 +423,41 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
   const handleSaleLedgerSelect = (row: any) => {
     setValue("saledgerid", row.id);
-    setValue("saleledgerName", row.ledgername);
+    setValue("saledgernm", row.ledgername);
     setSaleLedgerModalOpen(false);
   };
 
-  const SaleLedgerName = watch("saleledgerName")
+  const SaleLedgerName = watch("saledgernm")
+
+  // Model Search Transporter Modal Handlers
+  const baseTransporterParams = {
+    userid: userId,
+    compid: companyId,
+  };
+
+  const searchTransporterColumns = [
+    { key: "name", label: "name." },
+  ];
+
+  const searchTransporterFields = [
+    { value: "name", label: "Ledger Name" },
+  ];
+
+  const handleTransporterSelect = (row: any) => {
+    setValue("transporterid", row.id);
+    setValue("transporternm", row.name);
+    setTransporterModalOpen(false);
+  };
+
+  const transporterName = watch("transporternm")
 
   const calculateTotals = (items: any[] = []) => {
     let qty1 = 0;
-
     let qtyrateval = 0;
-
     let discval = 0;
     let netval = 0;
-
     let taxableval = 0;
     let taxval = 0;
-
     let cgstval = 0;
     let sgstval = 0;
     let igstval = 0;
@@ -447,7 +466,6 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
     const itemdtl = items.map((item, index) => {
       const qty = Number(item?.qty1 ?? 0);
-
       const rate = Number(item?.rate ?? 0);
       const value = qty * rate;
 
@@ -464,25 +482,17 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
       const igstpct = Number(item?.igstpct ?? 0);
 
       const itemCgstVal = Number(item?.cgstval ?? 0) || (itemTaxableVal * cgstpct) / 100;
-
       const itemSgstVal = Number(item?.sgstval ?? 0) || (itemTaxableVal * sgstpct) / 100;
-
       const itemIgstVal = Number(item?.igstval ?? 0) || (itemTaxableVal * igstpct) / 100;
-
       const itemTaxVal = itemCgstVal + itemSgstVal + itemIgstVal;
-
       const finalval = itemTaxableVal + itemTaxVal;
 
       qty1 += qty;
-
       qtyrateval += value;
-
       discval += discamt;
       netval += itemNetVal;
-
       taxableval += itemTaxableVal;
       taxval += itemTaxVal;
-
       cgstval += itemCgstVal;
       sgstval += itemSgstVal;
       igstval += itemIgstVal;
@@ -491,77 +501,44 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
       return {
         tag: item?.tag || "I",
-
         sl: Number(item?.sl ?? index + 1),
         dtlid: Number(item?.dtlid ?? index + 1),
-
         pcategoryid: Number(item?.pcategoryid ?? 0),
         pcategorynm: item?.pcategorynm ?? "",
-
         productid: Number(item?.productid ?? 0),
         productnm: item?.productnm ?? "",
-
         qty1: qty,
-
         rate: rate,
         value: value,
-
         discpct: discpct,
         discamt: discamt,
-
         netval: itemNetVal,
-
         taxablerate: taxablerate,
         taxableval: itemTaxableVal,
 
         taxid: Number(item?.taxid ?? 0),
         taxval: itemTaxVal,
-
         finalval: finalval,
-
         stockval: Number(item?.stockval ?? 0),
 
         cgstpct: cgstpct,
         cgstval: itemCgstVal,
         cgstledgerid: Number(item?.cgstledgerid ?? 0),
-
         sgstpct: sgstpct,
         sgstval: itemSgstVal,
         sgstledgerid: Number(item?.sgstledgerid ?? 0),
-
         igstpct: igstpct,
         igstval: itemIgstVal,
         igstledgerid: Number(item?.igstledgerid ?? 0),
-
         hsnid: Number(item?.hsnid ?? 0),
         hsnno: item?.hsnno ?? "",
-
         mrp: Number(item?.mrp ?? 0),
       };
     });
 
     return {
-      qty1,
-
-      qtyrateval,
-
-      discval,
-      netval,
-
-      beftaxval: netval,
-
-      taxableval,
-      taxval,
-
-      amtwithtaxval: billamt,
-      afttaxval: billamt,
-
-      billamt,
-
-      cgstval,
-      sgstval,
-      igstval,
-
+      qty1, qtyrateval, discval, netval, beftaxval: netval, taxableval, taxval,
+      amtwithtaxval: billamt, afttaxval: billamt, billamt, cgstval, sgstval, igstval,
       itemdtl,
     };
   };
@@ -591,7 +568,10 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
         return;
       }
 
-      const { qty1, qtyrateval, discval, netval, beftaxval, taxableval, taxval, amtwithtaxval, afttaxval, billamt, cgstval, sgstval, igstval, itemdtl } = calculateTotals(data.itemdtl || []);
+      const {
+        qty1, qtyrateval, discval, netval, beftaxval, taxableval, taxval, amtwithtaxval,
+        afttaxval, billamt, cgstval, sgstval, igstval, itemdtl
+      } = calculateTotals(data.itemdtl || []);
 
       const payload: DirectSaleFormType = {
         ...data,
@@ -600,22 +580,15 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
         branchid: toolbarBranchId,
 
         qty1: Number(qty1),
-
         qtyrateval: Number(qtyrateval),
-
         discval: Number(discval),
         netval: Number(netval),
-
         beftaxval: Number(beftaxval),
-
         taxableval: Number(taxableval),
         taxval: Number(taxval),
-
         amtwithtaxval: Number(amtwithtaxval),
         afttaxval: Number(afttaxval),
-
         billamt: Number(billamt),
-
         cgstval: Number(cgstval),
         sgstval: Number(sgstval),
         igstval: Number(igstval),
@@ -735,23 +708,6 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                 />
               </div>
 
-              <div className="w-110">
-                <label className="block text-gray-700 font-medium mb-1"> Customer <strong className="text-red-500"> * </strong> </label>
-                <input
-                  type="text"
-                  value={customerName || ''}
-                  disabled={isReadOnly}
-                  readOnly
-                  onClick={() => setCustomerModalOpen(true)}
-                  className={`inputField w-full border border-gray-300 
-                    ${errors.customerid && !customerName ? "border-red-500" : "border-gray-400"}
-                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
-                  }
-                  placeholder="Select Customer"
-                />
-                {errors.customerid && !customerName && <p className="text-red-500 mt-1 text-sm">{errors.customerid.message}</p>}
-              </div>
-
               <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Cash or Credit</label>
                 <FormSelect
@@ -769,6 +725,23 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                   disabled={isReadOnly}
                   className={`inputField ${errors.crdays ? "" : "border-gray-400"}`}
                 />
+              </div>
+
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1"> Customer <strong className="text-red-500"> * </strong> </label>
+                <input
+                  type="text"
+                  value={customerName || ''}
+                  disabled={isReadOnly}
+                  readOnly
+                  onClick={() => setCustomerModalOpen(true)}
+                  className={`inputField w-full border border-gray-300 
+                    ${errors.customerid && !customerName ? "border-red-500" : "border-gray-400"}
+                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
+                  }
+                  placeholder="Select Customer"
+                />
+                {errors.customerid && !customerName && <p className="text-red-500 mt-1 text-sm">{errors.customerid.message}</p>}
               </div>
 
               <div className="w-48">
@@ -837,6 +810,23 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                   placeholder="Select godown"
                 />
                 {errors.godownid && !GodownName && <p className="text-red-500 mt-1 text-sm">{errors.godownid.message}</p>}
+              </div>
+
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">Transporter <strong className="text-red-500"> * </strong></label>
+                <input
+                  type="text"
+                  value={transporterName || ''}
+                  disabled={isReadOnly}
+                  readOnly
+                  onClick={() => setTransporterModalOpen(true)}
+                  className={`inputField w-full border border-gray-300 
+                    ${errors.transporterid && !transporterName ? "border-red-500" : "border-gray-400"}
+                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
+                  }
+                  placeholder="Select godown"
+                />
+                {errors.transporterid && !transporterName && <p className="text-red-500 mt-1 text-sm">{errors.transporterid.message}</p>}
               </div>
 
               <div className="w-24">
@@ -1095,6 +1085,16 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
           columns={searchSaleLedgerColumns}
           searchFields={searchSaleLedgerFields}
           onSelect={handleSaleLedgerSelect}
+        />
+
+        <SearchModal
+          open={transporterModalOpen}
+          onClose={() => setTransporterModalOpen(false)}
+          endpoint="transporter"
+          baseParams={baseTransporterParams}
+          columns={searchTransporterColumns}
+          searchFields={searchTransporterFields}
+          onSelect={handleTransporterSelect}
         />
 
       </form>

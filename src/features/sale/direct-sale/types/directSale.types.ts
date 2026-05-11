@@ -9,7 +9,7 @@ export interface DirectSaleItem {
     productnm?: string;
     qty1: number;
     rate?: number;
-    
+
     value?: number;
     discpct?: number;
     discamt?: number;
@@ -45,9 +45,9 @@ export interface DirectSale {
 
     billdt?: string;
     billno?: string;
-    
+
     billtypeid: number;
-    billTypename?: string;
+    billtypenm?: string;
 
     customerid: number;
     customernm?: string;
@@ -71,13 +71,16 @@ export interface DirectSale {
     igstval?: number;
 
     smid?: number;
-    salemanName?: string;
+    smnm?: string;
 
     godownid: number;
-    godownName?: string;
+    godownnm?: string;
 
     saledgerid: number;
-    saleledgerName?: string;
+    saledgernm?: string;
+
+    transporterid: number;
+    transporterName?: string;
 
     narration?: string;
 
