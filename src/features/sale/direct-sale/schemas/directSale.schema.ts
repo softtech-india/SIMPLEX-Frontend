@@ -46,6 +46,7 @@ export const DirectSaleItemSchema = z.object({
   hsnno: z.string().optional(),
 
   mrp: z.number().optional(),
+  orderdtlid: z.number().optional(),
 });
 
 export const DirectSaleBaseSchema = z.object({
@@ -98,12 +99,17 @@ export const DirectSaleBaseSchema = z.object({
   saledgerid: z.number().min(1, "Please select a sale ledger"),
   saledgernm: z.string().optional(),
 
-  transporterid:  z.number().min(1, "Please select a transporter"),
+  transporterid: z.number().min(1, "Please select a transporter"),
   transporternm: z.string().optional(),
 
   billtime: z.string().optional(),
 
   qrcode: z.string().optional(),
+
+  // Order based sale
+  orderid: z.number().optional(),
+  orderno: z.string().optional(),
+  orderdt: z.string().optional(),
 
   itemdtl: z.array(DirectSaleItemSchema).min(1, "At least one item is required"),
 

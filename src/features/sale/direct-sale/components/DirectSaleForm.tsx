@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useDirectSaleById, useCreateDirectSale, useUpdateDirectSale, useDeleteDirectSale, useApproveDirectSale } from "../hooks/useDirectSale";
 import { DirectSaleFormType, OperationMode } from "../types/directSale.types";
 import { DirectSaleFormSchema } from "../schemas/directSale.schema";
-import { directSaleFormDefaults } from "../constants/directSaleFormDefaults";
+import { defaultItemDtl, directSaleFormDefaults } from "../constants/directSaleFormDefaults";
 import { useDirectSaleForm } from "../hooks/useDirectSaleForm";
 import { useFieldArray } from "react-hook-form";
 import { fetchSeriesList } from "@/api/purchase/purchase-api";
@@ -15,7 +15,7 @@ import useUserStore from "@/store/userStore";
 import { FormSelect } from "@/common/components/FormSelect";
 import { DirectSaleItems } from "./DirectSaleItems";
 import { useWatch } from "react-hook-form";
-import { formatDateForInput } from "@/helpers/dateUtils";
+import { formatDate, formatDateForInput } from "@/helpers/dateUtils";
 import SearchModal from "@/common/components/SearchModal";
 import { toast } from "sonner";
 import { useConfirm } from "@/common/hooks/useConfirm";
@@ -24,6 +24,8 @@ import { SHORTCUTS } from "@/common/constants/shortcuts";
 import { apiCall } from "@/utils/apiClient";
 import { useSaleQrScanner } from "@/hooks/useSaleQrScanner";
 import { fetchProductList } from "@/api/master/product-api";
+import { usePathname } from "next/navigation";
+import { OrderbasedSaleItems } from "./OrderbasedSaleItems";
 
 interface DirectSaleFormProps {
   visible: boolean;
@@ -44,6 +46,12 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
   } = useUserStore();
 
   const confirmDelete = useConfirm();
+  const pathname = usePathname();
+  const isOrderBasedSale = pathname?.includes("saleagnstorder");
+
+  useEffect(() => {
+    console.log('isOrderBasedSale : ', isOrderBasedSale);
+  }, [isOrderBasedSale])
 
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
   const [billTypeModalOpen, setBillTypeModalOpen] = useState(false);
@@ -52,6 +60,9 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
   const [saleLedgerModalOpen, setSaleLedgerModalOpen] = useState(false);
   const [transporterModalOpen, setTransporterModalOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+
+  // Order Based Sale
+  const [soPendingModalOpen, setSoPendingModalOpen] = useState(false);
 
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
@@ -98,22 +109,16 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
   //   console.log('productList :', productList);
   // }, [productList])
 
-  const {
-    control,
-    register,
-    handleSubmit,
-    setFocus,
-    reset,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useDirectSaleForm(isApproveMode);
+  const { control, register, handleSubmit, setFocus, reset, watch, setValue, formState: { errors }, } = useDirectSaleForm(isApproveMode);
 
   const { fields, append, remove, } = useFieldArray({
     control,
     name: "itemdtl",
   });
 
+  // useEffect(() => {
+  //   console.log(' fields ', fields)
+  // }, [fields])
   // Calculate Total Quantity and Vlaue
   const watchedItems = useWatch({
     control,
@@ -152,6 +157,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
     if (isAddMode) {
       reset(directSaleFormDefaults);
+      reset(defaultItemDtl);
       return;
     }
 
@@ -242,6 +248,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
             hsnid: Number(item.hsnid ?? 0),
             hsnno: item.hsnno ?? "",
+            orderdtlid: item.orderdtlid || 0,
 
             mrp: Number(item.mrp ?? 0),
           })) ?? [],
@@ -451,6 +458,36 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
   const transporterName = watch("transporternm")
 
+  // Model Search SoPending Modal Handlers
+  const orderid = watch("orderid");
+  const orderno = watch("orderno");
+  const orderdt = watch("orderdt");
+  const customerId = watch("customerid");
+
+  const baseSoPendingParams = {
+    userid: userId,
+    compid: companyId,
+    branchid: toolbarBranchId,
+    finid: finid,
+    customerid: customerId,
+  };
+
+  const searchSoPendingColumns = [
+    { key: "orderno", label: "Order No." },
+    { key: "orderdt", label: "Order Date." },
+  ];
+
+  const searchSoPendingFields = [
+    { value: "name", label: "Name" },
+  ];
+
+  const handleSoPendingSelect = (row: any) => {
+    setValue("orderid", row.id);
+    setValue(`orderno`, row.orderno);
+    setValue(`orderdt`, row.orderdt);
+    setSoPendingModalOpen(false);
+  };
+
   const calculateTotals = (items: any[] = []) => {
     let qty1 = 0;
     let qtyrateval = 0;
@@ -508,7 +545,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
         productid: Number(item?.productid ?? 0),
         productnm: item?.productnm ?? "",
         qty1: qty,
-        rate: rate,
+        rate: rate ?? 0,
         value: value,
         discpct: discpct,
         discamt: discamt,
@@ -533,6 +570,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
         hsnid: Number(item?.hsnid ?? 0),
         hsnno: item?.hsnno ?? "",
         mrp: Number(item?.mrp ?? 0),
+        orderdtlid: item?.orderdtlid || 0,
       };
     });
 
@@ -601,7 +639,8 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(directSaleFormDefaults);
-        onClose();
+        reset(defaultItemDtl)
+       // onClose();
         return;
       }
 
@@ -640,12 +679,13 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
     console.error("Validation errors:", err);
   };
 
+  const ModelFormName = `${mode} ${isOrderBasedSale ? "Order Based Sale" : "Direct Sale"}`;
 
   return (
     <Popup
       visible={visible}
       onHiding={onClose}
-      title={`${mode} Sale Order`}
+      title={ModelFormName}
       width="90vw"
       height="90vh"
       dragEnabled
@@ -849,25 +889,48 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                 />
               </div>
 
+              {isOrderBasedSale && (
+                <>
+                  <div className="w-68">
+                    <label className="block text-gray-700 font-medium mb-1">So No. & Date <span className="text-red-500"> * </span> </label>
+                    <input
+                      type="text"
+                      value={orderno ? `${orderno} - ${formatDate(orderdt)}` : ""}
+                      disabled={isReadOnly}
+                      readOnly
+                      onClick={() => setSoPendingModalOpen(true)}
+                      className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
+                      placeholder="Select SO No. & Date"
+                    />
+                  </div>
+                </>
+              )}
 
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1"> Scan QR Code <span className="text-red-500"> *</span> </label>
 
-                <input
-                  type="text"
-                  {...register("qrcode")}
-                  ref={(el) => {
-                    scanInputRef.current = el;
-                    register("qrcode").ref(el);
-                  }}
-                  className="inputField border-gray-300"
-                  onKeyDown={(e: any) => {
-                    if (e.key !== "Enter") return;
-                    e.preventDefault();
-                    handleScan(e.target.value);
-                  }}
-                />
-              </div>
+              {!isOrderBasedSale && (
+                <>
+                  <div className="w-48">
+                    <label className="block text-gray-700 font-medium mb-1"> Scan QR Code <span className="text-red-500"> *</span> </label>
+
+                    <input
+                      type="text"
+                      {...register("qrcode")}
+                      ref={(el) => {
+                        scanInputRef.current = el;
+                        register("qrcode").ref(el);
+                      }}
+                      className="inputField border-gray-300"
+                      onKeyDown={(e: any) => {
+                        if (e.key !== "Enter") return;
+                        e.preventDefault();
+                        handleScan(e.target.value);
+                      }}
+                    />
+                  </div>
+                </>
+              )}
+
+
 
             </div>
           </section>
@@ -885,37 +948,9 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                   type="button"
                   onClick={() =>
                     append({
-                      tag: "I",
+                      ...defaultItemDtl,
                       sl: fields.length + 1,
                       dtlid: fields.length + 1,
-                      pcategoryid: 0,
-                      pcategorynm: "",
-                      productid: 0,
-                      productnm: "",
-                      qty1: 0,
-                      rate: 0,
-                      value: 0,
-                      discpct: 0,
-                      discamt: 0,
-                      netval: 0,
-                      taxablerate: 0,
-                      taxableval: 0,
-                      taxid: 0,
-                      taxval: 0,
-                      finalval: 0,
-                      stockval: 0,
-                      cgstpct: 0,
-                      cgstval: 0,
-                      cgstledgerid: 0,
-                      sgstpct: 0,
-                      sgstval: 0,
-                      sgstledgerid: 0,
-                      igstpct: 0,
-                      igstval: 0,
-                      igstledgerid: 0,
-                      hsnid: 0,
-                      hsnno: "",
-                      mrp: 0,
                     })
                   }
                   className="primary-btn text-xs px-3 py-1"
@@ -925,30 +960,66 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
               )}
             </div>
 
-            <div className="space-y-2">
-              {fields.map((field, index) => (
-                <DirectSaleItems
-                  key={field.id}
-                  index={index}
-                  field={field}
-                  control={control}
-                  setValue={setValue}
-                  register={register}
-                  errors={errors}
-                  remove={remove}
-                  watchedItems={watchedItems}
-                  userId={userId}
-                  companyId={companyId}
-                  branchId={toolbarBranchId}
-                  visible={visible}
-                  isReadOnly={isReadOnly}
-                  fieldsLength={fields.length}
+            {!isOrderBasedSale && (
+              <>
+                <div className="space-y-2">
+                  {fields.map((field, index) => (
+                    <DirectSaleItems
+                      key={field.id}
+                      index={index}
+                      field={field}
+                      control={control}
+                      setValue={setValue}
+                      register={register}
+                      errors={errors}
+                      remove={remove}
+                      watchedItems={watchedItems}
+                      userId={userId}
+                      companyId={companyId}
+                      branchId={toolbarBranchId}
+                      visible={visible}
+                      isReadOnly={isReadOnly}
+                      fieldsLength={fields.length}
 
-                  excludeIds={selectedProductIds}
-                  currentId={watchedItems?.[index]?.productid}
-                />
-              ))}
-            </div>
+                      excludeIds={selectedProductIds}
+                      currentId={watchedItems?.[index]?.productid}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {isOrderBasedSale && (
+              <>
+                <div className="space-y-2">
+                  {fields.map((field, index) => (
+                    <OrderbasedSaleItems
+                      key={field.id}
+                      index={index}
+                      field={field}
+                      control={control}
+                      setValue={setValue}
+                      register={register}
+                      errors={errors}
+                      remove={remove}
+                      mode={mode}
+                      watchedItems={watchedItems}
+                      userId={userId}
+                      companyId={companyId}
+                      branchId={toolbarBranchId}
+                      finid={finid}
+                      orderid={orderid || 0}
+                      visible={visible}
+                      isReadOnly={isReadOnly}
+                      fieldsLength={fields.length}
+
+                      excludeIds={selectedProductIds}
+                      currentId={watchedItems?.[index]?.productid}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
 
             <div className="flex flex-wrap gap-4 items-center border-t pt-3">
 
@@ -1097,8 +1168,20 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
           onSelect={handleTransporterSelect}
         />
 
-      </form>
-    </Popup>
+        {/* Order Base Sale */}
+        <SearchModal
+          open={soPendingModalOpen}
+          onClose={() => setSoPendingModalOpen(false)}
+          endpoint="so/pendinglist"
+          baseParams={baseSoPendingParams}
+          columns={searchSoPendingColumns}
+          searchFields={searchSoPendingFields}
+          onSelect={handleSoPendingSelect}
+          excludeIds={selectedProductIds}
+        />
+
+      </form >
+    </Popup >
   );
 
 

@@ -2,10 +2,10 @@ import { Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import SearchModal from "@/common/components/SearchModal";
 import { toast } from "sonner";
-import { OperationMode } from "../types/goodReceivedNote.types";
+import { OperationMode } from "../types/directSale.types";
 
 
-type GoodReceivedNoteItemsProps = {
+type OrderbasedSaleItemsProps = {
   index: number;
   field: { id: string };
   control: any;
@@ -14,7 +14,6 @@ type GoodReceivedNoteItemsProps = {
   setValue: any;
   remove: (index: number) => void;
   watchedItems: any;
-  isRowConfirmed: boolean;
   userId: number | string;
   companyId: number | string;
   branchId: number | string;
@@ -30,7 +29,7 @@ type GoodReceivedNoteItemsProps = {
   currentId?: number;
 };
 
-export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
+export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
   index,
   field,
   control,
@@ -39,7 +38,6 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
   setValue,
   remove,
   watchedItems,
-  isRowConfirmed,
   userId,
   companyId,
   branchId,
@@ -59,15 +57,6 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
   const qty = Number(item?.qty1) || 0;
   const rate = Number(item?.rate) || 0;
   const value = qty * rate;
-
-  const actualValue =
-    mode === 'Confirmed' ? Number(item.scanqty) * rate : 0;
-
-
-
-  // useEffect(() => {
-  //   console.log('isRowConfirmed :', isRowConfirmed);
-  // }, [isRowConfirmed])
 
 
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
@@ -208,11 +197,14 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
           min={0}
           {...register(`itemdtl.${index}.rate`, { valueAsNumber: true })}
           disabled={isReadOnly}
-          className={`inputField border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""} `}
+          className={`inputField ${errors?.itemdtl?.[index]?.rate ? "border-red-500" : "border-gray-400"}`}
           onKeyDown={(e) => {
             if (e.key === "-") e.preventDefault();
           }}
         />
+        {errors?.itemdtl?.[index]?.rate && (
+          <p className="text-xs text-red-500 mt-1"> {errors.itemdtl[index].rate.message}</p>
+        )}
       </div>
 
       <div className="w-24">
@@ -227,108 +219,21 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
           className={`inputField  bg-gray-100 border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
         />
       </div>
-
-      {(mode !== 'Confirmed') && (
-        <>
-          <div className="w-14">
-            <label className="block text-gray-700 text-sm font-medium mb-1">
-              Bal. Qty.
-            </label>
-            <input
-              type="number"
-              min={0}
-              {...register(`itemdtl.${index}.balanceqty1`)}
-              readOnly
-              className={`
+      <div className="w-14">
+        <label className="block text-gray-700 text-sm font-medium mb-1">
+          Bal. Qty.
+        </label>
+        <input
+          type="number"
+          min={0}
+          {...register(`itemdtl.${index}.balanceqty1`)}
+          readOnly
+          className={`
                 inputField  bg-gray-100 cursor-not-allowed"
                 ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-300"}
-              `}
-            />
-          </div>
-        </>
-      )}
-
-      {isRowConfirmed && (
-        <div className="w-24">
-          <label className="block text-gray-700 text-sm font-medium mb-1">
-            Confirm Qty.
-          </label>
-          <input
-            type="number"
-            min={0}
-            {...register(`itemdtl.${index}.confirmqty1`)}
-            disabled={isReadOnly}
-            className={`
-                inputField 
-                ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-300"}
-                ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}
-              `}
-          />
-        </div>
-      )}
-
-      {(mode === 'Confirmed') && (
-        <>
-          <div className="w-14">
-            <label className="block text-gray-700 text-sm font-medium mb-1">
-              Scan
-            </label>
-            <input
-              type="number"
-              min={0}
-              disabled={isReadOnly}
-              {...register(`itemdtl.${index}.scanqty`)}
-              className={`inputField border-gray-300 `}
-              onKeyDown={(e) => {
-                if (e.key === "-") e.preventDefault();
-              }}
-            />
-          </div>
-          <div className="w-14">
-            <label className="block text-gray-700 text-sm font-medium mb-1">
-              Short
-            </label>
-            <input
-              type="number"
-              min={0}
-              disabled={isReadOnly}
-              {...register(`itemdtl.${index}.shortqty`)}
-              className={`inputField border-gray-300 `}
-              onKeyDown={(e) => {
-                if (e.key === "-") e.preventDefault();
-              }}
-            />
-          </div>
-          <div className="w-14">
-            <label className="block text-gray-700 text-sm font-medium mb-1">
-              Excess
-            </label>
-            <input
-              type="number"
-              min={0}
-              disabled={isReadOnly}
-              {...register(`itemdtl.${index}.excessqty`)}
-              className={`inputField border-gray-300 `}
-              onKeyDown={(e) => {
-                if (e.key === "-") e.preventDefault();
-              }}
-            />
-          </div>
-
-          <div className="w-20">
-            <label className="block text-gray-700 text-sm font-medium mb-1">
-              Actual Value
-            </label>
-            <input
-              type="number"
-              min={0}
-              value={actualValue}
-              readOnly
-              className={`inputField  bg-gray-100 border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
-            />
-          </div>
-        </>
-      )}
+          `}
+        />
+      </div>
 
       {!isReadOnly && (
         <div className="w-12 flex justify-center">
@@ -350,7 +255,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
       <SearchModal
         open={categoryModalOpen}
         onClose={() => setCategoryModalOpen(false)}
-        endpoint="po/pendingproductlist"
+        endpoint="so/pendingproductlist"
         baseParams={baseCategoryParams}
         columns={searchCategoryColumns}
         searchFields={searchCategoryFields}

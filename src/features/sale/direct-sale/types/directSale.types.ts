@@ -32,6 +32,7 @@ export interface DirectSaleItem {
     hsnid?: number;
     hsnno?: string;
     mrp?: number;
+    orderdtlid?: number;
 }
 
 export interface DirectSale {
@@ -89,6 +90,11 @@ export interface DirectSale {
     aprvstatus?: string;
     qrcode?: string;
 
+    // Order based sale
+    orderid?: number;
+    orderno?: string;
+    orderdt?: string;
+
     itemdtl?: DirectSaleItem[];
 
     entryby?: number;
@@ -101,7 +107,7 @@ export interface DirectSaleFormType
     extends Partial<
         Omit<
             DirectSale,
-            "id" | "entryby" | "entrydt" | "updateby" | "updatedt"
+            "id" | "entryby" | "entrydt" | "updateby" | "updatedt" | "Approve" | "Confirmed"
         >
     > { }
 

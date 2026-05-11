@@ -50,7 +50,7 @@ export default function DirectSaleModule() {
 
   useEffect(() => {
 
-  },[DirectSaleList])
+  }, [DirectSaleList])
   // Fetch dropdown options
   const { data: BranchOrderOptions = [] } = useQuery({
     queryKey: ["BranchOrderOptions", userId, companyId],
