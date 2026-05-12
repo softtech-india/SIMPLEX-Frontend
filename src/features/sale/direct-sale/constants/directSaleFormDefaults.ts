@@ -18,6 +18,7 @@ export const defaultItemDtl = {
   productnm: "",
 
   qty1: 0,
+  clqty: 0,
   rate: 0,
   value: 0,
 
@@ -52,6 +53,7 @@ export const defaultItemDtl = {
 
   mrp: 0,
   orderdtlid: 0,
+  unit: "",
 };
 
 export const directSaleFormDefaults: DirectSaleFormSchema = {

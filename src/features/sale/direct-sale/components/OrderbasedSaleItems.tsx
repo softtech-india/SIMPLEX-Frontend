@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import SearchModal from "@/common/components/SearchModal";
 import { toast } from "sonner";
 import { OperationMode } from "../types/directSale.types";
+import { useQuery } from "@tanstack/react-query";
+import { fetchProductStock } from "@/api/master/product-api";
 
 
 type OrderbasedSaleItemsProps = {
@@ -13,12 +15,14 @@ type OrderbasedSaleItemsProps = {
   errors: any;
   setValue: any;
   remove: (index: number) => void;
+  trigger: any;
   watchedItems: any;
   userId: number | string;
   companyId: number | string;
   branchId: number | string;
   finid: number | string;
   orderid: number | string;
+  billdt: string;
   visible: boolean;
   isReadOnly: boolean;
   fieldsLength: number;
@@ -37,12 +41,14 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
   errors,
   setValue,
   remove,
+  trigger,
   watchedItems,
   userId,
   companyId,
   branchId,
   finid,
   orderid,
+  billdt,
   visible,
   isReadOnly,
   fieldsLength,
@@ -58,8 +64,41 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
   const rate = Number(item?.rate) || 0;
   const value = qty * rate;
 
-
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+
+  const selectedProductId = item?.productid;
+
+  const { data: currentProductStock } = useQuery({
+    queryKey: ["fetchProductStock", userId, companyId, branchId, selectedProductId, billdt],
+    queryFn: () => fetchProductStock(userId, companyId, branchId, selectedProductId, billdt),
+    enabled: !!userId && !!companyId && !!branchId && !!selectedProductId,
+    staleTime: 0,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+
+  useEffect(() => {
+    if (!currentProductStock?.length) return;
+    const stockData = currentProductStock[0];
+    const clqty = Number(stockData?.clqty || 0);
+    const clrate = Number(stockData?.clrate || 0);
+
+    // Set rate & stock
+    setValue(`itemdtl.${index}.rate`, clrate,);
+    setValue(`itemdtl.${index}.clqty`, clqty);
+
+    // if existing qty > stock, adjust it
+    const currentQty = Number(watchedItems?.[index]?.qty1 || 1);
+
+    if (currentQty > clqty) {
+      setValue(`itemdtl.${index}.qty1`, clqty);
+      toast.error(`Qty adjusted to available stock (${clqty})`);
+    }
+
+    // Revalidate field
+    //trigger(`itemdtl.${index}.qty1` || 1);
+
+  }, [currentProductStock, index, setValue, trigger, watchedItems]);
 
   // Model Search Category Modal Handlers
   const baseCategoryParams = {

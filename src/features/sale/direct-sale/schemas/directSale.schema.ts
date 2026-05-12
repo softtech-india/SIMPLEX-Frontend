@@ -12,7 +12,7 @@ export const DirectSaleItemSchema = z.object({
   productnm: z.string().optional(),
 
   qty1: z.number().min(1, "Quantity should be greater than 0"),
-
+  clqty: z.number().optional(),
   rate: z.number().optional(),
   value: z.number().optional(),
 
@@ -47,6 +47,8 @@ export const DirectSaleItemSchema = z.object({
 
   mrp: z.number().optional(),
   orderdtlid: z.number().optional(),
+  balanceqty1: z.number().optional(),
+  unit: z.string().optional(),
 });
 
 export const DirectSaleBaseSchema = z.object({

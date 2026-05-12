@@ -49,10 +49,6 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
   const pathname = usePathname();
   const isOrderBasedSale = pathname?.includes("saleagnstorder");
 
-  useEffect(() => {
-    console.log('isOrderBasedSale : ', isOrderBasedSale);
-  }, [isOrderBasedSale])
-
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
   const [billTypeModalOpen, setBillTypeModalOpen] = useState(false);
   const [salemanModalOpen, setSalemanModalOpen] = useState(false);
@@ -97,7 +93,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
 
   const { data: productList = [] } = useQuery({
-    queryKey: ["fetchSeriesList", userId, companyId, toolbarBranchId],
+    queryKey: ["fetchProductList", userId, companyId, toolbarBranchId],
     queryFn: () => fetchProductList(userId, companyId, toolbarBranchId,),
     staleTime: 0,
     enabled: !!userId && !!companyId && !!toolbarBranchId && !!visible,
@@ -105,20 +101,17 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
     refetchOnWindowFocus: true,
   });
 
-  // useEffect(() => {
+  // useEffect(() => { fetchProductStock
   //   console.log('productList :', productList);
   // }, [productList])
 
-  const { control, register, handleSubmit, setFocus, reset, watch, setValue, formState: { errors }, } = useDirectSaleForm(isApproveMode);
+  const { control, register, handleSubmit, setFocus, reset, watch, setValue, trigger, formState: { errors }, } = useDirectSaleForm(isApproveMode);
 
   const { fields, append, remove, } = useFieldArray({
     control,
     name: "itemdtl",
   });
 
-  // useEffect(() => {
-  //   console.log(' fields ', fields)
-  // }, [fields])
   // Calculate Total Quantity and Vlaue
   const watchedItems = useWatch({
     control,
@@ -146,6 +139,9 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
     },
 
   });
+
+  // 
+  const billdt = watch("billdt");
 
   // Reset form 
   useEffect(() => {
@@ -216,7 +212,6 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
             productnm: item.productnm ?? "",
 
             qty1: Number(item.qty1 ?? 0),
-
             rate: Number(item.rate ?? 0),
             value: Number(item.value ?? 0),
 
@@ -251,6 +246,10 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
             orderdtlid: item.orderdtlid || 0,
 
             mrp: Number(item.mrp ?? 0),
+            clqty: Number(item.clqty ?? 0),
+            balanceqty1: Number(item.balanceqty1 ?? 0),
+            unit: item.unit ?? '',
+
           })) ?? [],
       });
     }
@@ -358,6 +357,8 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
         if (defaultBillType) {
           setValue("billtypeid", defaultBillType.id);
           setValue("billtypenm", defaultBillType.name);
+          setValue("saledgerid", defaultBillType.accountheadid);
+          setValue("saledgernm", defaultBillType.accountheadnm);
         }
       } catch (e) {
         console.error(e);
@@ -571,6 +572,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
         hsnno: item?.hsnno ?? "",
         mrp: Number(item?.mrp ?? 0),
         orderdtlid: item?.orderdtlid || 0,
+        clqty: item?.clqty || 0,
       };
     });
 
@@ -591,8 +593,8 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
       if (isDeleteMode) {
         const ok = await confirmDelete({
-          title: "Delete Sale Order",
-          message: "Are you sure you want to delete this Sale Order?",
+          title: "Delete Sale",
+          message: "Are you sure you want to delete this Sale?",
         });
 
         if (!ok) return;
@@ -634,13 +636,13 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
         itemdtl,
       };
 
-      console.log("FINAL SUBMIT PAYLOAD:", JSON.stringify(payload, null, 2));
+      // console.log("FINAL SUBMIT PAYLOAD:", JSON.stringify(payload, null, 2));
 
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(directSaleFormDefaults);
         reset(defaultItemDtl)
-       // onClose();
+        // onClose();
         return;
       }
 
@@ -701,7 +703,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
           <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
 
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50"> Sale Order Information </h2>
+            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50"> Sale Information </h2>
 
             <div className="flex flex-wrap gap-4 items-end">
 
@@ -725,7 +727,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Order Date</label>
+                <label className="block text-gray-700 font-medium mb-1">Bill Date</label>
                 <input
                   type="date"
                   {...register("billdt")}
@@ -735,7 +737,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Order No</label>
+                <label className="block text-gray-700 font-medium mb-1">Bill No</label>
                 <input
                   type="text"
                   {...register("billno")}
@@ -746,42 +748,6 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                     ${selectedSeries?.manualallow === "N" ? "bg-gray-100 cursor-not-allowed" : ""}
                   `}
                 />
-              </div>
-
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Cash or Credit</label>
-                <FormSelect
-                  name="cashcrtype"
-                  control={control}
-                  options={cashcrTypeOptions}
-                />
-              </div>
-
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Credit days</label>
-                <input
-                  type="number"
-                  {...register("crdays", { valueAsNumber: true })}
-                  disabled={isReadOnly}
-                  className={`inputField ${errors.crdays ? "" : "border-gray-400"}`}
-                />
-              </div>
-
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1"> Customer <strong className="text-red-500"> * </strong> </label>
-                <input
-                  type="text"
-                  value={customerName || ''}
-                  disabled={isReadOnly}
-                  readOnly
-                  onClick={() => setCustomerModalOpen(true)}
-                  className={`inputField w-full border border-gray-300 
-                    ${errors.customerid && !customerName ? "border-red-500" : "border-gray-400"}
-                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
-                  }
-                  placeholder="Select Customer"
-                />
-                {errors.customerid && !customerName && <p className="text-red-500 mt-1 text-sm">{errors.customerid.message}</p>}
               </div>
 
               <div className="w-48">
@@ -800,6 +766,59 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                 />
                 {errors.billtypeid && !BillTypeName && <p className="text-red-500 mt-1 text-sm">{errors.billtypeid.message}</p>}
               </div>
+
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">Cash or Credit</label>
+                <FormSelect
+                  name="cashcrtype"
+                  control={control}
+                  options={cashcrTypeOptions}
+                />
+              </div>
+
+              <div className="w-100">
+                <label className="block text-gray-700 font-medium mb-1"> Customer <strong className="text-red-500"> * </strong> </label>
+                <input
+                  type="text"
+                  value={customerName || ''}
+                  disabled={isReadOnly}
+                  readOnly
+                  onClick={() => setCustomerModalOpen(true)}
+                  className={`inputField w-full border border-gray-300 
+                    ${errors.customerid && !customerName ? "border-red-500" : "border-gray-400"}
+                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
+                  }
+                  placeholder="Select Customer"
+                />
+                {errors.customerid && !customerName && <p className="text-red-500 mt-1 text-sm">{errors.customerid.message}</p>}
+              </div>
+
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">Credit days</label>
+                <input
+                  type="number"
+                  {...register("crdays", { valueAsNumber: true })}
+                  disabled={isReadOnly}
+                  className={`inputField ${errors.crdays ? "" : "border-gray-400"}`}
+                />
+              </div>
+
+              {isOrderBasedSale && (
+                <>
+                  <div className="w-68">
+                    <label className="block text-gray-700 font-medium mb-1">So No. & Date <span className="text-red-500"> * </span> </label>
+                    <input
+                      type="text"
+                      value={orderno ? `${orderno} - ${formatDate(orderdt)}` : ""}
+                      disabled={isReadOnly}
+                      readOnly
+                      onClick={() => setSoPendingModalOpen(true)}
+                      className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
+                      placeholder="Select SO No. & Date"
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Sale Ledger <strong className="text-red-500"> * </strong> </label>
@@ -864,12 +883,12 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                     ${errors.transporterid && !transporterName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
                   }
-                  placeholder="Select godown"
+                  placeholder="Select transporter "
                 />
                 {errors.transporterid && !transporterName && <p className="text-red-500 mt-1 text-sm">{errors.transporterid.message}</p>}
               </div>
 
-              <div className="w-24">
+              <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Time</label>
                 <input
                   type="time"
@@ -889,22 +908,6 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                 />
               </div>
 
-              {isOrderBasedSale && (
-                <>
-                  <div className="w-68">
-                    <label className="block text-gray-700 font-medium mb-1">So No. & Date <span className="text-red-500"> * </span> </label>
-                    <input
-                      type="text"
-                      value={orderno ? `${orderno} - ${formatDate(orderdt)}` : ""}
-                      disabled={isReadOnly}
-                      readOnly
-                      onClick={() => setSoPendingModalOpen(true)}
-                      className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
-                      placeholder="Select SO No. & Date"
-                    />
-                  </div>
-                </>
-              )}
 
 
               {!isOrderBasedSale && (
@@ -929,7 +932,6 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                   </div>
                 </>
               )}
-
 
 
             </div>
@@ -973,10 +975,12 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                       register={register}
                       errors={errors}
                       remove={remove}
+                      trigger={trigger}
                       watchedItems={watchedItems}
                       userId={userId}
                       companyId={companyId}
                       branchId={toolbarBranchId}
+                      billdt={billdt || ''}
                       visible={visible}
                       isReadOnly={isReadOnly}
                       fieldsLength={fields.length}
@@ -1002,6 +1006,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                       register={register}
                       errors={errors}
                       remove={remove}
+                      trigger={trigger}
                       mode={mode}
                       watchedItems={watchedItems}
                       userId={userId}
@@ -1009,6 +1014,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                       branchId={toolbarBranchId}
                       finid={finid}
                       orderid={orderid || 0}
+                      billdt={billdt || ''}
                       visible={visible}
                       isReadOnly={isReadOnly}
                       fieldsLength={fields.length}
@@ -1027,7 +1033,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
               <div className="w-120" />
 
-              <div className="w-28 relative">
+              <div className="w-14 relative">
                 <span className="absolute -left-20 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-700 whitespace-nowrap">
                   Total Qty
                 </span>

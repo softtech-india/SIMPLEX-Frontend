@@ -12,6 +12,7 @@ export interface GetDirectSaleParams {
   finid?: number;
   startdt?: string;
   enddt?: string;
+  entrytype?: string;
 }
 
 type UseDirectSaleByIdParams = {

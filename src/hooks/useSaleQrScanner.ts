@@ -8,21 +8,12 @@ const safeNumber = (val: any) => {
   return isNaN(n) ? 0 : n;
 };
 
-type SaleItem = {
-  pcategoryid: number;
-  pcategorynm?: string;
-
-  productid: number;
-  productnm: string;
-
-  qty1: number;
-};
-
 type ProductMaster = {
   id: number;
   productname: string;
   productcategoryid: number;
   categorynm: string;
+  unit: string;
 };
 
 type Params = {
@@ -130,7 +121,10 @@ export const useSaleQrScanner = ({
           productid: matchedProduct.id,
           productnm: matchedProduct.productname,
 
+          unit: matchedProduct.unit,
           qty1: 1,
+          rate: 0,
+          clqty: 0,
         });
       }
 

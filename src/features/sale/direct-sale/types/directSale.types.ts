@@ -8,6 +8,7 @@ export interface DirectSaleItem {
     productid: number;
     productnm?: string;
     qty1: number;
+    clqty?: number;
     rate?: number;
 
     value?: number;
@@ -33,6 +34,8 @@ export interface DirectSaleItem {
     hsnno?: string;
     mrp?: number;
     orderdtlid?: number;
+    balanceqty1?: number;
+    unit?: string;
 }
 
 export interface DirectSale {

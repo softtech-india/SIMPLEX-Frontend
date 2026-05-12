@@ -2,6 +2,8 @@ import { Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import SearchModal from "@/common/components/SearchModal";
 import { toast } from "sonner";
+import { fetchProductStock } from "@/api/master/product-api";
+import { useQuery } from "@tanstack/react-query";
 
 
 type DirectSaleItemsProps = {
@@ -12,10 +14,12 @@ type DirectSaleItemsProps = {
   errors: any;
   setValue: any;
   remove: (index: number) => void;
+  trigger: any;
   watchedItems: any;
   userId: number | string;
   companyId: number | string;
   branchId: number | string;
+  billdt: string;
   visible: boolean;
   isReadOnly: boolean;
   fieldsLength: number;
@@ -31,10 +35,12 @@ export const DirectSaleItems: React.FC<DirectSaleItemsProps> = ({
   errors,
   setValue,
   remove,
+  trigger,
   watchedItems,
   userId,
   companyId,
   branchId,
+  billdt,
   visible,
   isReadOnly,
   fieldsLength,
@@ -50,6 +56,40 @@ export const DirectSaleItems: React.FC<DirectSaleItemsProps> = ({
 
   const [brandModalOpen, setBrandModalOpen] = useState(false);
   const [productModalOpen, setProductModalOpen] = useState(false);
+
+  const selectedProductId = item?.productid;
+
+  const { data: currentProductStock } = useQuery({
+    queryKey: ["fetchProductStock", userId, companyId, branchId, selectedProductId, billdt],
+    queryFn: () => fetchProductStock(userId, companyId, branchId, selectedProductId, billdt),
+    enabled: !!userId && !!companyId && !!branchId && !!selectedProductId,
+    staleTime: 0,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+
+  useEffect(() => {
+    if (!currentProductStock?.length) return;
+    const stockData = currentProductStock[0];
+    const clqty = Number(stockData?.clqty || 0);
+    const clrate = Number(stockData?.clrate || 0);
+
+    // Set rate & stock
+    setValue(`itemdtl.${index}.rate`, clrate,);
+    setValue(`itemdtl.${index}.clqty`, clqty);
+
+    // if existing qty > stock, adjust it
+    const currentQty = Number(watchedItems?.[index]?.qty1 || 1);
+
+    if (currentQty > clqty) {
+      setValue(`itemdtl.${index}.qty1`, clqty);
+      toast.error(`Qty adjusted to available stock (${clqty})`);
+    }
+
+    // Revalidate field
+    //trigger(`itemdtl.${index}.qty1` || 1);
+
+  }, [ currentProductStock, index, setValue, trigger, watchedItems ]);
 
   // Model Search Brand Modal Handlers
   const baseBrandParams = {
@@ -68,8 +108,13 @@ export const DirectSaleItems: React.FC<DirectSaleItemsProps> = ({
   const handleBrandSelect = (row: any) => {
     setValue(`itemdtl.${index}.pcategoryid`, row.id);
     setValue(`itemdtl.${index}.pcategorynm`, row.name);
+
     setValue(`itemdtl.${index}.productid`, null);
     setValue(`itemdtl.${index}.productnm`, "");
+
+    setValue(`itemdtl.${index}.rate`, 0);
+    setValue(`itemdtl.${index}.clqty`, 0);
+
     setBrandModalOpen(false);
   };
 
@@ -106,6 +151,7 @@ export const DirectSaleItems: React.FC<DirectSaleItemsProps> = ({
 
     setValue(`itemdtl.${index}.productid`, row.id);
     setValue(`itemdtl.${index}.productnm`, row.productname);
+   // setValue(`itemdtl.${index}.qty1`, 0);
     setProductModalOpen(false);
   };
 
@@ -146,17 +192,35 @@ export const DirectSaleItems: React.FC<DirectSaleItemsProps> = ({
         )}
       </div>
 
-      <div className="w-28">
+      <div className="w-14">
         <label className="block text-gray-700 font-medium mb-1"> Quantity <strong className="text-red-500"> * </strong> </label>
         <input
           type="number"
-          {...register(`itemdtl.${index}.qty1`, { valueAsNumber: true })}
+          min={0}
+          {...register(`itemdtl.${index}.qty1`, {
+            valueAsNumber: true,
+            onChange: (e: any) => {
+              let value = Number(e.target.value);
+
+              if (value < 0) value = 0;
+              const clqty = Number(watchedItems?.[index]?.clqty) || 0;
+              if (value > clqty) {
+                toast.error("Quantity cannot exceed closing stock");
+                value = clqty;
+              }
+
+              setValue(`itemdtl.${index}.qty1`, value);
+            },
+          })}
           disabled={isReadOnly}
           className={`inputField ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-400"}`}
+          onKeyDown={(e) => {
+            if (e.key === "-") e.preventDefault();
+          }}
         />
-        {errors?.itemdtl?.[index]?.qty1 && (
+        {/* {errors?.itemdtl?.[index]?.qty1 && (
           <p className="text-xs text-red-500 mt-1"> {errors.itemdtl[index].qty1.message}</p>
-        )}
+        )} */}
       </div>
 
       <div className="w-28">
@@ -166,6 +230,9 @@ export const DirectSaleItems: React.FC<DirectSaleItemsProps> = ({
           {...register(`itemdtl.${index}.rate`, { valueAsNumber: true })}
           disabled={isReadOnly}
           className={`inputField ${errors?.itemdtl?.[index]?.rate ? "border-red-500" : "border-gray-400"}`}
+          onKeyDown={(e) => {
+            if (e.key === "-") e.preventDefault();
+          }}
         />
         {errors?.itemdtl?.[index]?.rate && (
           <p className="text-xs text-red-500 mt-1"> {errors.itemdtl[index].rate.message}</p>
@@ -177,6 +244,17 @@ export const DirectSaleItems: React.FC<DirectSaleItemsProps> = ({
         <input
           type="number"
           value={value}
+          readOnly
+          className="inputField  bg-gray-100 border-gray-400"
+        />
+      </div>
+
+      <div className="w-14">
+        <label className="block text-gray-700 font-medium mb-1"> Cl. Stock</label>
+        <input
+          type="number"
+          min={0}
+          {...register(`itemdtl.${index}.clqty`)}
           readOnly
           className="inputField  bg-gray-100 border-gray-400"
         />
