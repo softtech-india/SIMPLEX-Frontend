@@ -2,12 +2,14 @@ export interface DirectSaleItem {
     tag?: string;
     sl?: number;
     dtlid?: number;
+
     pcategoryid?: number;
     pcategorynm?: string;
-    productid?: number;
+    productid: number;
     productnm?: string;
-    qty1?: number;
+    qty1: number;
     rate?: number;
+
     value?: number;
     discpct?: number;
     discamt?: number;
@@ -30,6 +32,7 @@ export interface DirectSaleItem {
     hsnid?: number;
     hsnno?: string;
     mrp?: number;
+    orderdtlid?: number;
 }
 
 export interface DirectSale {
@@ -43,17 +46,15 @@ export interface DirectSale {
 
     billdt?: string;
     billno?: string;
-    billtypeid?: number;
-    billTypename?: string;
 
-    customerid?: number;
+    billtypeid: number;
+    billtypenm?: string;
+
+    customerid: number;
     customernm?: string;
 
     cashcrtype?: string;
     crdays?: number;
-
-    saledgerid?: number;
-    narration?: string;
 
     qty1?: number;
     qtyrateval?: number;
@@ -71,14 +72,28 @@ export interface DirectSale {
     igstval?: number;
 
     smid?: number;
-    salemanName?: string;
+    smnm?: string;
 
-    godownid?: number;
-    godownName?: string;
+    godownid: number;
+    godownnm?: string;
+
+    saledgerid: number;
+    saledgernm?: string;
+
+    transporterid: number;
+    transporterName?: string;
+
+    narration?: string;
 
     billtime?: string;
 
     aprvstatus?: string;
+    qrcode?: string;
+
+    // Order based sale
+    orderid?: number;
+    orderno?: string;
+    orderdt?: string;
 
     itemdtl?: DirectSaleItem[];
 
@@ -92,7 +107,7 @@ export interface DirectSaleFormType
     extends Partial<
         Omit<
             DirectSale,
-            | "entryby" | "entrydt" | "updateby" | "updatedt"
+            "id" | "entryby" | "entrydt" | "updateby" | "updatedt" | "Approve" | "Confirmed"
         >
     > { }
 

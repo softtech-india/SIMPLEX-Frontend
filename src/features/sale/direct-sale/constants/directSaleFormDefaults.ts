@@ -1,6 +1,58 @@
 import { DirectSaleFormSchema } from "../schemas/directSale.schema";
 
 const today = new Date().toISOString().split("T")[0];
+const currentTime = new Date().toLocaleTimeString("en-GB", {
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+export const defaultItemDtl = {
+  tag: "I",
+  sl: 1,
+  dtlid: 1,
+
+  pcategoryid: 0,
+  pcategorynm: "",
+
+  productid: 0,
+  productnm: "",
+
+  qty1: 0,
+  rate: 0,
+  value: 0,
+
+  discpct: 0,
+  discamt: 0,
+
+  netval: 0,
+
+  taxablerate: 0,
+  taxableval: 0,
+
+  taxid: 0,
+  taxval: 0,
+
+  finalval: 0,
+  stockval: 0,
+
+  cgstpct: 0,
+  cgstval: 0,
+  cgstledgerid: 0,
+
+  sgstpct: 0,
+  sgstval: 0,
+  sgstledgerid: 0,
+
+  igstpct: 0,
+  igstval: 0,
+  igstledgerid: 0,
+
+  hsnid: 0,
+  hsnno: "",
+
+  mrp: 0,
+  orderdtlid: 0,
+};
 
 export const directSaleFormDefaults: DirectSaleFormSchema = {
   id: 0,
@@ -19,10 +71,9 @@ export const directSaleFormDefaults: DirectSaleFormSchema = {
   customerid: 0,
   customernm: "",
 
-  cashcrtype: "",
+  cashcrtype: "C",
   crdays: 0,
 
-  saledgerid: 0,
   narration: "",
 
   qty1: 0,
@@ -43,61 +94,61 @@ export const directSaleFormDefaults: DirectSaleFormSchema = {
 
   smid: 0,
   godownid: 0,
+  saledgerid: 0,
+  transporterid: 0,
 
-  billtime: "",
+  billtime: currentTime,
 
-  itemdtl: [
-    {
-      tag: "I",
-      sl: 1,
-      dtlid: 1,
+  // itemdtl: [
+  //   {
+  //     tag: "I",
+  //     sl: 1,
+  //     dtlid: 1,
 
-      pcategoryid: 0,
-      pcategorynm: "",
+  //     pcategoryid: 0,
+  //     pcategorynm: "",
 
-      productid: 0,
-      productnm: "",
+  //     productid: 0,
+  //     productnm: "",
 
-      qty1: 0,
+  //     qty1: 0,
 
-      rate: 0,
-      value: 0,
+  //     rate: 0,
+  //     value: 0,
 
-      discpct: 0,
-      discamt: 0,
+  //     discpct: 0,
+  //     discamt: 0,
 
-      netval: 0,
+  //     netval: 0,
 
-      taxablerate: 0,
-      taxableval: 0,
+  //     taxablerate: 0,
+  //     taxableval: 0,
 
-      taxid: 0,
-      taxval: 0,
+  //     taxid: 0,
+  //     taxval: 0,
 
-      finalval: 0,
-      stockval: 0,
+  //     finalval: 0,
+  //     stockval: 0,
 
-      cgstpct: 0,
-      cgstval: 0,
-      cgstledgerid: 0,
+  //     cgstpct: 0,
+  //     cgstval: 0,
+  //     cgstledgerid: 0,
 
-      sgstpct: 0,
-      sgstval: 0,
-      sgstledgerid: 0,
+  //     sgstpct: 0,
+  //     sgstval: 0,
+  //     sgstledgerid: 0,
 
-      igstpct: 0,
-      igstval: 0,
-      igstledgerid: 0,
+  //     igstpct: 0,
+  //     igstval: 0,
+  //     igstledgerid: 0,
 
-      hsnid: 0,
-      hsnno: "",
+  //     hsnid: 0,
+  //     hsnno: "",
 
-      mrp: 0,
-    },
-  ],
+  //     mrp: 0,
+  //   },
+  // ],
 
-  entryby: 0,
-  entrydt: "",
-  updateby: 0,
-  updatedt: "",
+  itemdtl: [],
+
 };

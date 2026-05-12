@@ -46,6 +46,7 @@ export const DirectSaleItemSchema = z.object({
   hsnno: z.string().optional(),
 
   mrp: z.number().optional(),
+  orderdtlid: z.number().optional(),
 });
 
 export const DirectSaleBaseSchema = z.object({
@@ -62,8 +63,8 @@ export const DirectSaleBaseSchema = z.object({
   billdt: z.string().optional(),
   billno: z.string().optional(),
 
-  billtypeid: z.number().optional(),
-  billTypename: z.string().optional(),
+  billtypeid: z.number().min(1, "Please select a bill type"),
+  billtypenm: z.string().optional(),
 
   customerid: z.number().min(1, "Please select a customer"),
   customernm: z.string().optional(),
@@ -71,7 +72,6 @@ export const DirectSaleBaseSchema = z.object({
   cashcrtype: z.string().optional(),
   crdays: z.number().optional(),
 
-  saledgerid: z.number().optional(),
   narration: z.string().optional(),
 
   qty1: z.number().optional(),
@@ -90,23 +90,29 @@ export const DirectSaleBaseSchema = z.object({
   cgstval: z.number().optional(),
   igstval: z.number().optional(),
 
-  smid: z.number().optional(),
-  salemanName: z.string().optional(),
+  smid: z.number().min(1, "Please select a saleman"),
+  smnm: z.string().optional(),
 
-  godownid: z.number().optional(),
-  godownName: z.string().optional(),
+  godownid: z.number().min(1, "Please select a godown"),
+  godownnm: z.string().optional(),
+
+  saledgerid: z.number().min(1, "Please select a sale ledger"),
+  saledgernm: z.string().optional(),
+
+  transporterid: z.number().min(1, "Please select a transporter"),
+  transporternm: z.string().optional(),
 
   billtime: z.string().optional(),
 
-  itemdtl: z
-    .array(DirectSaleItemSchema)
-    .min(1, "At least one item is required"),
+  qrcode: z.string().optional(),
 
-  entryby: z.number().optional(),
-  entrydt: z.string().optional(),
+  // Order based sale
+  orderid: z.number().optional(),
+  orderno: z.string().optional(),
+  orderdt: z.string().optional(),
 
-  updateby: z.number().optional(),
-  updatedt: z.string().optional(),
+  itemdtl: z.array(DirectSaleItemSchema).min(1, "At least one item is required"),
+
 });
 
 export const getDirectSaleSchema = (isApproveMode: boolean) =>

@@ -164,8 +164,11 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
           type="number"
           {...register(`itemdtl.${index}.rate`, { valueAsNumber: true })}
           disabled={isReadOnly}
-          className="inputField border-gray-400 "
+          className={`inputField ${errors?.itemdtl?.[index]?.rate ? "border-red-500" : "border-gray-400"}`}
         />
+        {errors?.itemdtl?.[index]?.rate && (
+          <p className="text-xs text-red-500 mt-1"> {errors.itemdtl[index].rate.message}</p>
+        )}
       </div>
 
       <div className="w-28">

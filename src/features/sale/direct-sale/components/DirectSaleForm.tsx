@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useDirectSaleById, useCreateDirectSale, useUpdateDirectSale, useDeleteDirectSale, useApproveDirectSale } from "../hooks/useDirectSale";
 import { DirectSaleFormType, OperationMode } from "../types/directSale.types";
 import { DirectSaleFormSchema } from "../schemas/directSale.schema";
-import { directSaleFormDefaults } from "../constants/directSaleFormDefaults";
+import { defaultItemDtl, directSaleFormDefaults } from "../constants/directSaleFormDefaults";
 import { useDirectSaleForm } from "../hooks/useDirectSaleForm";
 import { useFieldArray } from "react-hook-form";
 import { fetchSeriesList } from "@/api/purchase/purchase-api";
@@ -15,12 +15,17 @@ import useUserStore from "@/store/userStore";
 import { FormSelect } from "@/common/components/FormSelect";
 import { DirectSaleItems } from "./DirectSaleItems";
 import { useWatch } from "react-hook-form";
-import { formatDateForInput } from "@/helpers/dateUtils";
+import { formatDate, formatDateForInput } from "@/helpers/dateUtils";
 import SearchModal from "@/common/components/SearchModal";
 import { toast } from "sonner";
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
 import { SHORTCUTS } from "@/common/constants/shortcuts";
+import { apiCall } from "@/utils/apiClient";
+import { useSaleQrScanner } from "@/hooks/useSaleQrScanner";
+import { fetchProductList } from "@/api/master/product-api";
+import { usePathname } from "next/navigation";
+import { OrderbasedSaleItems } from "./OrderbasedSaleItems";
 
 interface DirectSaleFormProps {
   visible: boolean;
@@ -41,12 +46,23 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
   } = useUserStore();
 
   const confirmDelete = useConfirm();
+  const pathname = usePathname();
+  const isOrderBasedSale = pathname?.includes("saleagnstorder");
+
+  useEffect(() => {
+    console.log('isOrderBasedSale : ', isOrderBasedSale);
+  }, [isOrderBasedSale])
 
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
   const [billTypeModalOpen, setBillTypeModalOpen] = useState(false);
   const [salemanModalOpen, setSalemanModalOpen] = useState(false);
   const [godownModalOpen, setGodownModalOpen] = useState(false);
+  const [saleLedgerModalOpen, setSaleLedgerModalOpen] = useState(false);
+  const [transporterModalOpen, setTransporterModalOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+
+  // Order Based Sale
+  const [soPendingModalOpen, setSoPendingModalOpen] = useState(false);
 
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
@@ -79,22 +95,30 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
   const isSubmitting = createMutation.isPending || approveMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
-  const {
-    control,
-    register,
-    handleSubmit,
-    setFocus,
-    reset,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useDirectSaleForm(isApproveMode);
 
-  const { fields, append, remove } = useFieldArray({
+  const { data: productList = [] } = useQuery({
+    queryKey: ["fetchSeriesList", userId, companyId, toolbarBranchId],
+    queryFn: () => fetchProductList(userId, companyId, toolbarBranchId,),
+    staleTime: 0,
+    enabled: !!userId && !!companyId && !!toolbarBranchId && !!visible,
+    retry: 1,
+    refetchOnWindowFocus: true,
+  });
+
+  // useEffect(() => {
+  //   console.log('productList :', productList);
+  // }, [productList])
+
+  const { control, register, handleSubmit, setFocus, reset, watch, setValue, formState: { errors }, } = useDirectSaleForm(isApproveMode);
+
+  const { fields, append, remove, } = useFieldArray({
     control,
     name: "itemdtl",
   });
 
+  // useEffect(() => {
+  //   console.log(' fields ', fields)
+  // }, [fields])
   // Calculate Total Quantity and Vlaue
   const watchedItems = useWatch({
     control,
@@ -112,6 +136,17 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
     return sum + qty * rate;
   }, 0) || 0;
 
+  const { scanInputRef, handleScan } = useSaleQrScanner({
+    watchedItems,
+    productList,
+    setValue,
+
+    onUpdateItems: (items) => {
+      setValue("itemdtl", items, { shouldValidate: true, });
+    },
+
+  });
+
   // Reset form 
   useEffect(() => {
     if (!visible) return;
@@ -122,6 +157,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
     if (isAddMode) {
       reset(directSaleFormDefaults);
+      reset(defaultItemDtl);
       return;
     }
 
@@ -212,6 +248,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
             hsnid: Number(item.hsnid ?? 0),
             hsnno: item.hsnno ?? "",
+            orderdtlid: item.orderdtlid || 0,
 
             mrp: Number(item.mrp ?? 0),
           })) ?? [],
@@ -281,9 +318,13 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
   const customerName = watch("customernm")
 
   // Model Search Bill Type Modal Handlers
+  const BillTypeName = watch("billtypenm");
+  const billTypeId = watch("billtypeid");
+
   const baseBillTypeParams = {
     userid: userId,
     compid: companyId,
+    billtype: "SA"
   };
 
   const searchBillTypeColumns = [
@@ -296,11 +337,35 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
   const handleBillTypeSelect = (row: any) => {
     setValue("billtypeid", row.id);
-    setValue("billTypename", row.name);
+    setValue("billtypenm", row.name);
     setBillTypeModalOpen(false);
   };
 
-  const BillTypeName = watch("billTypename")
+  useEffect(() => {
+    if (!visible || billTypeId) return;
+
+    const fetchDefaultBillType = async () => {
+      try {
+        const response: any = await apiCall.get(
+          process.env.NEXT_PUBLIC_PROJECT_API_ENDPOINT + "billtype",
+          baseBillTypeParams
+        );
+
+        const defaultBillType = response?.data?.find(
+          (item: any) => item.isdefault === "Y"
+        );
+
+        if (defaultBillType) {
+          setValue("billtypeid", defaultBillType.id);
+          setValue("billtypenm", defaultBillType.name);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
+    fetchDefaultBillType();
+  }, [visible, billTypeId, userId, companyId, setValue]);
 
   // Model Search Saleman Modal Handlers
   const baseSalemanParams = {
@@ -319,11 +384,11 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
   const handleSalemanSelect = (row: any) => {
     setValue("smid", row.id);
-    setValue("salemanName", row.name);
+    setValue("smnm", row.name);
     setSalemanModalOpen(false);
   };
 
-  const SalemanName = watch("salemanName")
+  const SalemanName = watch("smnm")
 
   // Model Search Godown Modal Handlers
   const baseGodownParams = {
@@ -341,24 +406,95 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
   ];
 
   const handleGodownSelect = (row: any) => {
-    setValue("smid", row.id);
-    setValue("godownName", row.name);
+    setValue("godownid", row.id);
+    setValue("godownnm", row.name);
     setGodownModalOpen(false);
   };
 
-  const GodownName = watch("godownName")
+  const GodownName = watch("godownnm")
+
+  // Model Search SaleLedger Modal Handlers
+  const baseSaleLedgerParams = {
+    userid: userId,
+    compid: companyId,
+    grouptype: "S"
+  };
+
+  const searchSaleLedgerColumns = [
+    { key: "ledgername", label: "name." },
+  ];
+
+  const searchSaleLedgerFields = [
+    { value: "ledgername", label: "Ledger Name" },
+  ];
+
+  const handleSaleLedgerSelect = (row: any) => {
+    setValue("saledgerid", row.id);
+    setValue("saledgernm", row.ledgername);
+    setSaleLedgerModalOpen(false);
+  };
+
+  const SaleLedgerName = watch("saledgernm")
+
+  // Model Search Transporter Modal Handlers
+  const baseTransporterParams = {
+    userid: userId,
+    compid: companyId,
+  };
+
+  const searchTransporterColumns = [
+    { key: "name", label: "name." },
+  ];
+
+  const searchTransporterFields = [
+    { value: "name", label: "Ledger Name" },
+  ];
+
+  const handleTransporterSelect = (row: any) => {
+    setValue("transporterid", row.id);
+    setValue("transporternm", row.name);
+    setTransporterModalOpen(false);
+  };
+
+  const transporterName = watch("transporternm")
+
+  // Model Search SoPending Modal Handlers
+  const orderid = watch("orderid");
+  const orderno = watch("orderno");
+  const orderdt = watch("orderdt");
+  const customerId = watch("customerid");
+
+  const baseSoPendingParams = {
+    userid: userId,
+    compid: companyId,
+    branchid: toolbarBranchId,
+    finid: finid,
+    customerid: customerId,
+  };
+
+  const searchSoPendingColumns = [
+    { key: "orderno", label: "Order No." },
+    { key: "orderdt", label: "Order Date." },
+  ];
+
+  const searchSoPendingFields = [
+    { value: "name", label: "Name" },
+  ];
+
+  const handleSoPendingSelect = (row: any) => {
+    setValue("orderid", row.id);
+    setValue(`orderno`, row.orderno);
+    setValue(`orderdt`, row.orderdt);
+    setSoPendingModalOpen(false);
+  };
 
   const calculateTotals = (items: any[] = []) => {
     let qty1 = 0;
-
     let qtyrateval = 0;
-
     let discval = 0;
     let netval = 0;
-
     let taxableval = 0;
     let taxval = 0;
-
     let cgstval = 0;
     let sgstval = 0;
     let igstval = 0;
@@ -367,7 +503,6 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
     const itemdtl = items.map((item, index) => {
       const qty = Number(item?.qty1 ?? 0);
-
       const rate = Number(item?.rate ?? 0);
       const value = qty * rate;
 
@@ -384,25 +519,17 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
       const igstpct = Number(item?.igstpct ?? 0);
 
       const itemCgstVal = Number(item?.cgstval ?? 0) || (itemTaxableVal * cgstpct) / 100;
-
       const itemSgstVal = Number(item?.sgstval ?? 0) || (itemTaxableVal * sgstpct) / 100;
-
       const itemIgstVal = Number(item?.igstval ?? 0) || (itemTaxableVal * igstpct) / 100;
-
       const itemTaxVal = itemCgstVal + itemSgstVal + itemIgstVal;
-
       const finalval = itemTaxableVal + itemTaxVal;
 
       qty1 += qty;
-
       qtyrateval += value;
-
       discval += discamt;
       netval += itemNetVal;
-
       taxableval += itemTaxableVal;
       taxval += itemTaxVal;
-
       cgstval += itemCgstVal;
       sgstval += itemSgstVal;
       igstval += itemIgstVal;
@@ -411,77 +538,45 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
       return {
         tag: item?.tag || "I",
-
         sl: Number(item?.sl ?? index + 1),
         dtlid: Number(item?.dtlid ?? index + 1),
-
         pcategoryid: Number(item?.pcategoryid ?? 0),
         pcategorynm: item?.pcategorynm ?? "",
-
         productid: Number(item?.productid ?? 0),
         productnm: item?.productnm ?? "",
-
         qty1: qty,
-
-        rate: rate,
+        rate: rate ?? 0,
         value: value,
-
         discpct: discpct,
         discamt: discamt,
-
         netval: itemNetVal,
-
         taxablerate: taxablerate,
         taxableval: itemTaxableVal,
 
         taxid: Number(item?.taxid ?? 0),
         taxval: itemTaxVal,
-
         finalval: finalval,
-
         stockval: Number(item?.stockval ?? 0),
 
         cgstpct: cgstpct,
         cgstval: itemCgstVal,
         cgstledgerid: Number(item?.cgstledgerid ?? 0),
-
         sgstpct: sgstpct,
         sgstval: itemSgstVal,
         sgstledgerid: Number(item?.sgstledgerid ?? 0),
-
         igstpct: igstpct,
         igstval: itemIgstVal,
         igstledgerid: Number(item?.igstledgerid ?? 0),
-
         hsnid: Number(item?.hsnid ?? 0),
         hsnno: item?.hsnno ?? "",
-
         mrp: Number(item?.mrp ?? 0),
+        orderdtlid: item?.orderdtlid || 0,
       };
     });
 
     return {
-      qty1,
-
-      qtyrateval,
-
-      discval,
-      netval,
-
-      beftaxval: netval,
-
-      taxableval,
-      taxval,
-
-      amtwithtaxval: billamt,
-      afttaxval: billamt,
-
-      billamt,
-
-      cgstval,
-      sgstval,
-      igstval,
-
+      qty1, qtyrateval, discval, netval, beftaxval: netval, taxableval, taxval,
+      amtwithtaxval: billamt, afttaxval: billamt, billamt, cgstval, sgstval, igstval,
       itemdtl,
     };
   };
@@ -511,7 +606,10 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
         return;
       }
 
-      const { qty1, qtyrateval, discval, netval, beftaxval, taxableval, taxval, amtwithtaxval, afttaxval, billamt, cgstval, sgstval, igstval, itemdtl } = calculateTotals(data.itemdtl || []);
+      const {
+        qty1, qtyrateval, discval, netval, beftaxval, taxableval, taxval, amtwithtaxval,
+        afttaxval, billamt, cgstval, sgstval, igstval, itemdtl
+      } = calculateTotals(data.itemdtl || []);
 
       const payload: DirectSaleFormType = {
         ...data,
@@ -520,22 +618,15 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
         branchid: toolbarBranchId,
 
         qty1: Number(qty1),
-
         qtyrateval: Number(qtyrateval),
-
         discval: Number(discval),
         netval: Number(netval),
-
         beftaxval: Number(beftaxval),
-
         taxableval: Number(taxableval),
         taxval: Number(taxval),
-
         amtwithtaxval: Number(amtwithtaxval),
         afttaxval: Number(afttaxval),
-
         billamt: Number(billamt),
-
         cgstval: Number(cgstval),
         sgstval: Number(sgstval),
         igstval: Number(igstval),
@@ -548,7 +639,8 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(directSaleFormDefaults);
-        onClose();
+        reset(defaultItemDtl)
+       // onClose();
         return;
       }
 
@@ -587,12 +679,13 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
     console.error("Validation errors:", err);
   };
 
+  const ModelFormName = `${mode} ${isOrderBasedSale ? "Order Based Sale" : "Direct Sale"}`;
 
   return (
     <Popup
       visible={visible}
       onHiding={onClose}
-      title={`${mode} Sale Order`}
+      title={ModelFormName}
       width="90vw"
       height="90vh"
       dragEnabled
@@ -655,23 +748,6 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                 />
               </div>
 
-              <div className="w-110">
-                <label className="block text-gray-700 font-medium mb-1"> Customer <strong className="text-red-500"> * </strong> </label>
-                <input
-                  type="text"
-                  value={customerName || ''}
-                  disabled={isReadOnly}
-                  readOnly
-                  onClick={() => setCustomerModalOpen(true)}
-                  className={`inputField w-full border border-gray-300 
-                    ${errors.customerid && !customerName ? "border-red-500" : "border-gray-400"}
-                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
-                  }
-                  placeholder="Select Customer"
-                />
-                {errors.customerid && !customerName && <p className="text-red-500 mt-1 text-sm">{errors.customerid.message}</p>}
-              </div>
-
               <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Cash or Credit</label>
                 <FormSelect
@@ -692,7 +768,24 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Bill Type</label>
+                <label className="block text-gray-700 font-medium mb-1"> Customer <strong className="text-red-500"> * </strong> </label>
+                <input
+                  type="text"
+                  value={customerName || ''}
+                  disabled={isReadOnly}
+                  readOnly
+                  onClick={() => setCustomerModalOpen(true)}
+                  className={`inputField w-full border border-gray-300 
+                    ${errors.customerid && !customerName ? "border-red-500" : "border-gray-400"}
+                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
+                  }
+                  placeholder="Select Customer"
+                />
+                {errors.customerid && !customerName && <p className="text-red-500 mt-1 text-sm">{errors.customerid.message}</p>}
+              </div>
+
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">Bill Type <strong className="text-red-500"> * </strong></label>
                 <input
                   type="text"
                   value={BillTypeName || ''}
@@ -703,13 +796,30 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                     ${errors.billtypeid && !BillTypeName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
                   }
-                  placeholder="Select Customer"
+                  placeholder="Select bill type"
                 />
                 {errors.billtypeid && !BillTypeName && <p className="text-red-500 mt-1 text-sm">{errors.billtypeid.message}</p>}
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Saleman</label>
+                <label className="block text-gray-700 font-medium mb-1">Sale Ledger <strong className="text-red-500"> * </strong> </label>
+                <input
+                  type="text"
+                  value={SaleLedgerName || ''}
+                  disabled={isReadOnly}
+                  readOnly
+                  onClick={() => setSaleLedgerModalOpen(true)}
+                  className={`inputField w-full border border-gray-300 
+                    ${errors.saledgerid && !SaleLedgerName ? "border-red-500" : "border-gray-400"}
+                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
+                  }
+                  placeholder="Select sale ledger"
+                />
+                {errors.saledgerid && !SaleLedgerName && <p className="text-red-500 mt-1 text-sm">{errors.saledgerid.message}</p>}
+              </div>
+
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">Saleman <strong className="text-red-500"> * </strong> </label>
                 <input
                   type="text"
                   value={SalemanName || ''}
@@ -717,16 +827,16 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                   readOnly
                   onClick={() => setSalemanModalOpen(true)}
                   className={`inputField w-full border border-gray-300 
-                    ${errors.billtypeid && !SalemanName ? "border-red-500" : "border-gray-400"}
+                    ${errors.smid && !SalemanName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
                   }
-                  placeholder="Select Customer"
+                  placeholder="Select saleman"
                 />
-                {errors.billtypeid && !SalemanName && <p className="text-red-500 mt-1 text-sm">{errors.billtypeid.message}</p>}
+                {errors.smid && !SalemanName && <p className="text-red-500 mt-1 text-sm">{errors.smid.message}</p>}
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Godown</label>
+                <label className="block text-gray-700 font-medium mb-1">Godown <strong className="text-red-500"> * </strong></label>
                 <input
                   type="text"
                   value={GodownName || ''}
@@ -737,9 +847,36 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                     ${errors.godownid && !GodownName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
                   }
-                  placeholder="Select Customer"
+                  placeholder="Select godown"
                 />
                 {errors.godownid && !GodownName && <p className="text-red-500 mt-1 text-sm">{errors.godownid.message}</p>}
+              </div>
+
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">Transporter <strong className="text-red-500"> * </strong></label>
+                <input
+                  type="text"
+                  value={transporterName || ''}
+                  disabled={isReadOnly}
+                  readOnly
+                  onClick={() => setTransporterModalOpen(true)}
+                  className={`inputField w-full border border-gray-300 
+                    ${errors.transporterid && !transporterName ? "border-red-500" : "border-gray-400"}
+                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
+                  }
+                  placeholder="Select godown"
+                />
+                {errors.transporterid && !transporterName && <p className="text-red-500 mt-1 text-sm">{errors.transporterid.message}</p>}
+              </div>
+
+              <div className="w-24">
+                <label className="block text-gray-700 font-medium mb-1">Time</label>
+                <input
+                  type="time"
+                  {...register("billtime")}
+                  disabled={isReadOnly}
+                  className={`inputField ${errors.billtime ? "text-red-500" : "border-gray-400"}`}
+                />
               </div>
 
               <div className="w-48">
@@ -751,6 +888,49 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                   className={`inputField border-gray-400 bg-gray-100 cursor-not-allowed `}
                 />
               </div>
+
+              {isOrderBasedSale && (
+                <>
+                  <div className="w-68">
+                    <label className="block text-gray-700 font-medium mb-1">So No. & Date <span className="text-red-500"> * </span> </label>
+                    <input
+                      type="text"
+                      value={orderno ? `${orderno} - ${formatDate(orderdt)}` : ""}
+                      disabled={isReadOnly}
+                      readOnly
+                      onClick={() => setSoPendingModalOpen(true)}
+                      className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
+                      placeholder="Select SO No. & Date"
+                    />
+                  </div>
+                </>
+              )}
+
+
+              {!isOrderBasedSale && (
+                <>
+                  <div className="w-48">
+                    <label className="block text-gray-700 font-medium mb-1"> Scan QR Code <span className="text-red-500"> *</span> </label>
+
+                    <input
+                      type="text"
+                      {...register("qrcode")}
+                      ref={(el) => {
+                        scanInputRef.current = el;
+                        register("qrcode").ref(el);
+                      }}
+                      className="inputField border-gray-300"
+                      onKeyDown={(e: any) => {
+                        if (e.key !== "Enter") return;
+                        e.preventDefault();
+                        handleScan(e.target.value);
+                      }}
+                    />
+                  </div>
+                </>
+              )}
+
+
 
             </div>
           </section>
@@ -768,37 +948,9 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                   type="button"
                   onClick={() =>
                     append({
-                      tag: "I",
+                      ...defaultItemDtl,
                       sl: fields.length + 1,
                       dtlid: fields.length + 1,
-                      pcategoryid: 0,
-                      pcategorynm: "",
-                      productid: 0,
-                      productnm: "",
-                      qty1: 0,
-                      rate: 0,
-                      value: 0,
-                      discpct: 0,
-                      discamt: 0,
-                      netval: 0,
-                      taxablerate: 0,
-                      taxableval: 0,
-                      taxid: 0,
-                      taxval: 0,
-                      finalval: 0,
-                      stockval: 0,
-                      cgstpct: 0,
-                      cgstval: 0,
-                      cgstledgerid: 0,
-                      sgstpct: 0,
-                      sgstval: 0,
-                      sgstledgerid: 0,
-                      igstpct: 0,
-                      igstval: 0,
-                      igstledgerid: 0,
-                      hsnid: 0,
-                      hsnno: "",
-                      mrp: 0,
                     })
                   }
                   className="primary-btn text-xs px-3 py-1"
@@ -808,30 +960,66 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
               )}
             </div>
 
-            <div className="space-y-2">
-              {fields.map((field, index) => (
-                <DirectSaleItems
-                  key={field.id}
-                  index={index}
-                  field={field}
-                  control={control}
-                  setValue={setValue}
-                  register={register}
-                  errors={errors}
-                  remove={remove}
-                  watchedItems={watchedItems}
-                  userId={userId}
-                  companyId={companyId}
-                  branchId={toolbarBranchId}
-                  visible={visible}
-                  isReadOnly={isReadOnly}
-                  fieldsLength={fields.length}
+            {!isOrderBasedSale && (
+              <>
+                <div className="space-y-2">
+                  {fields.map((field, index) => (
+                    <DirectSaleItems
+                      key={field.id}
+                      index={index}
+                      field={field}
+                      control={control}
+                      setValue={setValue}
+                      register={register}
+                      errors={errors}
+                      remove={remove}
+                      watchedItems={watchedItems}
+                      userId={userId}
+                      companyId={companyId}
+                      branchId={toolbarBranchId}
+                      visible={visible}
+                      isReadOnly={isReadOnly}
+                      fieldsLength={fields.length}
 
-                  excludeIds={selectedProductIds}
-                  currentId={watchedItems?.[index]?.productid}
-                />
-              ))}
-            </div>
+                      excludeIds={selectedProductIds}
+                      currentId={watchedItems?.[index]?.productid}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {isOrderBasedSale && (
+              <>
+                <div className="space-y-2">
+                  {fields.map((field, index) => (
+                    <OrderbasedSaleItems
+                      key={field.id}
+                      index={index}
+                      field={field}
+                      control={control}
+                      setValue={setValue}
+                      register={register}
+                      errors={errors}
+                      remove={remove}
+                      mode={mode}
+                      watchedItems={watchedItems}
+                      userId={userId}
+                      companyId={companyId}
+                      branchId={toolbarBranchId}
+                      finid={finid}
+                      orderid={orderid || 0}
+                      visible={visible}
+                      isReadOnly={isReadOnly}
+                      fieldsLength={fields.length}
+
+                      excludeIds={selectedProductIds}
+                      currentId={watchedItems?.[index]?.productid}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
 
             <div className="flex flex-wrap gap-4 items-center border-t pt-3">
 
@@ -940,7 +1128,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
           onSelect={handleBillTypeSelect}
         />
 
-        < SearchModal
+        <SearchModal
           open={salemanModalOpen}
           onClose={() => setSalemanModalOpen(false)}
           endpoint="salesman"
@@ -950,7 +1138,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
           onSelect={handleSalemanSelect}
         />
 
-        < SearchModal
+        <SearchModal
           open={godownModalOpen}
           onClose={() => setGodownModalOpen(false)}
           endpoint="godown"
@@ -960,8 +1148,40 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
           onSelect={handleGodownSelect}
         />
 
-      </form>
-    </Popup>
+        <SearchModal
+          open={saleLedgerModalOpen}
+          onClose={() => setSaleLedgerModalOpen(false)}
+          endpoint="ledger"
+          baseParams={baseSaleLedgerParams}
+          columns={searchSaleLedgerColumns}
+          searchFields={searchSaleLedgerFields}
+          onSelect={handleSaleLedgerSelect}
+        />
+
+        <SearchModal
+          open={transporterModalOpen}
+          onClose={() => setTransporterModalOpen(false)}
+          endpoint="transporter"
+          baseParams={baseTransporterParams}
+          columns={searchTransporterColumns}
+          searchFields={searchTransporterFields}
+          onSelect={handleTransporterSelect}
+        />
+
+        {/* Order Base Sale */}
+        <SearchModal
+          open={soPendingModalOpen}
+          onClose={() => setSoPendingModalOpen(false)}
+          endpoint="so/pendinglist"
+          baseParams={baseSoPendingParams}
+          columns={searchSoPendingColumns}
+          searchFields={searchSoPendingFields}
+          onSelect={handleSoPendingSelect}
+          excludeIds={selectedProductIds}
+        />
+
+      </form >
+    </Popup >
   );
 
 

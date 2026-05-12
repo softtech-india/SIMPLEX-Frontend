@@ -131,8 +131,9 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
         aprvstatus: "",
 
         orderdt: SaleOrder.orderdt ? formatDateForInput(SaleOrder.orderdt) : "",
-        partyordno: SaleOrder.partyordno ? formatDateForInput(SaleOrder.partyordno) : "",
         partyorddt: SaleOrder.partyorddt ? formatDateForInput(SaleOrder.partyorddt) : "",
+
+        partyordno: SaleOrder.partyordno ?? "",
 
         compid: Number(SaleOrder.compid ?? 0),
         branchid: Number(SaleOrder.branchid ?? 0),
