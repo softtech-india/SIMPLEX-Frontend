@@ -111,6 +111,7 @@ export default function Login() {
       storageService.setItem("userCode", user.usercode);
       storageService.setItem("companyId", user.compid);
       storageService.setItem("companyName", user.compnm);
+      storageService.setItem("stateid", user.stateid);
       storageService.setItem("isLoggedIn", "true");
 
       // useCompanyStore.getState().setCompanyData({

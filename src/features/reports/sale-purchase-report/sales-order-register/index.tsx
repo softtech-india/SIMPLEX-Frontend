@@ -1,9 +1,11 @@
+// sales-order-register/index.tsx (corrected)
+
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { SaleRegisterDataGrid } from './components/SaleRegisterDataGrid';
-import { useSaleRegisterList } from './hooks/useSaleRegister';
-import { SaleRegister } from './types/saleRegister.type';
+import { SalesOrderDataGrid } from './components/SalesOrderDataGrid';
+import { useSalesOrderList } from './hooks/useSalesOrder';
+import { SalesOrder, SalesOrderFilterState, formatDateForApi } from './types/salesOrder.type';
 import useIsMobile from "@/common/hooks/useIsMobile";
 import { TransactionToolbar } from './components/TransactionToolbar';
 import { usePrivileges } from '@/common/hooks/usePrivileges';
@@ -11,59 +13,62 @@ import { exportToExcel, ExcelColumn } from '@/common/utility/exportToExcel';
 import { fetchBranchList } from "@/api/master/ledger-api";
 import { useQuery } from '@tanstack/react-query';
 import useUserStore from '@/store/userStore';
-import { currentDate, formatDate } from '@/helpers/dateUtils';
-import SaleRegisterFilterCriteria from './components/SaleRegisterFilterCriteria';
-import {
-  SaleRegisterFilterState,
-  formatDateForApi
-} from './types/saleRegister.type';
-import { DEFAULT_SALE_REGISTER_FILTER } from './constants/saleRegisterTrialDefaults';
+import { currentDate } from '@/helpers/dateUtils';
+import SalesOrderFilterCriteria from './components/SalesOrderFilterCriteria';
+import { DEFAULT_SALES_ORDER_FILTER } from './constants/salesOrderDefaults';
 import { storageService } from '@/common/utility/storageService';
 
-export default function SaleRegisterModule() {
+export default function SalesOrderRegisterModule() {
   // Hooks
   const isMobile = useIsMobile();
   const permissions = usePrivileges();
   const { userId, companyId, branchId, finid, branchnm } = useUserStore();
 
   // State 
-  const [selectedRow, setSelectedRow] = useState<SaleRegister | null>(null);
+  const [selectedRow, setSelectedRow] = useState<SalesOrder | null>(null);
   const [isFilterFormOpen, setIsFilterFormOpen] = useState(false);
   const [toolbarBranchId, setToolbarBranchId] = useState<string | null>(null);
-  const [formSelectedBranch, setFormSelectedBranch] = useState<string | null>(null);
-  const [localFilters, setLocalFilters] = useState<Partial<SaleRegisterFilterState>>({});
-
-  // Modal state
-  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<SaleRegister | null>(null);
   const [selectedBranchName, setSelectedBranchName] = useState<string>(branchnm || '');
+  const [localFilters, setLocalFilters] = useState<Partial<SalesOrderFilterState>>({});
 
-  // Direct date state like Purchase Order
+  // Direct date state
   const [fromDate, setFromDate] = useState<string | null>(currentDate);
   const [toDate, setToDate] = useState<string | null>(currentDate);
 
-  // Centralized filter state for advanced filters (not dates)
-  const [filterParams, setFilterParams] = useState<SaleRegisterFilterState>({
-    ...DEFAULT_SALE_REGISTER_FILTER,
+  // Centralized filter state for advanced filters
+  const stateId = storageService.getItem('stateid');
+
+  const [filterParams, setFilterParams] = useState<SalesOrderFilterState>({
+    ...DEFAULT_SALES_ORDER_FILTER,
     userid: Number(userId),
     compid: Number(companyId),
     branchid: Number(branchId),
     finid: Number(finid),
     startdt: formatDateForApi(currentDate),
-    enddt: formatDateForApi(currentDate)
+    enddt: formatDateForApi(currentDate),
+    strbrand: '',
+    strclass: '',
+    strsubclass: '',
+    sortby: 0,
+    stateid: Number(stateId) | 0,
+    partyid: 0,
+    orderstatus: 0
   });
 
-  const { data: saleRegisterList = [], isLoading, refetch } = useSaleRegisterList({
+  const { data: salesOrderList = [], isLoading, refetch } = useSalesOrderList({
     userid: filterParams.userid,
     compid: filterParams.compid,
     branchid: Number(toolbarBranchId) || filterParams.branchid,
     finid: filterParams.finid,
     startdt: fromDate ? formatDateForApi(fromDate) : formatDateForApi(currentDate),
     enddt: toDate ? formatDateForApi(toDate) : formatDateForApi(currentDate),
+    strbrand: filterParams.strbrand || ' ',
+    strclass: filterParams.strclass || ' ',
+    strsubclass: filterParams.strsubclass || ' ',
     sortby: filterParams.sortby,
     stateid: filterParams.stateid,
-    trantype: filterParams.trantype,
-    withProduct: filterParams.withProduct // Pass the withProduct value
+    partyid: filterParams.partyid,
+    orderstatus: filterParams.orderstatus
   });
 
   const { data: BranchOrderOptions = [] } = useQuery({
@@ -79,10 +84,6 @@ export default function SaleRegisterModule() {
         label: s.name,
       })),
   });
-
-  useEffect(() => {
-    console.log(filterParams)
-  }, [])
 
   // Refetch when dates, branch, or advanced filters change
   useEffect(() => {
@@ -103,18 +104,8 @@ export default function SaleRegisterModule() {
     }
   }, []);
 
-  // Double-click handler
   const handleRowDblClick = useCallback((e: any) => {
-    if (e.data) {
-      setSelectedProduct(e.data);
-      setIsDetailsModalOpen(true);
-    }
-  }, []);
-
-  // Modal close handler
-  const handleDetailsModalClose = useCallback(() => {
-    setIsDetailsModalOpen(false);
-    setSelectedProduct(null);
+    console.log('Row double clicked:', e.data);
   }, []);
 
   const handleMoreFilterClick = useCallback(() => {
@@ -125,19 +116,13 @@ export default function SaleRegisterModule() {
     setIsFilterFormOpen(false);
   }, []);
 
-  const handleApplyFilters = useCallback((filters: Partial<SaleRegisterFilterState>) => {
-    setFilterParams(prev => ({
+  const handleApplyFilters = useCallback((filters: Partial<SalesOrderFilterState>) => {
+    setFilterParams((prev: SalesOrderFilterState) => ({
       ...prev,
-      userid: Number(userId),
-      compid: Number(companyId),
-      finid: Number(finid),
       ...filters,
-      branchid: filters.branchid !== undefined ? filters.branchid : prev.branchid,
-      startdt: filters.startdt || prev.startdt,
-      enddt: filters.enddt || prev.enddt,
     }));
 
-    // ✅ NEW: Sync the popup dates back to the toolbar states!
+    // Sync dates from filters to toolbar
     if (filters.startdt) {
       setFromDate(filters.startdt);
     }
@@ -146,27 +131,28 @@ export default function SaleRegisterModule() {
     }
 
     setIsFilterFormOpen(false);
-  }, [userId, companyId, finid]);
-  const stateId = storageService.getItem('stateid');
+  }, []);
 
   const handleClearFilters = useCallback(() => {
     setFilterParams({
-      ...DEFAULT_SALE_REGISTER_FILTER,
+      ...DEFAULT_SALES_ORDER_FILTER,
       userid: Number(userId),
       compid: Number(companyId),
-      branchid: Number(branchId),  // Keep the original branch
+      branchid: Number(branchId),
       finid: Number(finid),
       startdt: formatDateForApi(currentDate),
       enddt: formatDateForApi(currentDate),
+      strbrand: '',
+      strclass: '',
+      strsubclass: '',
       sortby: 0,
       stateid: Number(stateId) | 0,
-      trantype: 0,
-      withProduct: 0
+      partyid: 0,
+      orderstatus: 0
     });
     setFromDate(currentDate);
     setToDate(currentDate);
     setToolbarBranchId(null);
-    setFormSelectedBranch(null);
     setSelectedBranchName(branchnm || '');
   }, [userId, companyId, branchId, finid, branchnm]);
 
@@ -175,37 +161,34 @@ export default function SaleRegisterModule() {
   }, [handleClearFilters]);
 
   const handleExport = useCallback(() => {
-    if (!saleRegisterList || saleRegisterList.length === 0) return;
+    if (!salesOrderList || salesOrderList.length === 0) return;
 
-    const columns: ExcelColumn[] = Object.keys(saleRegisterList[0]).map((key) => ({
+    const columns: ExcelColumn[] = Object.keys(salesOrderList[0]).map((key) => ({
       header: key.charAt(0).toUpperCase() + key.slice(1),
       key,
       width: 20,
     }));
 
     exportToExcel({
-      data: saleRegisterList,
+      data: salesOrderList,
       columns,
-      fileName: "Stock Trial Report.xlsx",
-      sheetName: "Stock Trial",
+      fileName: "Sales Order Register.xlsx",
+      sheetName: "Sales Order",
     });
-  }, [saleRegisterList]);
+  }, [salesOrderList]);
 
-  // Update branch handler
   const handleBranchChange = useCallback((branchIdValue: string | null) => {
     setToolbarBranchId(branchIdValue);
     if (branchIdValue) {
       const branch = BranchOrderOptions.find((b: any) => b.value === branchIdValue);
       const branchName = branch?.label || branchnm || '';
       setSelectedBranchName(branchName);
-      setFormSelectedBranch(branchName);
-      setFilterParams(prev => ({
+      setFilterParams((prev: SalesOrderFilterState) => ({
         ...prev,
         branchid: Number(branchIdValue),
       }));
     } else {
       setSelectedBranchName(branchnm || '');
-      setFormSelectedBranch(branchnm || '');
     }
   }, [BranchOrderOptions, branchnm]);
 
@@ -219,53 +202,22 @@ export default function SaleRegisterModule() {
 
   return (
     <>
-      <div className="stock-trial-module">
+      <div className="sales-order-module">
         <div className="bg-white rounded-xl shadow-sm border mt-2">
           <TransactionToolbar
-            title="Sale Register"
+            title="Sales Order Register"
             permissions={permissions}
             onMoreFilter={handleMoreFilterClick}
             onRefresh={handleRefresh}
             onExport={handleExport}
             periodTitle={`Period: ${fromDate} to ${toDate}`}
-            selects={{
-              name: "branch",
-              label: "Branch",
-              value: toolbarBranchId || String(branchId),
-              options: BranchOrderOptions,
-              placeholder: "Select Branch",
-              className: "w-48",
-              onChange: (val) => {
-                handleBranchChange(val);
-                if (val) {
-                  const branch = BranchOrderOptions.find((b: any) => b.value === val);
-                  setFormSelectedBranch(branch?.label || branchnm);
-                }
-              }
-            }}
-            selectFromDate={{
-              name: "fromDate",
-              label: "From",
-              value: fromDate,
-              className: "w-40",
-              isClearable: true,
-              onChange: handleFromDateChange,
-            }}
-            selectToDate={{
-              name: "toDate",
-              label: "To ",
-              value: toDate,
-              className: "w-40",
-              isClearable: true,
-              onChange: handleToDateChange,
-            }}
           />
         </div>
 
         {!isMobile && (
-          <div className="w-full px-2 sm:px-2 md:px-2 lg:px-2 max-w-full lg:max-w-355 bg-white rounded-xl shadow-sm border border-gray-200 p-2 overflow-x-auto my-4">
-            <SaleRegisterDataGrid
-              dataSource={saleRegisterList}
+          <div className="w-full px-2 sm:px-2 md:px-2 lg:px-2 max-w-full bg-white rounded-xl shadow-sm border border-gray-200 p-2 overflow-x-auto my-4">
+            <SalesOrderDataGrid
+              dataSource={salesOrderList}
               onSelectionChanged={handleSelectionChanged}
               onRowDblClick={handleRowDblClick}
               showFilterRow
@@ -273,12 +225,11 @@ export default function SaleRegisterModule() {
               selectionMode="single"
               onExporting={handleExport}
               height={500}
-              localFilters={localFilters}
             />
           </div>
         )}
 
-        <SaleRegisterFilterCriteria
+        <SalesOrderFilterCriteria
           visible={isFilterFormOpen}
           filterParams={filterParams}
           onClose={handleFilterFormClose}
@@ -286,9 +237,9 @@ export default function SaleRegisterModule() {
           onClear={handleClearFilters}
           localFilters={localFilters}
           setLocalFilters={setLocalFilters}
+          userId={Number(userId)}
+          companyId={Number(companyId)}
         />
-
-
       </div>
     </>
   );
