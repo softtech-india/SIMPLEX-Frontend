@@ -233,7 +233,7 @@ tr.dx-row.dx-column-lines.dx-header-row {
   color: #070707;
 }
 
-.dx-datagrid-rowsview .dx-data-row.dx-state-hover > td {
+.dx-datagrid-rowsview .dx-data-row.dx-state-hover>td {
   background-color: #777 !important;
   color: #f1f1f1 !important;
 }
@@ -517,8 +517,10 @@ a.dx-link.dx-link-delete.dx-icon-trash.dx-link-icon {
 .dashboard-cards {
   border-radius: 20px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  background-color: #f6f6fa !important; /* Updated background color */
-  border: 1px solid #d6d9e4; /* Added border */
+  background-color: #f6f6fa !important;
+  /* Updated background color */
+  border: 1px solid #d6d9e4;
+  /* Added border */
   /* transition: transform 0.3s ease, box-shadow 0.3s ease; */
 }
 
@@ -1473,10 +1475,11 @@ a.dx-link.dx-link-delete.dx-icon-trash.dx-link-icon {
 .dx-datagrid .dx-data-row {
   background: transparent !important;
   border-bottom: 1px solid #e0e0e0 !important;
-  height: 50px; /* adjust as needed */
+  height: 50px;
+  /* adjust as needed */
 }
 
-.dx-datagrid .dx-data-row > td {
+.dx-datagrid .dx-data-row>td {
   vertical-align: middle !important;
 }
 
@@ -1528,6 +1531,7 @@ a.dx-link.dx-link-delete.dx-icon-trash.dx-link-icon {
 
 /* For small screens */
 @media (max-width: 576px) {
+
   .dx-texteditor,
   .dx-selectbox {
     width: 100% !important;
@@ -1783,14 +1787,14 @@ a.dx-link.dx-link-delete.dx-icon-trash.dx-link-icon {
 .bg-color:hover {
   background-color: #131f9f;
 }
+
 .bg-color:active {
   background-color: #0a1360;
 }
 
 /* Primary button: main actions */
 .primary-btn {
-  @apply flex items-center gap-1 px-4 py-2 rounded text-sm sm:text-white font-medium
-         transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1;
+  @apply flex items-center gap-1 px-4 py-2 rounded text-sm sm:text-white font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1;
   background-color: var(--primary-button-color);
   color: #fff;
   border: none;
@@ -1824,20 +1828,22 @@ a.dx-link.dx-link-delete.dx-icon-trash.dx-link-icon {
 
 /* Edit button: success action */
 .edit-btn {
-  @apply flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium
-         transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1;
-  background-color: #16a34a; /* green-600 */
+  @apply flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1;
+  background-color: #16a34a;
+  /* green-600 */
   color: #fff;
   border: none;
   cursor: pointer;
 }
 
 .edit-btn:hover:enabled {
-  background-color: #15803d; /* green-700 */
+  background-color: #15803d;
+  /* green-700 */
 }
 
 .edit-btn:active:enabled {
-  background-color: #166534; /* green-800 */
+  background-color: #166534;
+  /* green-800 */
 }
 
 .edit-btn:disabled {
@@ -1846,20 +1852,22 @@ a.dx-link.dx-link-delete.dx-icon-trash.dx-link-icon {
 
 /* Delete button: danger action */
 .delete-btn {
-  @apply flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium
-         transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1;
-  background-color: #dc2626; /* red-600 */
+  @apply flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1;
+  background-color: #dc2626;
+  /* red-600 */
   color: #fff;
   border: none;
   cursor: pointer;
 }
 
 .delete-btn:hover:enabled {
-  background-color: #b91c1c; /* red-700 */
+  background-color: #b91c1c;
+  /* red-700 */
 }
 
 .delete-btn:active:enabled {
-  background-color: #991b1b; /* red-800 */
+  background-color: #991b1b;
+  /* red-800 */
 }
 
 .delete-btn:disabled {
@@ -1879,10 +1887,11 @@ a.dx-link.dx-link-delete.dx-icon-trash.dx-link-icon {
 
 .bg-color {
   background-color: var(--primary-bg-color);
-  color: #fff; /* ensures text contrast */
+  color: #fff;
+  /* ensures text contrast */
 }
 
-.inputField{
+.inputField {
   @apply w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-200;
 }
 
@@ -1894,6 +1903,7 @@ a.dx-link.dx-link-delete.dx-icon-trash.dx-link-icon {
   background-color: var(--primary-bg-color) !important;
   color: #ffffff !important;
 }
+
 .dx-popup-wrapper .dx-closebutton .dx-icon {
   color: #ffffff !important;
 }
@@ -1906,10 +1916,13 @@ a.dx-link.dx-link-delete.dx-icon-trash.dx-link-icon {
 
 /* Header */
 .erp-grid .dx-header-row {
-  background-color: #0f1c7f;      /* Primary color for header */
+  background-color: #0f1c7f;
+  /* Primary color for header */
   font-weight: 600;
-  color: #ffffff;                 /* White text on dark header */
-  border-bottom: 1px solid #0a0980; /* Slightly darker border */
+  color: #ffffff;
+  /* White text on dark header */
+  border-bottom: 1px solid #0a0980;
+  /* Slightly darker border */
 }
 
 /* Rows */
@@ -1931,7 +1944,8 @@ a.dx-link.dx-link-delete.dx-icon-trash.dx-link-icon {
 
 /* Alternating rows */
 .erp-grid .dx-row-alt {
-  background-color: #f6f6fa; /* Light neutral for alternating */
+  background-color: #f6f6fa;
+  /* Light neutral for alternating */
 }
 
 /* Borders clean */
@@ -1941,7 +1955,8 @@ a.dx-link.dx-link-delete.dx-icon-trash.dx-link-icon {
 
 .erp-grid .dx-datagrid-borders .dx-datagrid-rowsview td,
 .erp-grid .dx-datagrid-borders .dx-datagrid-rowsview th {
-  border-color: #d1d5db; /* Soft borders for clean ERP look */
+  border-color: #d1d5db;
+  /* Soft borders for clean ERP look */
 }
 
 /* Pager */
@@ -1977,4 +1992,133 @@ a.dx-link.dx-link-delete.dx-icon-trash.dx-link-icon {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* ============= For Sale order Register table */
+
+.grand-total-row {
+  background-color: #eff6ff !important;
+  border-top: 2px solid #3b82f6 !important;
+  border-bottom: 2px solid #3b82f6 !important;
+  height: 32px !important;
+}
+
+.grand-total-row td {
+  background-color: #eff6ff !important;
+  color: #1e3a8a !important;
+  font-weight: bold !important;
+  padding: 4px 8px !important;
+  height: 32px !important;
+}
+
+/* Sub Total Row Styling */
+.sub-total-row {
+  background-color: #fffbeb !important;
+  border-top: 1px solid #f59e0b !important;
+  border-bottom: 1px solid #f59e0b !important;
+  height: 32px !important;
+}
+
+.sub-total-row td {
+  background-color: #fffbeb !important;
+  color: #92400e !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  padding: 4px 8px !important;
+  height: 32px !important;
+}
+
+/* Text styles for total rows */
+.sub-total-text {
+  font-weight: 700;
+  color: #92400e;
+  font-size: 13px !important;
+}
+
+.grand-total-text {
+  font-weight: 900;
+  color: #1e3a8a;
+  font-size: 13px !important;
+}
+
+.sub-total-qty {
+  font-weight: 600;
+  color: #92400e;
+  font-size: 13px !important;
+}
+
+.grand-total-qty {
+  font-weight: 900;
+  color: #1e3a8a;
+  font-size: 13px !important;
+}
+
+/* Regular rows - slightly taller */
+.dx-data-row:not(.grand-total-row):not(.sub-total-row) {
+  height: 40px !important;
+}
+
+.dx-data-row:not(.grand-total-row):not(.sub-total-row) td {
+  padding: 8px 8px !important;
+  height: 40px !important;
+}
+
+/* Hover effects */
+.grand-total-row:hover td {
+  background-color: #dbeafe !important;
+}
+
+.sub-total-row:hover td {
+  background-color: #fef3c7 !important;
+}
+
+/* Alternating rows for regular data */
+.dx-row:not(.grand-total-row):not(.sub-total-row):nth-child(even) {
+  background-color: #f9fafb;
+}
+
+/* Ensure the row styling is applied consistently */
+.dx-data-row {
+  transition: all 0.2s ease;
+}
+
+/* Reduce padding in all table cells for compact view */
+.dx-datagrid .dx-row>td {
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+
+/* Force scrollbar visibility */
+.dx-datagrid {
+  overflow: auto !important;
+}
+
+.dx-datagrid .dx-datagrid-content {
+  min-width: 100% !important;
+}
+
+/* Custom scrollbar styling for better visibility */
+.dx-datagrid::-webkit-scrollbar {
+  width: 12px !important;
+  height: 12px !important;
+}
+
+.dx-datagrid::-webkit-scrollbar-track {
+  background: #f1f1f1 !important;
+  border-radius: 4px !important;
+}
+
+.dx-datagrid::-webkit-scrollbar-thumb {
+  background: #c1c1c1 !important;
+  border-radius: 4px !important;
+}
+
+.dx-datagrid::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8 !important;
+}
+
+/* For Firefox */
+.dx-datagrid {
+  scrollbar-width: auto !important;
+  scrollbar-color: #c1c1c1 #f1f1f1 !important;
 }

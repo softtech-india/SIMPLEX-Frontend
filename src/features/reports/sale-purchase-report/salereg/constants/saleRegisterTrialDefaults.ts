@@ -1,7 +1,10 @@
+import { storageService } from "@/common/utility/storageService";
 import { SaleRegisterFilterState } from "../types/saleRegister.type";
 
 // In your types file
 const today = new Date().toISOString().split("T")[0];
+const stateId = storageService.getItem('stateid');
+
 export const DEFAULT_SALE_REGISTER_FILTER: SaleRegisterFilterState = {
     userid: 0,
     compid: 0,
@@ -10,7 +13,7 @@ export const DEFAULT_SALE_REGISTER_FILTER: SaleRegisterFilterState = {
     startdt: today,
     enddt: today,
     sortby: 0,
-    stateid: 32,
+    stateid: Number(stateId) | 0,
     trantype: 0,
     withProduct: 0
 };
