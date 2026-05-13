@@ -193,6 +193,7 @@ const SaleRegisterFilterCriteria: React.FC<SaleRegisterFilterCriteriaProps> = ({
                             </InlineSelectField>
                         </div>
                     </div>
+                    {/* Branch */}
                     <div className="w-full">
                         <InlineSelectField label="Branch">
                             <div className="ml-11">

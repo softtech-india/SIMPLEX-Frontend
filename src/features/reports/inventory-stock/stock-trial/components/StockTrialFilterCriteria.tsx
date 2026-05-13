@@ -1,13 +1,13 @@
-// StockTrialFilterCriteria.tsx - Updated with comma-separated values
-
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Eye, X } from "lucide-react";
+import { Eye } from "lucide-react";
 import InlineSelectField from "@/common/components/InlineSelectField";
-import CustomSelectBox from "@/common/components/sharedComponents/CustomSelectBox";
 import { useQuery } from "@tanstack/react-query";
 import { stockTrialService } from "../services/stockTrialService";
 import { StockTrialFilterState } from "../types/stockTrial.types";
 import { LoadPanel, Popup, SelectBox, TagBox } from "devextreme-react";
+import { DEFAULT_STOCK_TRIAL_FILTER } from "../constants/stockTrialDefaults";
+import { fetchBranchList } from "@/api/master/ledger-api";
+import useUserStore from "@/store/userStore";
 
 interface StockTrialFilterCriteriaProps {
     visible: boolean;
@@ -38,6 +38,24 @@ const StockTrialFilterCriteria: React.FC<StockTrialFilterCriteriaProps> = ({
     localFilters,
     setLocalFilters
 }) => {
+    const { userId, companyId, branchId } = useUserStore();
+    const today = new Date().toISOString().split('T')[0];
+
+    // API calls for dropdown options
+    const { data: branchOptions = [] } = useQuery({
+        queryKey: ["branchOptions"],
+        queryFn: () => fetchBranchList(userId, companyId),
+        staleTime: 0,
+        enabled: true,
+        retry: 1,
+        refetchOnWindowFocus: true,
+        select: (data) =>
+            (data ?? []).map((s: any) => ({
+                value: s.id,
+                name: s.name,
+            })),
+    });
+
     const { data: brandsOptions = [] } = useQuery({
         queryKey: ["brandsOptions"],
         queryFn: () => stockTrialService.getAllBrands(),
@@ -66,99 +84,128 @@ const StockTrialFilterCriteria: React.FC<StockTrialFilterCriteriaProps> = ({
     });
 
     const { data: godownOptions = [] } = useQuery({
-        queryKey: ["godownOptions", filterParams.branchid],
-        queryFn: () => stockTrialService.getAllGodown(String(filterParams.branchid)),
-        enabled: !!filterParams.branchid,
+        queryKey: ["godownOptions", localFilters.branchid ?? filterParams.branchid],
+        queryFn: () => stockTrialService.getAllGodown(String(localFilters.branchid ?? filterParams.branchid)),
+        enabled: !!(localFilters.branchid ?? filterParams.branchid),
         staleTime: 0,
         retry: 1,
         refetchOnWindowFocus: true
     });
 
-    // Local state for form values before applying
     const [isLoading, setIsLoading] = useState(false);
 
-    // Initialize local filters when popup opens
+    // Initialize local filters ONLY when popup first opens and localFilters is empty
     useEffect(() => {
-        if (visible) {
+        if (visible && Object.keys(localFilters).length === 0) {
             setLocalFilters({
-                printrtval: filterParams.printrtval,
-                strbrand: filterParams.strbrand,
-                strclass: filterParams.strclass,
-                strsubclass: filterParams.strsubclass,
-                balancetag: filterParams.balancetag,
-                strgodown: filterParams.strgodown,
+                ...DEFAULT_STOCK_TRIAL_FILTER,
+                branchid: Number(branchId), // Set default branch from localStorage
+                startdt: today, // Set default to today
+                enddt: today, // Set default to today
             });
         }
-    }, [visible]);
+    }, [visible, setLocalFilters, localFilters, branchId, today]);
+
+    const handleClear = useCallback(() => {
+        setLocalFilters({
+            ...DEFAULT_STOCK_TRIAL_FILTER,
+            branchid: Number(branchId), // Keep default branch from localStorage on clear
+            startdt: today, // Reset to today
+            enddt: today, // Reset to today
+        });
+        onClear();
+    }, [onClear, setLocalFilters, branchId, today]);
 
     const handleApply = useCallback(async () => {
         setIsLoading(true);
         try {
-            await onApply(localFilters);
+            // Create a copy of filters without the core fields
+            const { userid, compid, finid, ...filterData } = localFilters;
+
+            // Filter out undefined values
+            const cleanedFilters = Object.fromEntries(
+                Object.entries(filterData).filter(([_, value]) => value !== undefined && value !== null && value !== '')
+            );
+
+            await onApply(cleanedFilters);
             onClose();
         } finally {
             setIsLoading(false);
         }
     }, [localFilters, onApply, onClose]);
 
-    const handleClear = useCallback(() => {
-        const clearedFilters = {
-            printrtval: 0,
-            strbrand: '',  // Empty string for comma-separated
-            strclass: '',   // Empty string for comma-separated
-            strsubclass: '', // Empty string for comma-separated
-            balancetag: 1,
-            strgodown: '',   // Empty string for comma-separated
-        };
-        setLocalFilters(clearedFilters);
-        onClear();
-    }, [onClear]);
+    // Handlers for individual field changes - directly update localFilters
+    const handleStartDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        setLocalFilters(prev => ({
+            ...prev,
+            startdt: e.target.value || today
+        }));
+    }, [setLocalFilters, today]);
 
-    // Helper to convert array of selected IDs to comma-separated string
+    const handleEndDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        setLocalFilters(prev => ({
+            ...prev,
+            enddt: e.target.value || today
+        }));
+    }, [setLocalFilters, today]);
+
+    const handlePrintrtvalChange = useCallback((e: any) => {
+        setLocalFilters(prev => ({
+            ...prev,
+            printrtval: e.value
+        }));
+    }, [setLocalFilters]);
+
+    const handleBalancetagChange = useCallback((e: any) => {
+        setLocalFilters(prev => ({
+            ...prev,
+            balancetag: e.value
+        }));
+    }, [setLocalFilters]);
+
+    const handleBranchChange = useCallback((e: any) => {
+        setLocalFilters(prev => ({
+            ...prev,
+            branchid: e.value
+        }));
+    }, [setLocalFilters]);
+
     const handleTagBoxChange = useCallback(
         (value: number[], fieldName: keyof StockTrialFilterState) => {
             const commaSeparatedValue = value.length > 0 ? value.join(',') : '';
-
             setLocalFilters(prev => ({
                 ...prev,
                 [fieldName]: commaSeparatedValue
             }));
         },
-        []
+        [setLocalFilters]
     );
 
-    // Helper to convert comma-separated string to array for TagBox
     const getTagBoxValue = useCallback((value: string | undefined): number[] => {
         if (!value || value === '') return [];
         return value
             .split(',')
-            .map(v => Number(v))   // ✅ FIX
+            .map(v => Number(v))
             .filter(v => !isNaN(v));
     }, []);
 
-    // Memoized handlers for select boxes to prevent re-renders
-    const handlePrintrtvalChange = useCallback((e: any) => {
-        setLocalFilters(prev => ({ ...prev, printrtval: e.value }));
-    }, []);
-
-    const handleBalancetagChange = useCallback((e: any) => {
-        setLocalFilters(prev => ({ ...prev, balancetag: e.value }));
-    }, []);
-
-    // Memoized values to prevent unnecessary re-renders
-    const printrtvalValue = useMemo(() => localFilters.printrtval ?? filterParams.printrtval, [localFilters.printrtval, filterParams.printrtval]);
-    const balancetagValue = useMemo(() => localFilters.balancetag ?? filterParams.balancetag, [localFilters.balancetag, filterParams.balancetag]);
-    const strbrandValue = useMemo(() => getTagBoxValue(localFilters.strbrand ?? filterParams.strbrand), [localFilters.strbrand, filterParams.strbrand, getTagBoxValue]);
-    const strclassValue = useMemo(() => getTagBoxValue(localFilters.strclass ?? filterParams.strclass), [localFilters.strclass, filterParams.strclass, getTagBoxValue]);
-    const strsubclassValue = useMemo(() => getTagBoxValue(localFilters.strsubclass ?? filterParams.strsubclass), [localFilters.strsubclass, filterParams.strsubclass, getTagBoxValue]);
-    const strgodownValue = useMemo(() => getTagBoxValue(localFilters.strgodown ?? filterParams.strgodown), [localFilters.strgodown, filterParams.strgodown, getTagBoxValue]);
+    // Use localFilters directly without falling back to filterParams
+    const startdtValue = localFilters.startdt ?? today;
+    const enddtValue = localFilters.enddt ?? today;
+    const printrtvalValue = localFilters.printrtval ?? 1;
+    const balancetagValue = localFilters.balancetag ?? 1;
+    const branchidValue = localFilters.branchid ?? Number(branchId);
+    const strbrandValue = useMemo(() => getTagBoxValue(localFilters.strbrand), [localFilters.strbrand, getTagBoxValue]);
+    const strclassValue = useMemo(() => getTagBoxValue(localFilters.strclass), [localFilters.strclass, getTagBoxValue]);
+    const strsubclassValue = useMemo(() => getTagBoxValue(localFilters.strsubclass), [localFilters.strsubclass, getTagBoxValue]);
+    const strgodownValue = useMemo(() => getTagBoxValue(localFilters.strgodown), [localFilters.strgodown, getTagBoxValue]);
 
     return (
         <Popup
             visible={visible}
             onHiding={onClose}
             title="Filter Criteria"
-            width="500px"
+            width="650px"
             height="auto"
             dragEnabled
             showTitle
@@ -166,10 +213,56 @@ const StockTrialFilterCriteria: React.FC<StockTrialFilterCriteriaProps> = ({
         >
             <div className="p-4">
                 <div className="space-y-4">
+                    {/* Branch */}
+                    <div className="w-full">
+                        <InlineSelectField label="Branch">
+                            <div className="ml-11">
+                                <SelectBox
+                                    dataSource={branchOptions}
+                                    valueExpr="value"
+                                    displayExpr="name"
+                                    value={branchidValue}
+                                    onValueChanged={handleBranchChange}
+                                    placeholder="Select Branch"
+                                    searchEnabled={true}
+                                    showClearButton={true}
+                                    className="w-full"
+                                />
+                            </div>
+                        </InlineSelectField>
+                    </div>
+
+                    {/* Date Range */}
+                    <div className="flex gap-4">
+                        <div className="w-1/2">
+                            <InlineSelectField label="From Date">
+                                <div className="ml-8">
+                                    <input
+                                        type="date"
+                                        value={startdtValue}
+                                        onChange={handleStartDateChange}
+                                        className="w-full border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    />
+                                </div>
+                            </InlineSelectField>
+                        </div>
+                        <div className="w-1/2">
+                            <InlineSelectField label="To Date">
+                                <div className="ml-10">
+                                    <input
+                                        type="date"
+                                        value={enddtValue}
+                                        onChange={handleEndDateChange}
+                                        className="w-full border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    />
+                                </div>
+                            </InlineSelectField>
+                        </div>
+                    </div>
 
                     {/* Brand */}
                     <InlineSelectField label="Brand">
-                        <div className="ml-10">
+                        <div className="ml-13">
                             <TagBox
                                 dataSource={brandsOptions}
                                 valueExpr="id"
@@ -185,8 +278,7 @@ const StockTrialFilterCriteria: React.FC<StockTrialFilterCriteriaProps> = ({
 
                     {/* Class */}
                     <InlineSelectField label="Class">
-
-                        <div className="ml-10">
+                        <div className="ml-15">
                             <TagBox
                                 dataSource={classOptions}
                                 valueExpr="id"
@@ -201,9 +293,8 @@ const StockTrialFilterCriteria: React.FC<StockTrialFilterCriteriaProps> = ({
                     </InlineSelectField>
 
                     {/* Sub Class */}
-                    <InlineSelectField label="Sub class">
-
-                        <div className="ml-10">
+                    <InlineSelectField label="Sub Class">
+                        <div className="ml-8">
                             <TagBox
                                 dataSource={subClassOptions}
                                 valueExpr="id"
@@ -219,8 +310,7 @@ const StockTrialFilterCriteria: React.FC<StockTrialFilterCriteriaProps> = ({
 
                     {/* Godown */}
                     <InlineSelectField label="Godown">
-
-                        <div className="ml-10">
+                        <div className="ml-8">
                             <TagBox
                                 dataSource={godownOptions}
                                 valueExpr="id"
@@ -234,39 +324,42 @@ const StockTrialFilterCriteria: React.FC<StockTrialFilterCriteriaProps> = ({
                         </div>
                     </InlineSelectField>
 
-
                     <div className="flex gap-4">
                         {/* Print Rate Value */}
-                        <InlineSelectField label="Print Rate Value">
-                            <div className="ml-10">
-                                <SelectBox
-                                    dataSource={printrtvalOptions}
-                                    valueExpr="id"
-                                    displayExpr="name"
-                                    value={printrtvalValue}
-                                    onValueChanged={handlePrintrtvalChange}
-                                    placeholder="Select"
-                                    searchEnabled={false}
-                                    className="w-full"
-                                />
-                            </div>
-                        </InlineSelectField>
+                        <div className="w-1/2">
+                            <InlineSelectField label="Print Rate Value">
+                                <div className="ml-0">
+                                    <SelectBox
+                                        dataSource={printrtvalOptions}
+                                        valueExpr="id"
+                                        displayExpr="name"
+                                        value={printrtvalValue}
+                                        onValueChanged={handlePrintrtvalChange}
+                                        placeholder="Select"
+                                        searchEnabled={false}
+                                        className="w-full"
+                                    />
+                                </div>
+                            </InlineSelectField>
+                        </div>
 
                         {/* Balance tag */}
-                        <InlineSelectField label="Balance Tag">
-                            <div className="ml-10">
-                                <SelectBox
-                                    dataSource={balancetagOptions}
-                                    displayExpr="name"
-                                    valueExpr="id"
-                                    value={balancetagValue}
-                                    onValueChanged={handleBalancetagChange}
-                                    placeholder="Select"
-                                    searchEnabled={false}
-                                    className="w-full"
-                                />
-                            </div>
-                        </InlineSelectField>
+                        <div className="w-1/2">
+                            <InlineSelectField label="Balance Tag">
+                                <div className="ml-8">
+                                    <SelectBox
+                                        dataSource={balancetagOptions}
+                                        displayExpr="name"
+                                        valueExpr="id"
+                                        value={balancetagValue}
+                                        onValueChanged={handleBalancetagChange}
+                                        placeholder="Select"
+                                        searchEnabled={false}
+                                        className="w-full"
+                                    />
+                                </div>
+                            </InlineSelectField>
+                        </div>
                     </div>
                 </div>
 

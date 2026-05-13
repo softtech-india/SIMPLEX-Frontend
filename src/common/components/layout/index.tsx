@@ -13,15 +13,33 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
+const SIDEBAR_COLLAPSED_KEY = 'sidebarCollapsed';
+
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    // Initialize from localStorage on mount
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+      if (stored !== null) {
+        return stored === '1'; // '1' = collapsed, '0' = expanded
+      }
+    }
+    return true; // default collapsed on desktop
+  });
   const [userPrivilege, setUserPrivilege] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const router = useRouter();
   const isMobile = useIsMobile();
   const { refreshStorage } = useAppStorage();
+
+  // Save sidebar collapsed state to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, sidebarCollapsed ? '1' : '0');
+    }
+  }, [sidebarCollapsed]);
 
   // Load user privilege from localStorage
   useEffect(() => {
@@ -48,7 +66,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       if (isMobile) {
         setSidebarOpen(false);
       } else {
-        setSidebarCollapsed(true);
+        // Don't auto-collapse on route change if user has a saved preference
+        // Only set default if no saved preference exists
+        const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+        if (stored === null) {
+          setSidebarCollapsed(true);
+        }
       }
     };
 
@@ -73,14 +96,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // Logout clears everything except pinned menus and redirects
   const logout = () => {
     const pinnedMenus = storageService.getItem("pinned-menus");
+    const sidebarState = localStorage.getItem(SIDEBAR_COLLAPSED_KEY); // Preserve sidebar state
 
     localStorage.clear();
 
     if (pinnedMenus !== null) {
       storageService.setItem("pinned-menus", pinnedMenus);
     }
-    
-    refreshStorage(); 
+    if (sidebarState !== null) {
+      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, sidebarState);
+    }
+
+    refreshStorage();
 
     router.push("/");
   };

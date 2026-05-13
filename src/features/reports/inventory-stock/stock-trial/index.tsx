@@ -8,17 +8,13 @@ import useIsMobile from "@/common/hooks/useIsMobile";
 import { TransactionToolbar } from './components/TransactionToolbar';
 import { usePrivileges } from '@/common/hooks/usePrivileges';
 import { exportToExcel, ExcelColumn } from '@/common/utility/exportToExcel';
-import { fetchBranchList } from "@/api/master/ledger-api";
-import { useQuery } from '@tanstack/react-query';
 import useUserStore from '@/store/userStore';
-import { currentDate, formatDate } from '@/helpers/dateUtils';
+import { formatDateForApi } from './types/stockTrial.types';
 import StockTrialFilterCriteria from './components/StockTrialFilterCriteria';
 import { StockLedgersModal } from './components/StockLedgerModal';
-import {
-  StockTrialFilterState,
-  formatDateForApi
-} from './types/stockTrial.types';
+import { StockTrialFilterState } from './types/stockTrial.types';
 import { DEFAULT_STOCK_TRIAL_FILTER } from './constants/stockTrialDefaults';
+import { storageService } from '@/common/utility/storageService';
 
 export default function StockTrialModule() {
   // Hooks
@@ -29,8 +25,6 @@ export default function StockTrialModule() {
   // State 
   const [selectedRow, setSelectedRow] = useState<StockTrial | null>(null);
   const [isFilterFormOpen, setIsFilterFormOpen] = useState(false);
-  const [toolbarBranchId, setToolbarBranchId] = useState<string | null>(null);
-  const [formSelectedBranch, setFormSelectedBranch] = useState<string | null>(null);
   const [localFilters, setLocalFilters] = useState<Partial<StockTrialFilterState>>({});
 
   // Modal state
@@ -38,32 +32,28 @@ export default function StockTrialModule() {
   const [selectedProduct, setSelectedProduct] = useState<StockTrial | null>(null);
   const [selectedBranchName, setSelectedBranchName] = useState<string>(branchnm || '');
 
-  // Direct date state like Purchase Order
-  const [fromDate, setFromDate] = useState<string | null>(currentDate);
-  const [toDate, setToDate] = useState<string | null>(currentDate);
+  // Get branch ID from local storage via userStore (already has it)
+  const defaultBranchId = Number(branchId);
+  const today = new Date().toISOString().split('T')[0];
 
-  // Centralized filter state for advanced filters (not dates)
+  // Centralized filter state
   const [filterParams, setFilterParams] = useState<StockTrialFilterState>({
     ...DEFAULT_STOCK_TRIAL_FILTER,
     userid: Number(userId),
     compid: Number(companyId),
-    branchid: Number(branchId),
+    branchid: defaultBranchId, // Use branchId from local storage
     finid: Number(finid),
-    startdt: formatDateForApi(currentDate),
-    enddt: formatDateForApi(currentDate),
-    strbrand: '',
-    strclass: '',
-    strsubclass: '',
-    strgodown: '',
+    startdt: today, // Set default to today
+    enddt: today, // Set default to today
   });
 
   const { data: stockTrialList = [], isLoading, refetch } = useStockTrialList({
     userid: filterParams.userid,
     compid: filterParams.compid,
-    branchid: Number(toolbarBranchId) || filterParams.branchid,
+    branchid: filterParams.branchid,
     finid: filterParams.finid,
-    startdt: fromDate ? formatDateForApi(fromDate) : formatDateForApi(currentDate),
-    enddt: toDate ? formatDateForApi(toDate) : formatDateForApi(currentDate),
+    startdt: formatDateForApi(filterParams.startdt),
+    enddt: formatDateForApi(filterParams.enddt),
     printrtval: filterParams.printrtval,
     strbrand: filterParams.strbrand,
     strclass: filterParams.strclass,
@@ -72,29 +62,43 @@ export default function StockTrialModule() {
     strgodown: filterParams.strgodown,
   });
 
-  const { data: BranchOrderOptions = [] } = useQuery({
-    queryKey: ["BranchOrderOptions", userId, companyId],
-    queryFn: () => fetchBranchList(userId, companyId),
-    staleTime: 0,
-    enabled: !!companyId && !!userId,
-    retry: 1,
-    refetchOnWindowFocus: false,
-    select: (data) =>
-      (data ?? []).map((s: any) => ({
-        value: String(s.id),
-        label: s.name,
-      })),
-  });
-
-  // Refetch when dates, branch, or advanced filters change
+  // Refetch when filterParams change
   useEffect(() => {
     refetch();
-  }, [fromDate, toDate, toolbarBranchId, filterParams, refetch]);
+  }, [filterParams, refetch]);
 
-  // Initialize selected branch name on component mount
+  const [BranchOrderOptions, setBranchOrderOptions] = useState<{ value: string; label: string }[]>([]);
+  // Update selected branch name when branch changes
   useEffect(() => {
-    setSelectedBranchName(branchnm || '');
-  }, [branchnm]);
+    if (filterParams.branchid && BranchOrderOptions.length > 0) {
+      const branch = BranchOrderOptions.find((b: any) => b.value === String(filterParams.branchid));
+      setSelectedBranchName(branch?.label || branchnm || '');
+    } else {
+      setSelectedBranchName(branchnm || '');
+    }
+  }, [filterParams.branchid, BranchOrderOptions, branchnm]);
+
+  // Fetch branch options for display in modal
+
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        const { fetchBranchList } = await import('@/api/master/ledger-api');
+        const data = await fetchBranchList(userId, companyId);
+        setBranchOrderOptions(
+          (data ?? []).map((s: any) => ({
+            value: String(s.id),
+            label: s.name,
+          }))
+        );
+      } catch (error) {
+        console.error("Error fetching branches:", error);
+      }
+    };
+    if (companyId && userId) {
+      fetchBranches();
+    }
+  }, [userId, companyId]);
 
   // Handlers
   const handleSelectionChanged = useCallback((e: any) => {
@@ -105,7 +109,6 @@ export default function StockTrialModule() {
     }
   }, []);
 
-  // Double-click handler
   const handleRowDblClick = useCallback((e: any) => {
     if (e.data) {
       setSelectedProduct(e.data);
@@ -113,7 +116,6 @@ export default function StockTrialModule() {
     }
   }, []);
 
-  // Modal close handler
   const handleDetailsModalClose = useCallback(() => {
     setIsDetailsModalOpen(false);
     setSelectedProduct(null);
@@ -132,35 +134,21 @@ export default function StockTrialModule() {
       ...prev,
       ...filters,
     }));
-
     setIsFilterFormOpen(false);
-
-    setTimeout(() => {
-      refetch();
-    }, 0);
-  }, [refetch]);
+  }, []);
 
   const handleClearFilters = useCallback(() => {
     setFilterParams({
       ...DEFAULT_STOCK_TRIAL_FILTER,
       userid: Number(userId),
       compid: Number(companyId),
-      branchid: Number(branchId),
+      branchid: defaultBranchId, // Keep the default branch from local storage on clear
       finid: Number(finid),
-      startdt: formatDateForApi(currentDate),
-      enddt: formatDateForApi(currentDate),
-      strbrand: '',
-      strclass: '',
-      strsubclass: '',
-      strgodown: '',
-      printrtval: 0
+      startdt: today, // Reset to today
+      enddt: today, // Reset to today
     });
-    setFromDate(currentDate);
-    setToDate(currentDate);
-    setToolbarBranchId(null);
-    setFormSelectedBranch(null);
     setSelectedBranchName(branchnm || '');
-  }, [userId, companyId, branchId, finid, branchnm]);
+  }, [userId, companyId, defaultBranchId, finid, branchnm, today]);
 
   const handleRefresh = useCallback(() => {
     handleClearFilters();
@@ -183,32 +171,6 @@ export default function StockTrialModule() {
     });
   }, [stockTrialList]);
 
-  // Update branch handler
-  const handleBranchChange = useCallback((branchIdValue: string | null) => {
-    setToolbarBranchId(branchIdValue);
-    if (branchIdValue) {
-      const branch = BranchOrderOptions.find((b: any) => b.value === branchIdValue);
-      const branchName = branch?.label || branchnm || '';
-      setSelectedBranchName(branchName);
-      setFormSelectedBranch(branchName);
-      setFilterParams(prev => ({
-        ...prev,
-        branchid: Number(branchIdValue),
-      }));
-    } else {
-      setSelectedBranchName(branchnm || '');
-      setFormSelectedBranch(branchnm || '');
-    }
-  }, [BranchOrderOptions, branchnm]);
-
-  const handleFromDateChange = useCallback((date: string | null) => {
-    setFromDate(date);
-  }, []);
-
-  const handleToDateChange = useCallback((date: string | null) => {
-    setToDate(date);
-  }, []);
-
   return (
     <>
       <div className="stock-trial-module">
@@ -219,38 +181,6 @@ export default function StockTrialModule() {
             onMoreFilter={handleMoreFilterClick}
             onRefresh={handleRefresh}
             onExport={handleExport}
-            periodTitle={`Period: ${fromDate} to ${toDate}`}
-            selects={{
-              name: "branch",
-              label: "Branch",
-              value: toolbarBranchId || String(branchId),
-              options: BranchOrderOptions,
-              placeholder: "Select Branch",
-              className: "w-48",
-              onChange: (val) => {
-                handleBranchChange(val);
-                if (val) {
-                  const branch = BranchOrderOptions.find((b: any) => b.value === val);
-                  setFormSelectedBranch(branch?.label || branchnm);
-                }
-              }
-            }}
-            selectFromDate={{
-              name: "fromDate",
-              label: "From",
-              value: fromDate,
-              className: "w-40",
-              isClearable: true,
-              onChange: handleFromDateChange,
-            }}
-            selectToDate={{
-              name: "toDate",
-              label: "To ",
-              value: toDate,
-              className: "w-40",
-              isClearable: true,
-              onChange: handleToDateChange,
-            }}
           />
         </div>
 
@@ -284,10 +214,10 @@ export default function StockTrialModule() {
           visible={isDetailsModalOpen}
           onClose={handleDetailsModalClose}
           selectedRow={selectedProduct}
-          branchId={Number(toolbarBranchId) || Number(branchId)}
+          branchId={filterParams.branchid}
           branchName={selectedBranchName || branchnm || ''}
-          startDate={fromDate}
-          endDate={toDate}
+          startDate={filterParams.startdt}
+          endDate={filterParams.enddt}
           godownIds={filterParams.strgodown}
         />
       </div>
