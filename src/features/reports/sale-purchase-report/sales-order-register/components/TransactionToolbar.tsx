@@ -131,7 +131,7 @@ export function TransactionToolbar({
                 <div className="flex gap-2 flex-wrap">
                     {onMoreFilter && (
                         <button onClick={onMoreFilter} className="secondary-btn">
-                            <Filter size={16} /> More Filter
+                            <Filter size={16} /> Filter
                         </button>
                     )}
 

@@ -2122,3 +2122,12 @@ a.dx-link.dx-link-delete.dx-icon-trash.dx-link-icon {
   scrollbar-width: auto !important;
   scrollbar-color: #c1c1c1 #f1f1f1 !important;
 }
+
+.erp-grid .dx-datagrid-rowsview {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+}
+
+.erp-grid .dx-datagrid-content {
+  min-width: 100%;
+}

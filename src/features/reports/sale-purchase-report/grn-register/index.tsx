@@ -1,11 +1,11 @@
-// sales-order-register/index.tsx (corrected)
+// sales-order-register/index-grn.tsx
 
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { SalesOrderDataGrid } from './components/SalesOrderDataGrid';
-import { useSalesOrderList } from './hooks/useSalesOrder';
-import { SalesOrder, SalesOrderFilterState, formatDateForApi } from './types/salesOrder.type';
+import { GRNDataGrid } from './components/GRNRegisterDataGrid';
+import { useGRNList } from './hooks/useGrnRegister';
+import { GRN, GRNFilterState, formatDateForApi } from './types/grnRegister.type';
 import useIsMobile from "@/common/hooks/useIsMobile";
 import { TransactionToolbar } from './components/TransactionToolbar';
 import { usePrivileges } from '@/common/hooks/usePrivileges';
@@ -14,32 +14,29 @@ import { fetchBranchList } from "@/api/master/ledger-api";
 import { useQuery } from '@tanstack/react-query';
 import useUserStore from '@/store/userStore';
 import { currentDate } from '@/helpers/dateUtils';
-import SalesOrderFilterCriteria from './components/SalesOrderFilterCriteria';
-import { DEFAULT_SALES_ORDER_FILTER } from './constants/salesOrderDefaults';
+import GRNFilterCriteria from './components/GRNFilterCriteria';
+import { DEFAULT_GRN_FILTER } from './constants/grnRegisterDefaults';
 import { storageService } from '@/common/utility/storageService';
 
-export default function SalesOrderRegisterModule() {
-  // Hooks
+export default function GRNRegisterModule() {
   const isMobile = useIsMobile();
   const permissions = usePrivileges();
   const { userId, companyId, branchId, finid, branchnm } = useUserStore();
 
-  // State 
-  const [selectedRow, setSelectedRow] = useState<SalesOrder | null>(null);
+  const [selectedRow, setSelectedRow] = useState<GRN | null>(null);
   const [isFilterFormOpen, setIsFilterFormOpen] = useState(false);
   const [toolbarBranchId, setToolbarBranchId] = useState<string | null>(null);
   const [selectedBranchName, setSelectedBranchName] = useState<string>(branchnm || '');
-  const [localFilters, setLocalFilters] = useState<Partial<SalesOrderFilterState>>({});
+  const [localFilters, setLocalFilters] = useState<Partial<GRNFilterState>>({});
 
-  // Direct date state
   const [fromDate, setFromDate] = useState<string | null>(currentDate);
   const [toDate, setToDate] = useState<string | null>(currentDate);
 
-  // Centralized filter state for advanced filters
   const stateId = storageService.getItem('stateid');
+  const sidebarState = storageService.getItem('sidebarCollapsed')
 
-  const [filterParams, setFilterParams] = useState<SalesOrderFilterState>({
-    ...DEFAULT_SALES_ORDER_FILTER,
+  const [filterParams, setFilterParams] = useState<GRNFilterState>({
+    ...DEFAULT_GRN_FILTER,
     userid: Number(userId),
     compid: Number(companyId),
     branchid: Number(branchId),
@@ -48,14 +45,11 @@ export default function SalesOrderRegisterModule() {
     enddt: formatDateForApi(currentDate),
     strbrand: '',
     strclass: '',
-    strsubclass: '',
-    sortby: 0,
-    stateid: Number(stateId) | 0,
-    partyid: 0,
-    orderstatus: 0
+    strparty: '',
+    stateid: Number(stateId) || 0,
   });
 
-  const { data: salesOrderList = [], isLoading, refetch } = useSalesOrderList({
+  const { data: grnList = [], isLoading, refetch } = useGRNList({
     userid: filterParams.userid,
     compid: filterParams.compid,
     branchid: Number(toolbarBranchId) || filterParams.branchid,
@@ -64,15 +58,12 @@ export default function SalesOrderRegisterModule() {
     enddt: toDate ? formatDateForApi(toDate) : formatDateForApi(currentDate),
     strbrand: filterParams.strbrand || ' ',
     strclass: filterParams.strclass || ' ',
-    strsubclass: filterParams.strsubclass || ' ',
-    sortby: filterParams.sortby,
+    strparty: filterParams.strparty || ' ',
     stateid: filterParams.stateid,
-    partyid: filterParams.partyid,
-    orderstatus: filterParams.orderstatus
   });
 
   const { data: BranchOrderOptions = [] } = useQuery({
-    queryKey: ["BranchOrderOptions", userId, companyId],
+    queryKey: ["GRNBranchOrderOptions", userId, companyId],
     queryFn: () => fetchBranchList(userId, companyId),
     staleTime: 0,
     enabled: !!companyId && !!userId,
@@ -85,17 +76,15 @@ export default function SalesOrderRegisterModule() {
       })),
   });
 
-  // Refetch when dates, branch, or advanced filters change
   useEffect(() => {
     refetch();
   }, [fromDate, toDate, toolbarBranchId, filterParams, refetch]);
 
-  // Initialize selected branch name on component mount
   useEffect(() => {
+    console.log(sidebarState)
     setSelectedBranchName(branchnm || '');
   }, [branchnm]);
 
-  // Handlers
   const handleSelectionChanged = useCallback((e: any) => {
     if (e.selectedRowsData && e.selectedRowsData.length > 0) {
       setSelectedRow(e.selectedRowsData[0]);
@@ -116,13 +105,12 @@ export default function SalesOrderRegisterModule() {
     setIsFilterFormOpen(false);
   }, []);
 
-  const handleApplyFilters = useCallback((filters: Partial<SalesOrderFilterState>) => {
-    setFilterParams((prev: SalesOrderFilterState) => ({
+  const handleApplyFilters = useCallback((filters: Partial<GRNFilterState>) => {
+    setFilterParams((prev: GRNFilterState) => ({
       ...prev,
       ...filters,
     }));
 
-    // Sync dates from filters to toolbar
     if (filters.startdt) {
       setFromDate(filters.startdt);
     }
@@ -135,7 +123,7 @@ export default function SalesOrderRegisterModule() {
 
   const handleClearFilters = useCallback(() => {
     setFilterParams({
-      ...DEFAULT_SALES_ORDER_FILTER,
+      ...DEFAULT_GRN_FILTER,
       userid: Number(userId),
       compid: Number(companyId),
       branchid: Number(branchId),
@@ -144,11 +132,8 @@ export default function SalesOrderRegisterModule() {
       enddt: formatDateForApi(currentDate),
       strbrand: '',
       strclass: '',
-      strsubclass: '',
-      sortby: 0,
-      stateid: Number(stateId) | 0,
-      partyid: 0,
-      orderstatus: 0
+      strparty: '',
+      stateid: Number(stateId) || 0,
     });
     setFromDate(currentDate);
     setToDate(currentDate);
@@ -161,21 +146,21 @@ export default function SalesOrderRegisterModule() {
   }, [handleClearFilters]);
 
   const handleExport = useCallback(() => {
-    if (!salesOrderList || salesOrderList.length === 0) return;
+    if (!grnList || grnList.length === 0) return;
 
-    const columns: ExcelColumn[] = Object.keys(salesOrderList[0]).map((key) => ({
+    const columns: ExcelColumn[] = Object.keys(grnList[0]).map((key) => ({
       header: key.charAt(0).toUpperCase() + key.slice(1),
       key,
       width: 20,
     }));
 
     exportToExcel({
-      data: salesOrderList,
+      data: grnList,
       columns,
-      fileName: "Sales Order Register.xlsx",
-      sheetName: "Sales Order",
+      fileName: "GRN Register.xlsx",
+      sheetName: "GRN Register",
     });
-  }, [salesOrderList]);
+  }, [grnList]);
 
   const handleBranchChange = useCallback((branchIdValue: string | null) => {
     setToolbarBranchId(branchIdValue);
@@ -183,7 +168,7 @@ export default function SalesOrderRegisterModule() {
       const branch = BranchOrderOptions.find((b: any) => b.value === branchIdValue);
       const branchName = branch?.label || branchnm || '';
       setSelectedBranchName(branchName);
-      setFilterParams((prev: SalesOrderFilterState) => ({
+      setFilterParams((prev: GRNFilterState) => ({
         ...prev,
         branchid: Number(branchIdValue),
       }));
@@ -202,10 +187,10 @@ export default function SalesOrderRegisterModule() {
 
   return (
     <>
-      <div className="sales-order-module">
+      <div className="grn-module">
         <div className="bg-white rounded-xl shadow-sm border mt-2">
           <TransactionToolbar
-            title="Sales Order Register"
+            title="GRN Register"
             permissions={permissions}
             onMoreFilter={handleMoreFilterClick}
             onRefresh={handleRefresh}
@@ -216,8 +201,8 @@ export default function SalesOrderRegisterModule() {
 
         {!isMobile && (
           <div className="w-355 px-2 sm:px-2 md:px-2 lg:px-2 bg-white rounded-xl shadow-sm border border-gray-200 p-2 overflow-x-auto my-4 flex-1">
-            <SalesOrderDataGrid
-              dataSource={salesOrderList}
+            <GRNDataGrid
+              dataSource={grnList}
               onSelectionChanged={handleSelectionChanged}
               onRowDblClick={handleRowDblClick}
               showFilterRow
@@ -229,7 +214,7 @@ export default function SalesOrderRegisterModule() {
           </div>
         )}
 
-        <SalesOrderFilterCriteria
+        <GRNFilterCriteria
           visible={isFilterFormOpen}
           filterParams={filterParams}
           onClose={handleFilterFormClose}

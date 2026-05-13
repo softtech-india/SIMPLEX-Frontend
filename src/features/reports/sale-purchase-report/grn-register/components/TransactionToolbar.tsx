@@ -1,3 +1,4 @@
+// app/sales-order-register/components/TransactionToolbar.tsx
 'use client';
 
 import useIsMobile from "@/common/hooks/useIsMobile";
@@ -11,6 +12,31 @@ import {
 import { useState, useRef, useEffect } from "react";
 import { MenuItem } from "@/common/components/filter/MenuItem";
 import { Permissions } from "@/common/types/privilege.types";
+import InlineSelectField from "@/common/components/InlineSelectField";
+import { ToolbarSelect as ToolbarSelectComponent } from "@/common/components/barmanager/ToolbarSelect";
+
+type ToolbarSelect = {
+    name: string;
+    options: { value: string; label: string }[];
+    label?: string;
+    value?: string | null;
+    placeholder?: string;
+    className?: string;
+    disabled?: boolean;
+    onChange?: (value: string | null) => void;
+};
+
+type ToolbarDateSelectProps = {
+    name: string;
+    label?: string;
+    value?: string | null;
+    placeholder?: string;
+    className?: string;
+    isDisabled?: boolean;
+    isClearable?: boolean;
+    dateFormat?: string;
+    onChange?: (value: string | null) => void;
+};
 
 interface TransactionToolbarProps {
     title: string;
@@ -21,7 +47,10 @@ interface TransactionToolbarProps {
     onPrint?: () => void;
     hasSelection?: boolean;
     periodTitle?: string;
+    selects?: ToolbarSelect;
     disabled?: boolean;
+    selectFromDate?: ToolbarDateSelectProps;
+    selectToDate?: ToolbarDateSelectProps;
 }
 
 export function TransactionToolbar({
@@ -32,7 +61,10 @@ export function TransactionToolbar({
     onExport,
     onPrint,
     hasSelection = true,
+    selects,
     disabled,
+    selectFromDate,
+    selectToDate,
 }: TransactionToolbarProps) {
     const isMobile = useIsMobile();
     const { canPrint, canExport } = permissions;
@@ -103,6 +135,34 @@ export function TransactionToolbar({
                         </button>
                     )}
 
+                    {/* From Date */}
+                    {selectFromDate && (
+                        <InlineSelectField label={selectFromDate.label || "From"}>
+                            <input
+                                type="date"
+                                name={selectFromDate.name}
+                                value={selectFromDate.value ?? ""}
+                                onChange={(e) => selectFromDate.onChange?.(e.target.value || null)}
+                                disabled={selectFromDate.isDisabled}
+                                className={`w-full border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400 ${selectFromDate.className || ""}`}
+                            />
+                        </InlineSelectField>
+                    )}
+
+                    {/* To Date */}
+                    {selectToDate && (
+                        <InlineSelectField label={selectToDate.label || "To"}>
+                            <input
+                                type="date"
+                                name={selectToDate.name}
+                                value={selectToDate.value ?? ""}
+                                onChange={(e) => selectToDate.onChange?.(e.target.value || null)}
+                                disabled={selectToDate.isDisabled}
+                                className={`w-full border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400 ${selectToDate.className || ""}`}
+                            />
+                        </InlineSelectField>
+                    )}
+
                     {canExport && onExport && (
                         <button onClick={onExport} className="secondary-btn">
                             <File size={16} /> Export
@@ -117,6 +177,27 @@ export function TransactionToolbar({
                         >
                             <Printer size={16} /> Print
                         </button>
+                    )}
+                </div>
+
+                {/* RIGHT SIDE - Filters */}
+                <div className="flex items-center gap-3 ml-auto">
+                    {selects && (
+                        <div className="flex items-center gap-2">
+                            {selects.label && (
+                                <label className="text-sm font-medium text-gray-700">
+                                    {selects.label}:
+                                </label>
+                            )}
+                            <ToolbarSelectComponent
+                                value={selects.value}
+                                options={selects.options}
+                                placeholder={selects.placeholder}
+                                isDisabled={selects.disabled}
+                                onChange={(opt) => selects.onChange?.(opt?.value ?? null)}
+                                className={`${selects.className ?? ""} w-60`}
+                            />
+                        </div>
                     )}
                 </div>
             </div>

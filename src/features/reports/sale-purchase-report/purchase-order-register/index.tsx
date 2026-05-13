@@ -1,11 +1,9 @@
-// sales-order-register/index.tsx (corrected)
-
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { SalesOrderDataGrid } from './components/SalesOrderDataGrid';
-import { useSalesOrderList } from './hooks/useSalesOrder';
-import { SalesOrder, SalesOrderFilterState, formatDateForApi } from './types/salesOrder.type';
+import { PurchaseOrderDataGrid } from './components/PurchaseOrderDataGrid';
+import { usePurchaseOrderList } from './hooks/usePurchaseOrder';
+import { PurchaseOrder, PurchaseOrderFilterState, formatDateForApi } from './types/purchaseOrder.type';
 import useIsMobile from "@/common/hooks/useIsMobile";
 import { TransactionToolbar } from './components/TransactionToolbar';
 import { usePrivileges } from '@/common/hooks/usePrivileges';
@@ -14,22 +12,22 @@ import { fetchBranchList } from "@/api/master/ledger-api";
 import { useQuery } from '@tanstack/react-query';
 import useUserStore from '@/store/userStore';
 import { currentDate } from '@/helpers/dateUtils';
-import SalesOrderFilterCriteria from './components/SalesOrderFilterCriteria';
-import { DEFAULT_SALES_ORDER_FILTER } from './constants/salesOrderDefaults';
+import PurchaseOrderFilterCriteria from './components/PurchaseOrderFilterCriteria';
+import { DEFAULT_PURCHASE_ORDER_FILTER } from './constants/purchaseOrderDefaults';
 import { storageService } from '@/common/utility/storageService';
 
-export default function SalesOrderRegisterModule() {
+export default function PurchaseOrderRegisterModule() {
   // Hooks
   const isMobile = useIsMobile();
   const permissions = usePrivileges();
   const { userId, companyId, branchId, finid, branchnm } = useUserStore();
 
   // State 
-  const [selectedRow, setSelectedRow] = useState<SalesOrder | null>(null);
+  const [selectedRow, setSelectedRow] = useState<PurchaseOrder | null>(null);
   const [isFilterFormOpen, setIsFilterFormOpen] = useState(false);
   const [toolbarBranchId, setToolbarBranchId] = useState<string | null>(null);
   const [selectedBranchName, setSelectedBranchName] = useState<string>(branchnm || '');
-  const [localFilters, setLocalFilters] = useState<Partial<SalesOrderFilterState>>({});
+  const [localFilters, setLocalFilters] = useState<Partial<PurchaseOrderFilterState>>({});
 
   // Direct date state
   const [fromDate, setFromDate] = useState<string | null>(currentDate);
@@ -38,8 +36,8 @@ export default function SalesOrderRegisterModule() {
   // Centralized filter state for advanced filters
   const stateId = storageService.getItem('stateid');
 
-  const [filterParams, setFilterParams] = useState<SalesOrderFilterState>({
-    ...DEFAULT_SALES_ORDER_FILTER,
+  const [filterParams, setFilterParams] = useState<PurchaseOrderFilterState>({
+    ...DEFAULT_PURCHASE_ORDER_FILTER,
     userid: Number(userId),
     compid: Number(companyId),
     branchid: Number(branchId),
@@ -55,7 +53,7 @@ export default function SalesOrderRegisterModule() {
     orderstatus: 0
   });
 
-  const { data: salesOrderList = [], isLoading, refetch } = useSalesOrderList({
+  const { data: purchaseOrderList = [], isLoading, refetch } = usePurchaseOrderList({
     userid: filterParams.userid,
     compid: filterParams.compid,
     branchid: Number(toolbarBranchId) || filterParams.branchid,
@@ -116,8 +114,8 @@ export default function SalesOrderRegisterModule() {
     setIsFilterFormOpen(false);
   }, []);
 
-  const handleApplyFilters = useCallback((filters: Partial<SalesOrderFilterState>) => {
-    setFilterParams((prev: SalesOrderFilterState) => ({
+  const handleApplyFilters = useCallback((filters: Partial<PurchaseOrderFilterState>) => {
+    setFilterParams((prev: PurchaseOrderFilterState) => ({
       ...prev,
       ...filters,
     }));
@@ -135,7 +133,7 @@ export default function SalesOrderRegisterModule() {
 
   const handleClearFilters = useCallback(() => {
     setFilterParams({
-      ...DEFAULT_SALES_ORDER_FILTER,
+      ...DEFAULT_PURCHASE_ORDER_FILTER,
       userid: Number(userId),
       compid: Number(companyId),
       branchid: Number(branchId),
@@ -161,21 +159,21 @@ export default function SalesOrderRegisterModule() {
   }, [handleClearFilters]);
 
   const handleExport = useCallback(() => {
-    if (!salesOrderList || salesOrderList.length === 0) return;
+    if (!purchaseOrderList || purchaseOrderList.length === 0) return;
 
-    const columns: ExcelColumn[] = Object.keys(salesOrderList[0]).map((key) => ({
+    const columns: ExcelColumn[] = Object.keys(purchaseOrderList[0]).map((key) => ({
       header: key.charAt(0).toUpperCase() + key.slice(1),
       key,
       width: 20,
     }));
 
     exportToExcel({
-      data: salesOrderList,
+      data: purchaseOrderList,
       columns,
-      fileName: "Sales Order Register.xlsx",
-      sheetName: "Sales Order",
+      fileName: "Purchase Order Register.xlsx",
+      sheetName: "Purchase Order",
     });
-  }, [salesOrderList]);
+  }, [purchaseOrderList]);
 
   const handleBranchChange = useCallback((branchIdValue: string | null) => {
     setToolbarBranchId(branchIdValue);
@@ -183,7 +181,7 @@ export default function SalesOrderRegisterModule() {
       const branch = BranchOrderOptions.find((b: any) => b.value === branchIdValue);
       const branchName = branch?.label || branchnm || '';
       setSelectedBranchName(branchName);
-      setFilterParams((prev: SalesOrderFilterState) => ({
+      setFilterParams((prev: PurchaseOrderFilterState) => ({
         ...prev,
         branchid: Number(branchIdValue),
       }));
@@ -202,10 +200,10 @@ export default function SalesOrderRegisterModule() {
 
   return (
     <>
-      <div className="sales-order-module">
+      <div className="purchase-order-module">
         <div className="bg-white rounded-xl shadow-sm border mt-2">
           <TransactionToolbar
-            title="Sales Order Register"
+            title="Purchase Order Register"
             permissions={permissions}
             onMoreFilter={handleMoreFilterClick}
             onRefresh={handleRefresh}
@@ -216,8 +214,8 @@ export default function SalesOrderRegisterModule() {
 
         {!isMobile && (
           <div className="w-355 px-2 sm:px-2 md:px-2 lg:px-2 bg-white rounded-xl shadow-sm border border-gray-200 p-2 overflow-x-auto my-4 flex-1">
-            <SalesOrderDataGrid
-              dataSource={salesOrderList}
+            <PurchaseOrderDataGrid
+              dataSource={purchaseOrderList}
               onSelectionChanged={handleSelectionChanged}
               onRowDblClick={handleRowDblClick}
               showFilterRow
@@ -229,7 +227,7 @@ export default function SalesOrderRegisterModule() {
           </div>
         )}
 
-        <SalesOrderFilterCriteria
+        <PurchaseOrderFilterCriteria
           visible={isFilterFormOpen}
           filterParams={filterParams}
           onClose={handleFilterFormClose}
