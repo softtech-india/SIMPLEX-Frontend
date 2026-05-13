@@ -48,9 +48,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
   visible,
   isReadOnly,
   fieldsLength,
-
   mode,
-
   excludeIds,
   currentId
 
@@ -63,14 +61,11 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
   const actualValue =
     mode === 'Confirmed' ? Number(item.scanqty) * rate : 0;
 
-
-
-  // useEffect(() => {
-  //   console.log('isRowConfirmed :', isRowConfirmed);
-  // }, [isRowConfirmed])
-
-
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+
+  // FIX: isScanned should be true when a product is selected (has productid)
+  // NOT based on scanqty
+  const isScanned = item?.productid && item?.productid > 0;
 
   // Model Search Category Modal Handlers
   const baseCategoryParams = {
@@ -116,7 +111,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
   return (
     <div className="flex flex-wrap gap-4 items-end">
 
-      <div className="w-68">
+      <div className="w-60">
         <label className="block text-gray-700 text-sm font-medium mb-1">
           Category
         </label>
@@ -131,7 +126,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
         />
       </div>
 
-      <div className="w-80">
+      <div className="w-68">
         <label className="block text-gray-700 text-sm font-medium mb-1">
           Product
         </label>
@@ -199,7 +194,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
         />
       </div>
 
-      <div className="w-24">
+      <div className="w-20">
         <label className="block text-gray-700 text-sm font-medium mb-1">
           Rate
         </label>
@@ -215,7 +210,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
         />
       </div>
 
-      <div className="w-24">
+      <div className="w-20">
         <label className="block text-gray-700 text-sm font-medium mb-1">
           Value
         </label>
@@ -269,62 +264,104 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
 
       {(mode === 'Confirmed') && (
         <>
-          <div className="w-14">
+          {/* Scanned */}
+          <div className="w-16">
             <label className="block text-gray-700 text-sm font-medium mb-1">
-              Scan
+              Scanned
             </label>
-            <input
-              type="number"
-              min={0}
-              disabled={isReadOnly}
-              {...register(`itemdtl.${index}.scanqty`)}
-              className={`inputField border-gray-300 `}
-              onKeyDown={(e) => {
-                if (e.key === "-") e.preventDefault();
-              }}
-            />
+
+            <div
+              className={`inputField flex items-center justify-center h-[42px] border rounded-md font-medium ${item?.isScanned
+                ? "bg-green-50 border-green-300 text-green-600"
+                : "bg-red-50 border-red-300 text-red-600"
+                }`}
+            >
+              {item?.isScanned ? "✓ Done" : "✗ No"}
+            </div>
           </div>
-          <div className="w-14">
+
+          {/* Scan Qty */}
+          <div className="w-16">
             <label className="block text-gray-700 text-sm font-medium mb-1">
-              Short
+              Scan Qty.
             </label>
+
             <input
               type="number"
               min={0}
-              disabled={isReadOnly}
-              {...register(`itemdtl.${index}.shortqty`)}
-              className={`inputField border-gray-300 `}
+              {...register(`itemdtl.${index}.scanqty`, {
+                valueAsNumber: true,
+                onChange: (e: any) => {
+                  let scanQty = Number(e.target.value);
+
+                  if (scanQty < 0) scanQty = 0;
+
+                  const orderQty = Number(item?.qty1) || 0;
+
+                  // Calculate short and excess
+                  const shortQty =
+                    scanQty < orderQty ? orderQty - scanQty : 0;
+
+                  const excessQty =
+                    scanQty > orderQty ? scanQty - orderQty : 0;
+
+                  // Update form values
+                  setValue(`itemdtl.${index}.scanqty`, scanQty);
+                  setValue(`itemdtl.${index}.shortqty`, shortQty);
+                  setValue(`itemdtl.${index}.excessqty`, excessQty);
+                },
+              })}
+              className="inputField border border-gray-300 rounded-md h-[42px]"
               onKeyDown={(e) => {
                 if (e.key === "-") e.preventDefault();
               }}
-            />
-          </div>
-          <div className="w-14">
-            <label className="block text-gray-700 text-sm font-medium mb-1">
-              Excess
-            </label>
-            <input
-              type="number"
-              min={0}
-              disabled={isReadOnly}
-              {...register(`itemdtl.${index}.excessqty`)}
-              className={`inputField border-gray-300 `}
-              onKeyDown={(e) => {
-                if (e.key === "-") e.preventDefault();
-              }}
+              disabled={!item?.isScanned}
             />
           </div>
 
+          {/* Short */}
+          <div className="w-16">
+            <label className="block text-gray-700 text-sm font-medium mb-1">
+              Short
+            </label>
+
+            <input
+              type="number"
+              min={0}
+              disabled
+              value={item?.shortqty || 0}
+              className="inputField border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed h-[42px]"
+            />
+          </div>
+
+          {/* Excess */}
+          <div className="w-16">
+            <label className="block text-gray-700 text-sm font-medium mb-1">
+              Excess
+            </label>
+
+            <input
+              type="number"
+              min={0}
+              disabled
+              value={item?.excessqty || 0}
+              className="inputField border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed h-[42px]"
+            />
+          </div>
+
+          {/* Actual Value */}
           <div className="w-20">
             <label className="block text-gray-700 text-sm font-medium mb-1">
               Actual Value
             </label>
+
             <input
               type="number"
               min={0}
               value={actualValue}
               readOnly
-              className={`inputField  bg-gray-100 border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+              className={`inputField border border-gray-300 rounded-md h-[42px] bg-gray-100 ${isReadOnly ? "cursor-not-allowed" : ""
+                }`}
             />
           </div>
         </>
@@ -362,6 +399,4 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
     </div>
 
   );
-
-
 };

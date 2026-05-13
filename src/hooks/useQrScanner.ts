@@ -7,12 +7,13 @@ type Item = {
   scanqty?: number;
   shortqty?: number;
   excessqty?: number;
+  isScanned?: boolean;
 };
 
 type Params = {
   watchedItems: Item[];
-  setValue: any; 
-  onUpdateItems: (items: Item[]) => void; 
+  setValue: any;
+  onUpdateItems: (items: Item[]) => void;
 };
 
 export const useQrScanner = ({
@@ -30,8 +31,8 @@ export const useQrScanner = ({
 
   const handleScan = (value: string) => {
     let rawValue = value
-      ?.replace(/\u00A0/g, " ") 
-      ?.replace(/\s+/g, "") 
+      ?.replace(/\u00A0/g, " ")
+      ?.replace(/\s+/g, "")
       ?.trim();
 
     if (!rawValue) {
@@ -73,18 +74,19 @@ export const useQrScanner = ({
         if (item.productid === scannedId) {
           matchFound = true;
 
-          const balance = Number(item.qty1) || 0;
-          const newScanQty = (Number(item.scanqty) || 0) + 1;
+          // const balance = Number(item.qty1) || 0;
+          // const newScanQty = (Number(item.scanqty) || 0) + 1;
 
-          const newShortQty = Math.max(balance - newScanQty, 0);
-          const newExcessQty =
-            newScanQty > balance ? newScanQty - balance : 0;
+          // const newShortQty = Math.max(balance - newScanQty, 0);
+          // const newExcessQty =
+          //   newScanQty > balance ? newScanQty - balance : 0;
 
           return {
             ...item,
-            scanqty: newScanQty,
-            shortqty: newShortQty,
-            excessqty: newExcessQty,
+            // scanqty: newScanQty,
+            // shortqty: newShortQty,
+            // excessqty: newExcessQty,
+            isScanned: true
           };
         }
 
