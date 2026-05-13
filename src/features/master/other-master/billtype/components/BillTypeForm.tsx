@@ -190,7 +190,7 @@ export function BillTypeForm({ visible, onClose, BillTypeId, mode }: BillTypeFor
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(BillTypeDefaultValues);
-        onClose();
+       // onClose();
         defaultFocusRef.current?.focus();
         return;
       }

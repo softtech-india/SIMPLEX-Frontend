@@ -229,9 +229,7 @@ export const DirectSaleItems: React.FC<DirectSaleItemsProps> = ({
       </div>
 
       <div className="w-28">
-        <label className="block text-gray-700 font-medium mb-1">
-          Rate
-        </label>
+        <label className="block text-gray-700 font-medium mb-1"> Rate</label>
 
         <Controller
           control={control}

@@ -244,7 +244,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(openingStockFormDefaults);
-        onClose();
+        //onClose();
         return;
       }
 

@@ -145,7 +145,7 @@ export function UserForm({ visible, onClose, formUserId, mode }: UserFormProps) 
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset({});
-        onClose();
+       // onClose();
         defaultFocusRef.current?.focus();
         return;
       }

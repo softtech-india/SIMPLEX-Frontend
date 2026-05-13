@@ -119,7 +119,7 @@ export function ProdUnitForm({ visible, onClose, ProdUnitId, mode }: ProdUnitFor
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(prodUnitDefaultValues);
-        onClose();
+        //onClose();
         defaultFocusRef.current?.focus();
         return;
       }

@@ -180,7 +180,7 @@ export function GodownForm({ visible, onClose, GodownId, mode }: GodownFormProps
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(GodownDefaultValues);
-        onClose();
+       // onClose();
         defaultFocusRef.current?.focus();
         return;
       }

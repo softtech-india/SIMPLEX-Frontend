@@ -213,14 +213,16 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
           readOnly
           className={`
             inputField w-full 
-            ${errors?.itemdtl?.[index]?.productid ? "border-red-500" : "border-gray-300"}
+           
             ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : " cursor-pointer "}
           `}
           placeholder="Select Product"
         />
+        {/*
+         ${errors?.itemdtl?.[index]?.productid ? "border-red-500" : "border-gray-300"}
         {errors?.itemdtl?.[index]?.productid && (
           <p className="text-xs text-red-500 mt-1"> {errors.itemdtl[index].productid.message} </p>
-        )}
+        )} */}
       </div>
 
       <div className="w-14">
@@ -246,11 +248,12 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
           }}
           disabled={isReadOnly || Number(watchedItems?.[index]?.clqty) === 0}
           className={`inputField 
-            ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-300"} 
+        
             ${isReadOnly || Number(watchedItems?.[index]?.clqty) === 0 ? "bg-gray-100 cursor-not-allowed" : ""}
           `}
           onKeyDown={(e) => { if (e.key === "-") e.preventDefault(); }}
         />
+        {/* ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-300"}  */}
       </div>
 
       <div className="w-14">

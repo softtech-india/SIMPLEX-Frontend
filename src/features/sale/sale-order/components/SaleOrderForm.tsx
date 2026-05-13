@@ -302,7 +302,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(pruchaseOrderFormDefaults);
-        onClose();
+       // onClose();
         return;
       }
 

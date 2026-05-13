@@ -135,14 +135,11 @@ export function SalesManForm({
       if (isAddMode) {
         const response = await createMutation.mutateAsync(payload);
 
-        // Check if creation was successful
         if (response?.success) {
-          // Success: Reset form and keep it open for another entry
           reset(SalesManDefaultValues);
           defaultFocusRef.current?.focus();
-          // Optional: You can also refresh any dropdowns or lists here
         }
-        // If not successful, form stays as is (user can correct and retry)
+
         return;
       }
 

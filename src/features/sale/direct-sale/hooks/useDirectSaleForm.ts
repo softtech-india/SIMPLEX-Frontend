@@ -24,6 +24,7 @@ export const useDirectSaleForm = (
     },
 
     mode: "onChange",
+   // reValidateMode: "onSubmit",
     shouldUnregister: false,
   });
 };

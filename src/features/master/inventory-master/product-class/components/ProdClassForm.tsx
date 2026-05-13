@@ -93,7 +93,7 @@ export function ProdClassForm({ visible, onClose, ProdClassId, mode }: ProdClass
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset({});
-        onClose();
+       // onClose();
         defaultFocusRef.current?.focus();
         return;
       }

@@ -162,7 +162,7 @@ export function VoucherNumberingForm({ visible, onClose, VoucherNumberingId, mod
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(VoucherNumberingDefaultValues);
-        onClose();
+       // onClose();
         defaultFocusRef.current?.focus();
         return;
       }

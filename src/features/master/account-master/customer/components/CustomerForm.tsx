@@ -259,7 +259,7 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode }: Custome
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(customerFormDefaults);
-        onClose();
+       // onClose();
         return;
       }
 

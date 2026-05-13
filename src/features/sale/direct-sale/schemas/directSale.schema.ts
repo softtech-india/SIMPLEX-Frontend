@@ -65,11 +65,23 @@ export const DirectSaleBaseSchema = z.object({
   billdt: z.string().optional(),
   billno: z.string().optional(),
 
-  billtypeid: z.number("Please select a bill type"),
+  billtypeid: z.number().min(1,"Please select a bill type"),
   billtypenm: z.string().optional(),
 
-  customerid: z.number("Please select a customer"),
+  customerid: z.number().min(1,"Please select a customer"),
   customernm: z.string().optional(),
+
+  smid: z.number().min(1,"Please select a saleman"),
+  smnm: z.string().optional(),
+
+  godownid: z.number().min(1,"Please select a godown"),
+  godownnm: z.string().optional(),
+
+  saledgerid: z.number().min(1,"Please select a sale ledger"),
+  saledgernm: z.string().optional(),
+
+  transporterid: z.number().min(1,"Please select a transporter"),
+  transporternm: z.string().optional(),
 
   cashcrtype: z.string().optional(),
   crdays: z.number().optional(),
@@ -91,18 +103,6 @@ export const DirectSaleBaseSchema = z.object({
   sgstval: z.number().optional(),
   cgstval: z.number().optional(),
   igstval: z.number().optional(),
-
-  smid: z.number("Please select a saleman"),
-  smnm: z.string().optional(),
-
-  godownid: z.number("Please select a godown"),
-  godownnm: z.string().optional(),
-
-  saledgerid: z.number("Please select a sale ledger"),
-  saledgernm: z.string().optional(),
-
-  transporterid: z.number("Please select a transporter"),
-  transporternm: z.string().optional(),
 
   billtime: z.string().optional(),
 

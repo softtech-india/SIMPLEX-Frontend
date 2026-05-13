@@ -123,7 +123,7 @@ export function HSNForm({ visible, onClose, HSNId, mode }: HSNFormProps) {
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(HSNDefaultValues);
-        onClose();
+       // onClose();
         defaultFocusRef.current?.focus();
         return;
       }
