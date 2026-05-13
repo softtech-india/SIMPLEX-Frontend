@@ -172,12 +172,13 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
         vnumid: Number(DirectSale.vnumid ?? 0),
 
         billtypeid: Number(DirectSale.billtypeid ?? 0),
-
         customerid: Number(DirectSale.customerid ?? 0),
+        saledgerid: Number(DirectSale.saledgerid ?? 0),
+        godownid: Number(DirectSale.godownid ?? 0),
+        smid: Number(DirectSale.smid ?? 0),
+        transporterid: Number(DirectSale.transporterid || 0),
 
         crdays: Number(DirectSale.crdays ?? 0),
-
-        saledgerid: Number(DirectSale.saledgerid ?? 0),
 
         qty1: Number(DirectSale.qty1 ?? 0),
         qtyrateval: Number(DirectSale.qtyrateval ?? 0),
@@ -194,9 +195,6 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
         sgstval: Number(DirectSale.sgstval ?? 0),
         cgstval: Number(DirectSale.cgstval ?? 0),
         igstval: Number(DirectSale.igstval ?? 0),
-
-        smid: Number(DirectSale.smid ?? 0),
-        godownid: Number(DirectSale.godownid ?? 0),
 
         itemdtl:
           DirectSale.itemdtl?.map((item, index) => ({
@@ -618,6 +616,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
         compid: companyId,
         branchid: toolbarBranchId,
+        finid: Number(finid),
 
         qty1: Number(qty1),
         qtyrateval: Number(qtyrateval),
@@ -636,12 +635,14 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
         itemdtl,
       };
 
-      // console.log("FINAL SUBMIT PAYLOAD:", JSON.stringify(payload, null, 2));
+      console.log("FINAL SUBMIT PAYLOAD:", JSON.stringify(payload, null, 2));
 
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
-        reset(directSaleFormDefaults);
-        reset(defaultItemDtl)
+        reset({
+          ...directSaleFormDefaults,
+          itemdtl: [],
+        });
         // onClose();
         return;
       }
@@ -1031,7 +1032,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
               <div className="w-68" />
 
-              <div className="w-120" />
+              <div className="w-80" />
 
               <div className="w-14 relative">
                 <span className="absolute -left-20 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-700 whitespace-nowrap">
@@ -1045,6 +1046,12 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                 />
               </div>
 
+              {isOrderBasedSale && (
+                <>
+                  <div className="w-14"></div>
+                </>
+              )}
+
               <div className="w-28" />
 
               <div className="w-28 relative">
@@ -1053,7 +1060,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                 </span>
                 <input
                   type="number"
-                  value={totalValue}
+                  value={Number(totalValue.toFixed(2))}
                   readOnly
                   className="inputField w-full bg-gray-100"
                 />

@@ -50,10 +50,10 @@ export interface DirectSale {
     billdt?: string;
     billno?: string;
 
-    billtypeid: number;
+    billtypeid: string | number;
     billtypenm?: string;
 
-    customerid: number;
+    customerid: string | number;
     customernm?: string;
 
     cashcrtype?: string;
@@ -77,13 +77,13 @@ export interface DirectSale {
     smid?: number;
     smnm?: string;
 
-    godownid: number;
+    godownid: string | number;
     godownnm?: string;
 
-    saledgerid: number;
+    saledgerid: string | number;
     saledgernm?: string;
 
-    transporterid: number;
+    transporterid: string | number;
     transporterName?: string;
 
     narration?: string;
