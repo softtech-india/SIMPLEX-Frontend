@@ -4,7 +4,8 @@ import {
   ChevronDown, ChevronRight, Home, FileText, BarChart2, Users, Briefcase, Key,
   MapPin, Settings, Shield, Search, Star, Boxes, Database, FolderTree, Layers3,
   Package, Receipt, Ruler, Shapes, Warehouse, ClipboardList, PackageCheck,
-  ShoppingCart, BadgeDollarSign, FileCheck, ShoppingBag
+  ShoppingCart, BadgeDollarSign, FileCheck, ShoppingBag,
+  X
 } from 'lucide-react';
 
 import useIsMobile from '@/common/hooks/useIsMobile';
@@ -111,9 +112,9 @@ const filterMenus = (menus: MenuItem[], query: string) => {
     items
       .map((item: MenuItem) => {
         const children = item.items ? recursive(item.items) : [];
-        const match = item.menuname.toLowerCase().includes(q);
+        const isMatch = item.menuname.toLowerCase().includes(q);
 
-        if (match || children.length > 0) {
+        if (isMatch || children.length > 0) {
           if (children.length > 0) expandedIds.push(item.menuid);
           return { ...item, items: children };
         }
@@ -184,7 +185,7 @@ const MenuItemComponent: React.FC<MenuItemProps> = ({
       </button>
 
       {hasSubMenus && isExpanded && !collapsed && (
-        <div className="space-y-1">
+        <div className="ml-4 border-l pl-4 space-y-1">
           {menu.items!.map((child: MenuItem) => (
             <MenuItemComponent
               key={child.menuid}
@@ -238,14 +239,16 @@ export default function Sidebar({
     [activeMenus, debouncedQuery]
   );
 
-  /* auto expand search */
+  /* auto expand on search - using string keys to match the expandedMenus format */
   useEffect(() => {
     if (!debouncedQuery) return;
 
-    const expanded: Record<string, boolean> = {};
-    expandedIds.forEach(id => (expanded[String(id)] = true));
+    const newExpanded: Record<string, boolean> = {};
+    expandedIds.forEach(id => (newExpanded[String(id)] = true));
 
-    setExpandedMenus(expanded);
+    setExpandedMenus(prev =>
+      JSON.stringify(prev) === JSON.stringify(newExpanded) ? prev : newExpanded
+    );
   }, [debouncedQuery, expandedIds]);
 
   /* ACCORDION TOGGLE */
@@ -296,6 +299,20 @@ export default function Sidebar({
     );
   };
 
+  // flatten
+  const flattenMenus = (menus: MenuItem[]): MenuItem[] =>
+    menus.flatMap(menu => [
+      menu,
+      ...(menu.items ? flattenMenus(menu.items) : []),
+    ]);
+
+  const flatMenus = useMemo(() => flattenMenus(activeMenus), [activeMenus]);
+
+  const pinnedItems = useMemo(
+    () => flatMenus.filter(m => pinnedMenus.includes(m.menuid)),
+    [flatMenus, pinnedMenus]
+  );
+
   return (
     <>
       {isOpen && (
@@ -308,12 +325,12 @@ export default function Sidebar({
       <aside
         className={`
           fixed top-16 left-0 bottom-0 bg-white border-r z-30
-          transition-all overflow-y-auto
+          transition-all duration-300 ease-in-out overflow-y-auto
           ${collapsed ? 'md:w-16' : 'md:w-80'} w-80
           ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
         `}
       >
-        {/* SEARCH */}
+        {/* Search */}
         {!collapsed && (
           <div className="p-3">
             <div className="relative">
@@ -321,11 +338,47 @@ export default function Sidebar({
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search..."
+                name='search'
                 className="w-full pl-10 pr-3 py-2 border rounded-lg text-sm"
               />
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
+        )}
+
+        {/* Pinned */}
+        {!collapsed && pinnedItems.length > 0 && (
+          <div className="px-3">
+            <div className="text-xs text-gray-400 mb-2">Pinned</div>
+            {pinnedItems.map(menu => (
+              <MenuItemComponent
+                key={menu.menuid}
+                menu={menu}
+                collapsed={collapsed}
+                expandedMenus={expandedMenus}
+                toggleMenu={toggleMenu}
+                handleNavigation={handleNavigation}
+                routerPath={router.pathname}
+                searchQuery={debouncedQuery}
+                togglePin={togglePin}
+                pinnedMenus={pinnedMenus}
+              />
+            ))}
+            <div className="border-b my-2" />
+          </div>
+        )}
+
+        {/* No results */}
+        {filteredMenus.length === 0 && (
+          <div className="px-3 text-sm text-gray-500">No results found</div>
         )}
 
         {/* MENU */}
