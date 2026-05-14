@@ -338,6 +338,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
       const qty = Number(item?.qty1) || 0;
       const rate = Number(item?.rate) || 0;
       const value = qty * rate;
+      const scn = item?.isScanned;
 
       qty1 += qty;
       totprodval += value;
@@ -358,22 +359,49 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
         alterunitfactortype: item?.alterunitfactortype || "M",
         rateon: item?.rateon || 1,
         orderdtlid: item?.orderdtlid || 0,
+        scn: item?.isScanned
       };
     });
 
     return { qty1, totprodval, itemdtl };
   };
 
+
   // Submit handler
   const handleConfirm = async () => {
     try {
+      // Find items with invalid scanned qty
+      const invalidScannedItems = (watchedItems || []).filter(
+        (item: any) => !item?.scanqty || Number(item.scanqty) <= 0
+      );
+
+      if (invalidScannedItems.length > 0) {
+        const productNames = invalidScannedItems
+          .map(
+            (item: any) =>
+              item?.productnm || `Product ID: ${item?.productid}`
+          )
+          .join(", ");
+
+        toast.error(
+          `Scanned quantity is 0 for: ${productNames}`,
+          {
+            duration: 5000,
+          }
+        );
+
+        return;
+      }
+
       const proceedSave = async () => {
-        const confirmItems: ConfirmItems[] = (watchedItems || []).map((item: any) => ({
-          tag: item.tag || "I",
-          dtlid: item.dtlid,
-          productid: item.productid,
-          qty1: Number(item.scanqty) || 0,
-        }));
+        const confirmItems: ConfirmItems[] = (watchedItems || []).map(
+          (item: any) => ({
+            tag: item.tag || "I",
+            dtlid: item.dtlid,
+            productid: item.productid,
+            qty1: Number(item.scanqty) || 0,
+          })
+        );
 
         const confirmPayload: ConfirmGrn = {
           id: formGoodReceivedNoteId,
@@ -384,7 +412,6 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
         };
 
         await confirmMutation.mutateAsync(confirmPayload);
-
         onClose();
       };
 
@@ -392,22 +419,23 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
         toast.error("Scanned quantity is 0. Cannot proceed with save.");
         return;
       }
+
       if (totalScanQty < totalQty) {
         toast.warning(
           `Scanned quantity (${totalScanQty}) is less than total quantity (${totalQty}). Do you want to continue?`,
           {
             action: (
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-col w-44">
                 <button
                   onClick={proceedSave}
-                  className="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700"
+                  className="w-full bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700"
                 >
                   Continue
                 </button>
 
                 <button
                   onClick={() => { }}
-                  className="bg-gray-200 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-300"
+                  className="w-full bg-gray-200 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-300"
                 >
                   Cancel
                 </button>
