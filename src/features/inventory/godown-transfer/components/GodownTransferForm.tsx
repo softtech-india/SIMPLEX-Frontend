@@ -489,7 +489,7 @@ export function GodownTransferForm({
         await createMutation.mutateAsync(payload);
         toast.success("Godown Transfer created successfully");
         reset(godownTransferFormDefaults);
-        onClose();
+       // onClose();
         return;
       }
 

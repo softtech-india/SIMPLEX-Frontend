@@ -49,10 +49,6 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
   const pathname = usePathname();
   const isOrderBasedSale = pathname?.includes("saleagnstorder");
 
-  useEffect(() => {
-    console.log('isOrderBasedSale : ', isOrderBasedSale);
-  }, [isOrderBasedSale])
-
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
   const [billTypeModalOpen, setBillTypeModalOpen] = useState(false);
   const [salemanModalOpen, setSalemanModalOpen] = useState(false);
@@ -97,7 +93,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
 
   const { data: productList = [] } = useQuery({
-    queryKey: ["fetchSeriesList", userId, companyId, toolbarBranchId],
+    queryKey: ["fetchProductList", userId, companyId, toolbarBranchId],
     queryFn: () => fetchProductList(userId, companyId, toolbarBranchId,),
     staleTime: 0,
     enabled: !!userId && !!companyId && !!toolbarBranchId && !!visible,
@@ -105,25 +101,26 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
     refetchOnWindowFocus: true,
   });
 
-  // useEffect(() => {
+  // useEffect(() => { fetchProductStock
   //   console.log('productList :', productList);
   // }, [productList])
 
-  const { control, register, handleSubmit, setFocus, reset, watch, setValue, formState: { errors }, } = useDirectSaleForm(isApproveMode);
+  const { control, register, handleSubmit, setFocus, reset, watch, setValue, getValues, trigger, formState: { errors }, } = useDirectSaleForm(isApproveMode);
 
-  const { fields, append, remove, } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control,
     name: "itemdtl",
   });
 
-  // useEffect(() => {
-  //   console.log(' fields ', fields)
-  // }, [fields])
   // Calculate Total Quantity and Vlaue
   const watchedItems = useWatch({
     control,
     name: "itemdtl",
   }) || [];
+
+  useEffect(() => {
+    console.log('watchedItems :', watchedItems);
+  }, [watchedItems])
 
   const totalQty = (watchedItems || []).reduce((sum, item) => {
     return sum + (Number(item?.qty1) || 0);
@@ -137,15 +134,20 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
   }, 0) || 0;
 
   const { scanInputRef, handleScan } = useSaleQrScanner({
-    watchedItems,
     productList,
     setValue,
-
-    onUpdateItems: (items) => {
-      setValue("itemdtl", items, { shouldValidate: true, });
-    },
+    // onUpdateItems: (updater) => {
+    //   replace(updater(watchedItems));
+    // }
+    onUpdateItems: (updater) => {
+      replace(updater(getValues("itemdtl") || []));
+      trigger("itemdtl");
+    }
 
   });
+
+  // 
+  const billdt = watch("billdt");
 
   // Reset form 
   useEffect(() => {
@@ -153,35 +155,174 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
     setTimeout(() => {
       setFocus("billdt");
-    }, 1000);
+    }, 100);
 
-    if (isAddMode) {
-      reset(directSaleFormDefaults);
-      reset(defaultItemDtl);
-      return;
-    }
+    // if (DirectSale) {
+    //   reset({
+    //     ...directSaleFormDefaults,
+
+    //     ...DirectSale,
+
+    //     billdt: DirectSale.billdt ? formatDateForInput(DirectSale.billdt) : "",
+
+    //     compid: Number(DirectSale.compid ?? 0),
+    //     branchid: Number(DirectSale.branchid ?? 0),
+    //     finid: Number(DirectSale.finid ?? 0),
+
+    //     vnumid: Number(DirectSale.vnumid ?? 0),
+
+    //     billtypeid: Number(DirectSale.billtypeid ?? 0),
+    //     customerid: Number(DirectSale.customerid ?? 0),
+    //     saledgerid: Number(DirectSale.saledgerid ?? 0),
+    //     godownid: Number(DirectSale.godownid ?? 0),
+    //     smid: Number(DirectSale.smid ?? 0),
+    //     transporterid: Number(DirectSale.transporterid || 0),
+
+    //     crdays: Number(DirectSale.crdays ?? 0),
+
+    //     qty1: Number(DirectSale.qty1 ?? 0),
+    //     qtyrateval: Number(DirectSale.qtyrateval ?? 0),
+
+    //     discval: Number(DirectSale.discval ?? 0),
+    //     netval: Number(DirectSale.netval ?? 0),
+    //     beftaxval: Number(DirectSale.beftaxval ?? 0),
+    //     taxableval: Number(DirectSale.taxableval ?? 0),
+    //     taxval: Number(DirectSale.taxval ?? 0),
+    //     amtwithtaxval: Number(DirectSale.amtwithtaxval ?? 0),
+    //     afttaxval: Number(DirectSale.afttaxval ?? 0),
+    //     billamt: Number(DirectSale.billamt ?? 0),
+
+    //     sgstval: Number(DirectSale.sgstval ?? 0),
+    //     cgstval: Number(DirectSale.cgstval ?? 0),
+    //     igstval: Number(DirectSale.igstval ?? 0),
+
+    //     itemdtl:
+    //       DirectSale.itemdtl?.map((item, index) => ({
+    //         tag: item.tag ?? "I",
+
+    //         sl: Number(item.sl ?? index + 1),
+    //         dtlid: Number(item.dtlid ?? index + 1),
+
+    //         pcategoryid: Number(item.pcategoryid ?? 0),
+    //         pcategorynm: item.pcategorynm ?? "",
+
+    //         productid: Number(item.productid ?? 0),
+    //         productnm: item.productnm ?? "",
+
+    //         qty1: Number(item.qty1 ?? 0),
+    //         rate: Number(item.rate ?? 0),
+    //         value: Number(item.value ?? 0),
+
+    //         discpct: Number(item.discpct ?? 0),
+    //         discamt: Number(item.discamt ?? 0),
+
+    //         netval: Number(item.netval ?? 0),
+
+    //         taxablerate: Number(item.taxablerate ?? 0),
+    //         taxableval: Number(item.taxableval ?? 0),
+
+    //         taxid: Number(item.taxid ?? 0),
+    //         taxval: Number(item.taxval ?? 0),
+
+    //         finalval: Number(item.finalval ?? 0),
+    //         stockval: Number(item.stockval ?? 0),
+
+    //         cgstpct: Number(item.cgstpct ?? 0),
+    //         cgstval: Number(item.cgstval ?? 0),
+    //         cgstledgerid: Number(item.cgstledgerid ?? 0),
+
+    //         sgstpct: Number(item.sgstpct ?? 0),
+    //         sgstval: Number(item.sgstval ?? 0),
+    //         sgstledgerid: Number(item.sgstledgerid ?? 0),
+
+    //         igstpct: Number(item.igstpct ?? 0),
+    //         igstval: Number(item.igstval ?? 0),
+    //         igstledgerid: Number(item.igstledgerid ?? 0),
+
+    //         hsnid: Number(item.hsnid ?? 0),
+    //         hsnno: item.hsnno ?? "",
+    //         orderdtlid: item.orderdtlid || 0,
+
+    //         mrp: Number(item.mrp ?? 0),
+    //         clqty: Number(item.clqty ?? 0),
+    //         balanceqty1: Number(item.balanceqty1 ?? 0),
+    //         unit: item.unit ?? '',
+
+    //       })) ?? [],
+    //   });
+    // }
 
     if (DirectSale) {
+      const mappedItems =
+        DirectSale.itemdtl?.map((item, index) => ({
+          tag: item.tag ?? "I",
+          sl: Number(item.sl ?? index + 1),
+          dtlid: Number(item.dtlid ?? index + 1),
+
+          pcategoryid: Number(item.pcategoryid ?? 0),
+          pcategorynm: item.pcategorynm ?? "",
+
+          productid: Number(item.productid ?? 0),
+          productnm: item.productnm ?? "",
+
+          qty1: Number(item.qty1 ?? 0),
+          rate: Number(item.rate ?? 0),
+          value: Number(item.value ?? 0),
+
+          discpct: Number(item.discpct ?? 0),
+          discamt: Number(item.discamt ?? 0),
+
+          netval: Number(item.netval ?? 0),
+
+          taxablerate: Number(item.taxablerate ?? 0),
+          taxableval: Number(item.taxableval ?? 0),
+
+          taxid: Number(item.taxid ?? 0),
+          taxval: Number(item.taxval ?? 0),
+
+          finalval: Number(item.finalval ?? 0),
+          stockval: Number(item.stockval ?? 0),
+
+          cgstpct: Number(item.cgstpct ?? 0),
+          cgstval: Number(item.cgstval ?? 0),
+
+          sgstpct: Number(item.sgstpct ?? 0),
+          sgstval: Number(item.sgstval ?? 0),
+
+          igstpct: Number(item.igstpct ?? 0),
+          igstval: Number(item.igstval ?? 0),
+
+          hsnid: Number(item.hsnid ?? 0),
+          hsnno: item.hsnno ?? "",
+          orderdtlid: item.orderdtlid || 0,
+
+          mrp: Number(item.mrp ?? 0),
+          clqty: Number(item.clqty ?? 0),
+          balanceqty1: Number(item.balanceqty1 ?? 0),
+          unit: item.unit ?? "",
+        })) ?? [];
+
       reset({
         ...directSaleFormDefaults,
-
         ...DirectSale,
 
-        billdt: DirectSale.billdt ? formatDateForInput(DirectSale.billdt) : "",
+        billdt: DirectSale.billdt
+          ? formatDateForInput(DirectSale.billdt)
+          : "",
 
         compid: Number(DirectSale.compid ?? 0),
         branchid: Number(DirectSale.branchid ?? 0),
         finid: Number(DirectSale.finid ?? 0),
 
         vnumid: Number(DirectSale.vnumid ?? 0),
-
         billtypeid: Number(DirectSale.billtypeid ?? 0),
-
         customerid: Number(DirectSale.customerid ?? 0),
+        saledgerid: Number(DirectSale.saledgerid ?? 0),
+        godownid: Number(DirectSale.godownid ?? 0),
+        smid: Number(DirectSale.smid ?? 0),
+        transporterid: Number(DirectSale.transporterid || 0),
 
         crdays: Number(DirectSale.crdays ?? 0),
-
-        saledgerid: Number(DirectSale.saledgerid ?? 0),
 
         qty1: Number(DirectSale.qty1 ?? 0),
         qtyrateval: Number(DirectSale.qtyrateval ?? 0),
@@ -199,60 +340,11 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
         cgstval: Number(DirectSale.cgstval ?? 0),
         igstval: Number(DirectSale.igstval ?? 0),
 
-        smid: Number(DirectSale.smid ?? 0),
-        godownid: Number(DirectSale.godownid ?? 0),
-
-        itemdtl:
-          DirectSale.itemdtl?.map((item, index) => ({
-            tag: item.tag ?? "I",
-
-            sl: Number(item.sl ?? index + 1),
-            dtlid: Number(item.dtlid ?? index + 1),
-
-            pcategoryid: Number(item.pcategoryid ?? 0),
-            pcategorynm: item.pcategorynm ?? "",
-
-            productid: Number(item.productid ?? 0),
-            productnm: item.productnm ?? "",
-
-            qty1: Number(item.qty1 ?? 0),
-
-            rate: Number(item.rate ?? 0),
-            value: Number(item.value ?? 0),
-
-            discpct: Number(item.discpct ?? 0),
-            discamt: Number(item.discamt ?? 0),
-
-            netval: Number(item.netval ?? 0),
-
-            taxablerate: Number(item.taxablerate ?? 0),
-            taxableval: Number(item.taxableval ?? 0),
-
-            taxid: Number(item.taxid ?? 0),
-            taxval: Number(item.taxval ?? 0),
-
-            finalval: Number(item.finalval ?? 0),
-            stockval: Number(item.stockval ?? 0),
-
-            cgstpct: Number(item.cgstpct ?? 0),
-            cgstval: Number(item.cgstval ?? 0),
-            cgstledgerid: Number(item.cgstledgerid ?? 0),
-
-            sgstpct: Number(item.sgstpct ?? 0),
-            sgstval: Number(item.sgstval ?? 0),
-            sgstledgerid: Number(item.sgstledgerid ?? 0),
-
-            igstpct: Number(item.igstpct ?? 0),
-            igstval: Number(item.igstval ?? 0),
-            igstledgerid: Number(item.igstledgerid ?? 0),
-
-            hsnid: Number(item.hsnid ?? 0),
-            hsnno: item.hsnno ?? "",
-            orderdtlid: item.orderdtlid || 0,
-
-            mrp: Number(item.mrp ?? 0),
-          })) ?? [],
+        itemdtl: mappedItems,
       });
+
+      // IMPORTANT FIX
+      replace(mappedItems);
     }
 
   }, [DirectSale, isAddMode, reset, visible, setFocus]);
@@ -358,6 +450,8 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
         if (defaultBillType) {
           setValue("billtypeid", defaultBillType.id);
           setValue("billtypenm", defaultBillType.name);
+          setValue("saledgerid", defaultBillType.accountheadid);
+          setValue("saledgernm", defaultBillType.accountheadnm);
         }
       } catch (e) {
         console.error(e);
@@ -571,6 +665,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
         hsnno: item?.hsnno ?? "",
         mrp: Number(item?.mrp ?? 0),
         orderdtlid: item?.orderdtlid || 0,
+        clqty: item?.clqty || 0,
       };
     });
 
@@ -589,10 +684,13 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
   const handleFormSubmit = async (data: DirectSaleFormSchema) => {
     try {
 
+      const isValid = await trigger();
+      if (!isValid) return;
+
       if (isDeleteMode) {
         const ok = await confirmDelete({
-          title: "Delete Sale Order",
-          message: "Are you sure you want to delete this Sale Order?",
+          title: "Delete Sale",
+          message: "Are you sure you want to delete this Sale?",
         });
 
         if (!ok) return;
@@ -616,6 +714,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
         compid: companyId,
         branchid: toolbarBranchId,
+        finid: Number(finid),
 
         qty1: Number(qty1),
         qtyrateval: Number(qtyrateval),
@@ -634,13 +733,21 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
         itemdtl,
       };
 
-      console.log("FINAL SUBMIT PAYLOAD:", JSON.stringify(payload, null, 2));
+      // console.log("FINAL SUBMIT PAYLOAD:", JSON.stringify(payload, null, 2));
 
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
-        reset(directSaleFormDefaults);
-        reset(defaultItemDtl)
-       // onClose();
+        console.log('save called')
+        reset({
+          ...directSaleFormDefaults,
+          itemdtl: [],
+        });
+
+        // IMPORTANT: next tick sync
+        requestAnimationFrame(() => {
+          replace([]);
+        });
+        // onClose();
         return;
       }
 
@@ -701,7 +808,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
           <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
 
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50"> Sale Order Information </h2>
+            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50"> Sale Information </h2>
 
             <div className="flex flex-wrap gap-4 items-end">
 
@@ -725,7 +832,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Order Date</label>
+                <label className="block text-gray-700 font-medium mb-1">Bill Date</label>
                 <input
                   type="date"
                   {...register("billdt")}
@@ -735,7 +842,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Order No</label>
+                <label className="block text-gray-700 font-medium mb-1">Bill No</label>
                 <input
                   type="text"
                   {...register("billno")}
@@ -746,42 +853,6 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                     ${selectedSeries?.manualallow === "N" ? "bg-gray-100 cursor-not-allowed" : ""}
                   `}
                 />
-              </div>
-
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Cash or Credit</label>
-                <FormSelect
-                  name="cashcrtype"
-                  control={control}
-                  options={cashcrTypeOptions}
-                />
-              </div>
-
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Credit days</label>
-                <input
-                  type="number"
-                  {...register("crdays", { valueAsNumber: true })}
-                  disabled={isReadOnly}
-                  className={`inputField ${errors.crdays ? "" : "border-gray-400"}`}
-                />
-              </div>
-
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1"> Customer <strong className="text-red-500"> * </strong> </label>
-                <input
-                  type="text"
-                  value={customerName || ''}
-                  disabled={isReadOnly}
-                  readOnly
-                  onClick={() => setCustomerModalOpen(true)}
-                  className={`inputField w-full border border-gray-300 
-                    ${errors.customerid && !customerName ? "border-red-500" : "border-gray-400"}
-                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
-                  }
-                  placeholder="Select Customer"
-                />
-                {errors.customerid && !customerName && <p className="text-red-500 mt-1 text-sm">{errors.customerid.message}</p>}
               </div>
 
               <div className="w-48">
@@ -800,6 +871,59 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                 />
                 {errors.billtypeid && !BillTypeName && <p className="text-red-500 mt-1 text-sm">{errors.billtypeid.message}</p>}
               </div>
+
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">Cash or Credit</label>
+                <FormSelect
+                  name="cashcrtype"
+                  control={control}
+                  options={cashcrTypeOptions}
+                />
+              </div>
+
+              <div className="w-100">
+                <label className="block text-gray-700 font-medium mb-1"> Customer <strong className="text-red-500"> * </strong> </label>
+                <input
+                  type="text"
+                  value={customerName || ''}
+                  disabled={isReadOnly}
+                  readOnly
+                  onClick={() => setCustomerModalOpen(true)}
+                  className={`inputField w-full border border-gray-300 
+                    ${errors.customerid && !customerName ? "border-red-500" : "border-gray-400"}
+                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
+                  }
+                  placeholder="Select Customer"
+                />
+                {errors.customerid && !customerName && <p className="text-red-500 mt-1 text-sm">{errors.customerid.message}</p>}
+              </div>
+
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">Credit days</label>
+                <input
+                  type="number"
+                  {...register("crdays", { valueAsNumber: true })}
+                  disabled={isReadOnly}
+                  className={`inputField ${errors.crdays ? "" : "border-gray-400"}`}
+                />
+              </div>
+
+              {isOrderBasedSale && (
+                <>
+                  <div className="w-68">
+                    <label className="block text-gray-700 font-medium mb-1">So No. & Date <span className="text-red-500"> * </span> </label>
+                    <input
+                      type="text"
+                      value={orderno ? `${orderno} - ${formatDate(orderdt)}` : ""}
+                      disabled={isReadOnly}
+                      readOnly
+                      onClick={() => setSoPendingModalOpen(true)}
+                      className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
+                      placeholder="Select SO No. & Date"
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Sale Ledger <strong className="text-red-500"> * </strong> </label>
@@ -864,12 +988,12 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                     ${errors.transporterid && !transporterName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
                   }
-                  placeholder="Select godown"
+                  placeholder="Select transporter "
                 />
                 {errors.transporterid && !transporterName && <p className="text-red-500 mt-1 text-sm">{errors.transporterid.message}</p>}
               </div>
 
-              <div className="w-24">
+              <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Time</label>
                 <input
                   type="time"
@@ -889,22 +1013,6 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                 />
               </div>
 
-              {isOrderBasedSale && (
-                <>
-                  <div className="w-68">
-                    <label className="block text-gray-700 font-medium mb-1">So No. & Date <span className="text-red-500"> * </span> </label>
-                    <input
-                      type="text"
-                      value={orderno ? `${orderno} - ${formatDate(orderdt)}` : ""}
-                      disabled={isReadOnly}
-                      readOnly
-                      onClick={() => setSoPendingModalOpen(true)}
-                      className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
-                      placeholder="Select SO No. & Date"
-                    />
-                  </div>
-                </>
-              )}
 
 
               {!isOrderBasedSale && (
@@ -929,7 +1037,6 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                   </div>
                 </>
               )}
-
 
 
             </div>
@@ -973,10 +1080,12 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                       register={register}
                       errors={errors}
                       remove={remove}
+                      trigger={trigger}
                       watchedItems={watchedItems}
                       userId={userId}
                       companyId={companyId}
                       branchId={toolbarBranchId}
+                      billdt={billdt || ''}
                       visible={visible}
                       isReadOnly={isReadOnly}
                       fieldsLength={fields.length}
@@ -1002,6 +1111,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                       register={register}
                       errors={errors}
                       remove={remove}
+                      trigger={trigger}
                       mode={mode}
                       watchedItems={watchedItems}
                       userId={userId}
@@ -1009,6 +1119,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                       branchId={toolbarBranchId}
                       finid={finid}
                       orderid={orderid || 0}
+                      billdt={billdt || ''}
                       visible={visible}
                       isReadOnly={isReadOnly}
                       fieldsLength={fields.length}
@@ -1025,9 +1136,9 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
               <div className="w-68" />
 
-              <div className="w-120" />
+              <div className="w-80" />
 
-              <div className="w-28 relative">
+              <div className="w-14 relative">
                 <span className="absolute -left-20 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-700 whitespace-nowrap">
                   Total Qty
                 </span>
@@ -1039,6 +1150,12 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                 />
               </div>
 
+              {isOrderBasedSale && (
+                <>
+                  <div className="w-14"></div>
+                </>
+              )}
+
               <div className="w-28" />
 
               <div className="w-28 relative">
@@ -1047,7 +1164,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                 </span>
                 <input
                   type="number"
-                  value={totalValue}
+                  value={Number(totalValue.toFixed(2))}
                   readOnly
                   className="inputField w-full bg-gray-100"
                 />

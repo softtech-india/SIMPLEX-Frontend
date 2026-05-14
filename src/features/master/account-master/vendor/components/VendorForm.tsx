@@ -351,7 +351,7 @@ export function VendorForm({ visible, onClose, formVendorId, mode }: VendorFormP
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(vendorFormDefaults);
-        onClose();
+       // onClose();
         return;
       }
 

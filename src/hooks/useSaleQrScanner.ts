@@ -2,20 +2,9 @@ import { DirectSaleItem } from "@/features/sale/direct-sale/types/directSale.typ
 import { useRef } from "react";
 import { toast } from "sonner";
 
-
 const safeNumber = (val: any) => {
   const n = Number(val);
   return isNaN(n) ? 0 : n;
-};
-
-type SaleItem = {
-  pcategoryid: number;
-  pcategorynm?: string;
-
-  productid: number;
-  productnm: string;
-
-  qty1: number;
 };
 
 type ProductMaster = {
@@ -23,17 +12,16 @@ type ProductMaster = {
   productname: string;
   productcategoryid: number;
   categorynm: string;
+  unit: string;
 };
 
 type Params = {
-  watchedItems: DirectSaleItem[];
   productList: ProductMaster[];
   setValue: any;
-  onUpdateItems: (items: DirectSaleItem[]) => void;
+  onUpdateItems: (updater: (prev: DirectSaleItem[]) => DirectSaleItem[]) => void;
 };
 
 export const useSaleQrScanner = ({
-  watchedItems,
   productList,
   setValue,
   onUpdateItems,
@@ -47,7 +35,7 @@ export const useSaleQrScanner = ({
   };
 
   const handleScan = (value: string) => {
-    let rawValue = value
+    const rawValue = value
       ?.replace(/\u00A0/g, " ")
       ?.replace(/\s+/g, "")
       ?.trim();
@@ -57,7 +45,6 @@ export const useSaleQrScanner = ({
       return;
     }
 
-    // validate json format
     if (!rawValue.startsWith("{") || !rawValue.endsWith("}")) {
       toast.error("Invalid Barcode");
       setValue("qrcode", "");
@@ -67,28 +54,13 @@ export const useSaleQrScanner = ({
 
     try {
       const match = rawValue.match(/\{.*\}/);
-
-      if (!match) {
-        toast.error("Invalid Barcode");
-        setValue("qrcode", "");
-        focusInput();
-        return;
-      }
+      if (!match) throw new Error("Invalid");
 
       const parsed = JSON.parse(match[0]);
-
       const scannedId = parsed?.id;
 
-      if (!scannedId) {
-        toast.error("Invalid Barcode");
-        setValue("qrcode", "");
-        focusInput();
-        return;
-      }
+      if (!scannedId) throw new Error("Invalid");
 
-      /**
-       * Find product from master list
-       */
       const matchedProduct = productList.find(
         (item) => item.id === scannedId
       );
@@ -100,41 +72,37 @@ export const useSaleQrScanner = ({
         return;
       }
 
-      /**
-       * Check existing item
-       */
-      const existingIndex = watchedItems.findIndex(
-        (item) => item.productid === matchedProduct.id
-      );
+      // SAFE FUNCTIONAL UPDATE (NO STALE STATE)
+      onUpdateItems((prev) => {
+        const updated = [...prev];
 
-      let updatedItems = [...watchedItems];
+        const existingIndex = updated.findIndex(
+          (item) => item.productid === matchedProduct.id
+        );
 
-      /**
-       * Product already exists
-       * increase qty only
-       */
-      if (existingIndex > -1) {
-        updatedItems[existingIndex] = {
-          ...updatedItems[existingIndex],
-          // qty1: (Number(updatedItems[existingIndex].qty1) || 0) + 1,
-          qty1: safeNumber(updatedItems[existingIndex].qty1) + 1,
-        };
-      } else {
-        /**
-         * Add new row
-         */
-        updatedItems.push({
-          pcategoryid: matchedProduct.productcategoryid,
-          pcategorynm: matchedProduct.categorynm,
+        if (existingIndex > -1) {
+          updated[existingIndex] = {
+            ...updated[existingIndex],
+            qty1: safeNumber(updated[existingIndex].qty1) + 1,
+          };
+        } else {
+          updated.push({
+            pcategoryid: matchedProduct.productcategoryid,
+            pcategorynm: matchedProduct.categorynm,
 
-          productid: matchedProduct.id,
-          productnm: matchedProduct.productname,
+            productid: matchedProduct.id,
+            productnm: matchedProduct.productname,
 
-          qty1: 1,
-        });
-      }
+            unit: matchedProduct.unit,
 
-      onUpdateItems(updatedItems);
+            qty1: 1,
+            rate: 0,
+            clqty: 0,
+          });
+        }
+
+        return updated;
+      });
 
       setValue("qrcode", "");
 
@@ -143,7 +111,6 @@ export const useSaleQrScanner = ({
       }
 
       focusInput();
-
     } catch (err) {
       toast.error("Invalid Barcode");
       setValue("qrcode", "");

@@ -14,6 +14,7 @@ import { fetchBranchList } from "@/api/master/ledger-api";
 import { useQuery } from '@tanstack/react-query';
 import useUserStore from '@/store/userStore';
 import { currentDate } from '@/helpers/dateUtils';
+import { usePathname } from 'next/navigation';
 
 
 export default function DirectSaleModule() {
@@ -22,6 +23,10 @@ export default function DirectSaleModule() {
   const isMobile = useIsMobile()
   const permissions = usePrivileges();
   const { userId, companyId, branchId, finid, branchnm } = useUserStore();
+  const pathname = usePathname();
+
+  const isOrderBasedSale = pathname?.includes("saleagnstorder");
+  const saleListType = `${isOrderBasedSale ? "O" : "D"}`;
 
   // State 
   const [selectedRow, setselectedRow] = useState<DirectSale | null>(null);
@@ -46,6 +51,7 @@ export default function DirectSaleModule() {
       finid: Number(finid),
       startdt: fromDate || "",
       enddt: toDate || "",
+      entrytype: saleListType,
     });
 
   useEffect(() => {
@@ -141,7 +147,7 @@ export default function DirectSaleModule() {
 
   return (
     <>
-      <div className="Sale-order-module ">
+      <div className="Sale-module ">
 
         <div className="bg-white rounded-xl shadow-sm border mt-2">
 

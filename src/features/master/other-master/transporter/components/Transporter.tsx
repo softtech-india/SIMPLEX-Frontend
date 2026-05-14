@@ -131,15 +131,10 @@ export function TransporterForm({
 
       if (isAddMode) {
         const response = await createMutation.mutateAsync(payload);
-
-        // Check if creation was successful
         if (response?.success) {
-          // Success: Reset form and keep it open for another entry
           reset(TransporterDefaultValues);
           defaultFocusRef.current?.focus();
-          // Optional: You can also refresh any dropdowns or lists here
         }
-        // If not successful, form stays as is (user can correct and retry)
         return;
       }
 
@@ -148,17 +143,13 @@ export function TransporterForm({
           id: transporterId,
           data: payload,
         });
-
-        // Only close if update was successful
         if (response?.success) {
           onClose();
         }
-        // If not successful, form stays open for user to correct
+
       }
     } catch (error) {
       console.error("Submit error:", error);
-      // Error is already handled by toast in the mutation
-      // Form stays as is so user can try again
     }
   };
 

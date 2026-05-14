@@ -465,7 +465,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(goodReceivedNoteFormDefaults);
-        onClose();
+       // onClose();
         return;
       }
 

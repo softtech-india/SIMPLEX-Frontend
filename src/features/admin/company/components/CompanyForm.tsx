@@ -120,7 +120,7 @@ export function CompanyForm({ visible, onClose, companyId, mode }: CompanyFormPr
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset({});
-        onClose();
+       // onClose();
         // defaultFocusRef.current?.focus();
         return;
       }

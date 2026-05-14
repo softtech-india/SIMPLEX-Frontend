@@ -160,7 +160,7 @@ export function UserBranchMappingForm({ visible, onClose, formDataId, mode, sele
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset({});
-        onClose();
+       // onClose();
         defaultFocusRef.current?.focus();
         return;
       }

@@ -301,7 +301,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(pruchaseOrderFormDefaults);
-        onClose();
+       // onClose();
         return;
       }
 
@@ -655,7 +655,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                 </span>
                 <input
                   type="number"
-                  value={totalValue}
+                  value={Number(totalValue.toFixed(2))}
                   readOnly
                   className="inputField w-full bg-gray-100"
                 />

@@ -59,6 +59,38 @@ export const fetchProductList = async (
   }
 }
 
+export const fetchProductStock = async (
+  userId: string | number | null,
+  companyId: string | number | null,
+  branchid?: string | number | null,
+  productid?: string | number | null,
+  tilldt?: string | number | null,
+) => {
+  try {
+    const response: any = await apiCall.get(
+      `${process.env.NEXT_PUBLIC_PROJECT_API_ENDPOINT}productstock`,
+      {
+        userid: userId,
+        compid: companyId,
+        branchid: branchid,
+        productid: productid,
+        tilldt: tilldt,
+      }
+    );
+
+    if (response?.error) {
+      notify(response.error, "error", 3000);
+      return [];
+    }
+
+    return response?.data ?? [];
+
+  } catch (error) {
+    console.error("fetchProductStock error:", error);
+    return [];
+  }
+}
+
 // export const fetchProductList = async ({
 //   userId,
 //   companyId,

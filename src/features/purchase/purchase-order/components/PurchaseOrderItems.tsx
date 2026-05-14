@@ -2,6 +2,7 @@ import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import SearchModal from "@/common/components/SearchModal";
 import { toast } from "sonner";
+import { Controller } from "react-hook-form";
 
 
 type PurchaseOrderItemsProps = {
@@ -160,22 +161,50 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
 
       <div className="w-28">
         <label className="block text-gray-700 font-medium mb-1"> Rate</label>
-        <input
-          type="number"
-          {...register(`itemdtl.${index}.rate`, { valueAsNumber: true })}
-          disabled={isReadOnly}
-          className={`inputField ${errors?.itemdtl?.[index]?.rate ? "border-red-500" : "border-gray-400"}`}
+
+        <Controller
+          control={control}
+          name={`itemdtl.${index}.rate`}
+          render={({ field }) => (
+            <input
+              type="text"
+              inputMode="decimal"
+              placeholder="0.000000"
+              value={field.value ?? ""}
+
+              onChange={(e) => {
+                let value = e.target.value;
+                value = value.replace(/[^0-9.]/g, "");
+
+                const parts = value.split(".");
+                if (parts.length > 2) return;
+
+                const integerPart = parts[0] || "";
+                const decimalPart = parts[1] || "";
+
+                if (integerPart.length > 12) return;
+                if (decimalPart.length > 6) return;
+
+                field.onChange(value);
+              }}
+
+              onBlur={() => {
+                const numericValue = Number(field.value || 0);
+                field.onChange(numericValue);
+              }}
+
+              className={`inputField ${errors?.itemdtl?.[index]?.rate ? "border-red-500" : "border-gray-400"}`}
+            />
+          )}
         />
-        {errors?.itemdtl?.[index]?.rate && (
-          <p className="text-xs text-red-500 mt-1"> {errors.itemdtl[index].rate.message}</p>
-        )}
+        {/* {errors?.itemdtl?.[index]?.rate && (<p className="text-xs text-red-500 mt-1">{errors.itemdtl[index].rate.message} </p>)} */}
       </div>
 
       <div className="w-28">
         <label className="block text-gray-700 font-medium mb-1"> Value</label>
         <input
           type="number"
-          value={value}
+          value={Number(value.toFixed(2))}
           readOnly
           className="inputField  bg-gray-100 border-gray-400"
         />

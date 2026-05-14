@@ -105,7 +105,7 @@ const CustomDataGrid: React.FC<CustomDataGridProps> = ({
 }) => {
   return (
     <DataGrid
-      dataSource={dataSource}
+      dataSource={dataSource || []}
       keyExpr={keyExpr}
       height={height}
       width="100%"

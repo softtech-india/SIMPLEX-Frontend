@@ -338,7 +338,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(requisitionFormDefaults);
-        onClose();
+       // onClose();
         return;
       }
 

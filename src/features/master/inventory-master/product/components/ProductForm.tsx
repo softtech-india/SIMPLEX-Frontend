@@ -248,7 +248,7 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(ProductDefaultValues);
-        onClose();
+       // onClose();
         defaultFocusRef.current?.focus();
         return;
       }
