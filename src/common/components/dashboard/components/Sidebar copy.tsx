@@ -1,23 +1,44 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import {
-  ChevronDown, ChevronRight, Home, FileText, BarChart2, Users, Briefcase, Key,
-  MapPin, Settings, Shield, Search, Star, Boxes, Database, FolderTree, Layers3,
-  Package, Receipt, Ruler, Shapes, Warehouse, ClipboardList, PackageCheck,
-  ShoppingCart, BadgeDollarSign, FileCheck, ShoppingBag
+  ChevronDown,
+  ChevronRight,
+  Home,
+  FileText,
+  BarChart2,
+  Users,
+  Briefcase,
+  Key,
+  MapPin,
+  Settings,
+  Shield,
+  Search,
+  Star,
+  Boxes,
+  Database,
+  FolderTree,
+  Layers3,
+  Package,
+  Receipt,
+  Ruler,
+  Shapes,
+  Warehouse,
+  ClipboardList,
+  PackageCheck,
+  ShoppingCart,
+  BadgeDollarSign,
+  FileCheck,
+  ShoppingBag,
 } from 'lucide-react';
-
 import useIsMobile from '@/common/hooks/useIsMobile';
 import { storageService } from '@/common/utility/storageService';
 
-/* =========================
-   TYPES
-========================= */
 interface MenuItem {
   menuid: number;
   menuname: string;
   path?: string;
   text: string;
+  icon?: string;
   isactive: boolean;
   items?: MenuItem[];
 }
@@ -29,23 +50,6 @@ interface SidebarProps {
   collapsed: boolean;
 }
 
-interface MenuItemProps {
-  menu: MenuItem;
-  parentKey?: string;
-  level?: number;
-  collapsed: boolean;
-  expandedMenus: Record<string, boolean>;
-  toggleMenu: (menuKey: string, parentKey?: string) => void;
-  handleNavigation: (path?: string) => void;
-  routerPath: string;
-  searchQuery: string;
-  togglePin: (id: number) => void;
-  pinnedMenus: number[];
-}
-
-/* =========================
-   ICONS
-========================= */
 const ICONS: Record<string, any> = {
   Dashboard: Home,
   Admin: Settings,
@@ -59,6 +63,7 @@ const ICONS: Record<string, any> = {
   Company: Briefcase,
   Branch: MapPin,
   "User Priviledge": Shield,
+  preferences: Settings,
 
   Master: Settings,
   "Inventory Master": Boxes,
@@ -79,11 +84,10 @@ const ICONS: Record<string, any> = {
   "Sales Order": ClipboardList,
   "Sale (Direct)": BadgeDollarSign,
   "Sale (Order Based)": FileCheck,
+
 };
 
-/* =========================
-   HELPERS
-========================= */
+// Highlight
 const highlightText = (text: string, query: string) => {
   if (!query) return text;
   const parts = text.split(new RegExp(`(${query})`, 'gi'));
@@ -94,14 +98,12 @@ const highlightText = (text: string, query: string) => {
   );
 };
 
-const getMenuKey = (menu: MenuItem, parentPath?: string) => {
-  return parentPath ? `${parentPath}/${menu.menuid}` : `${menu.menuid}`;
-};
+// Filter
+const filterMenus = (
+  menus: MenuItem[],
+  query: string
+): { filtered: MenuItem[]; expandedIds: number[] } => {
 
-/* =========================
-   FILTER
-========================= */
-const filterMenus = (menus: MenuItem[], query: string) => {
   if (!query) return { filtered: menus, expandedIds: [] };
 
   const q = query.toLowerCase();
@@ -109,11 +111,11 @@ const filterMenus = (menus: MenuItem[], query: string) => {
 
   const recursive = (items: MenuItem[]): MenuItem[] =>
     items
-      .map((item: MenuItem) => {
+      .map(item => {
         const children = item.items ? recursive(item.items) : [];
-        const match = item.menuname.toLowerCase().includes(q);
+        const isMatch = item.menuname.toLowerCase().includes(q);
 
-        if (match || children.length > 0) {
+        if (isMatch || children.length > 0) {
           if (children.length > 0) expandedIds.push(item.menuid);
           return { ...item, items: children };
         }
@@ -124,13 +126,9 @@ const filterMenus = (menus: MenuItem[], query: string) => {
   return { filtered: recursive(menus), expandedIds };
 };
 
-/* =========================
-   MENU ITEM (RECURSIVE)
-========================= */
-const MenuItemComponent: React.FC<MenuItemProps> = ({
+// Menu Item
+const MenuItemComponent: React.FC<any> = ({
   menu,
-  parentKey,
-  level = 0,
   collapsed,
   expandedMenus,
   toggleMenu,
@@ -140,11 +138,8 @@ const MenuItemComponent: React.FC<MenuItemProps> = ({
   togglePin,
   pinnedMenus,
 }) => {
-  const hasSubMenus = !!menu.items?.length;
-
-  const menuKey = getMenuKey(menu, parentKey);
-  const isExpanded = !!expandedMenus[menuKey];
-
+  const hasSubMenus = (menu.items || []).length > 0;
+  const isExpanded = expandedMenus[menu.menuid];
   const Icon = ICONS[menu.text] || FileText;
   const isActive = menu.path === routerPath;
   const isPinned = pinnedMenus.includes(menu.menuid);
@@ -152,22 +147,20 @@ const MenuItemComponent: React.FC<MenuItemProps> = ({
   return (
     <div className="space-y-1">
       <button
-        onClick={() =>
-          hasSubMenus
-            ? toggleMenu(menuKey, parentKey)
-            : handleNavigation(menu.path)
-        }
+        onClick={() => hasSubMenus ? toggleMenu(menu.menuid) : handleNavigation(menu.path)}
         className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium
         ${isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'}`}
-        style={{ paddingLeft: `${level * 12 + 12}px` }}
       >
         <span className="flex items-center gap-3">
           <Icon className="w-5 h-5 text-gray-500" />
-          {!collapsed && <span>{highlightText(menu.menuname, searchQuery)}</span>}
+          {!collapsed && (
+            <span>{highlightText(menu.menuname, searchQuery)}</span>
+          )}
         </span>
 
         {!collapsed && (
           <div className="flex items-center gap-2">
+            {/* Pin */}
             <Star
               onClick={(e) => {
                 e.stopPropagation();
@@ -177,20 +170,19 @@ const MenuItemComponent: React.FC<MenuItemProps> = ({
                 }`}
             />
 
-            {hasSubMenus &&
-              (isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />)}
+            {hasSubMenus && (
+              isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />
+            )}
           </div>
         )}
       </button>
 
       {hasSubMenus && isExpanded && !collapsed && (
-        <div className="space-y-1">
-          {menu.items!.map((child: MenuItem) => (
+        <div className="ml-4 border-l pl-4 space-y-1">
+          {(menu.items || []).map((child: MenuItem) => (
             <MenuItemComponent
               key={child.menuid}
               menu={child}
-              parentKey={menuKey}
-              level={level + 1}
               collapsed={collapsed}
               expandedMenus={expandedMenus}
               toggleMenu={toggleMenu}
@@ -207,9 +199,6 @@ const MenuItemComponent: React.FC<MenuItemProps> = ({
   );
 };
 
-/* =========================
-   SIDEBAR
-========================= */
 export default function Sidebar({
   isOpen,
   onClose,
@@ -220,12 +209,12 @@ export default function Sidebar({
   const router = useRouter();
   const isMobile = useIsMobile();
 
-  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
+  const [expandedMenus, setExpandedMenus] = useState<Record<number, boolean>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [pinnedMenus, setPinnedMenus] = useState<number[]>([]);
 
-  /* debounce */
+  // debounce
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(searchQuery), 300);
     return () => clearTimeout(t);
@@ -233,54 +222,31 @@ export default function Sidebar({
 
   const activeMenus = menus.filter(m => m.isactive);
 
-  const { filtered: filteredMenus, expandedIds } = useMemo(
-    () => filterMenus(activeMenus, debouncedQuery),
-    [activeMenus, debouncedQuery]
-  );
+  const { filtered: filteredMenus, expandedIds } = useMemo(() => {
+    return filterMenus(activeMenus, debouncedQuery);
+  }, [activeMenus, debouncedQuery]);
 
-  /* auto expand search */
+  // expand on search
   useEffect(() => {
     if (!debouncedQuery) return;
 
-    const expanded: Record<string, boolean> = {};
-    expandedIds.forEach(id => (expanded[String(id)] = true));
+    const newExpanded: Record<number, boolean> = {};
+    expandedIds.forEach(id => (newExpanded[id] = true));
 
-    setExpandedMenus(expanded);
+    setExpandedMenus(prev =>
+      JSON.stringify(prev) === JSON.stringify(newExpanded) ? prev : newExpanded
+    );
   }, [debouncedQuery, expandedIds]);
 
-  /* ACCORDION TOGGLE */
-  const toggleMenu = (menuKey: string, parentPath?: string) => {
-    setExpandedMenus(prev => {
-      const isOpen = !!prev[menuKey];
-      const updated = { ...prev };
-
-      // close if already open
-      if (isOpen) {
-        delete updated[menuKey];
-        return updated;
-      }
-
-      // ONLY close siblings (same parent path level)
-      Object.keys(updated).forEach(key => {
-        const keyParent = key.split('/').slice(0, -1).join('/');
-        const currentParent = parentPath ?? '';
-
-        if (keyParent === currentParent) {
-          delete updated[key];
-        }
-      });
-
-      updated[menuKey] = true;
-      return updated;
-    });
+  const toggleMenu = (id: number) => {
+    setExpandedMenus(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
   const handleNavigation = (path?: string) => {
     if (path) router.push(path);
     if (isMobile) onClose();
   };
-
-  /* PIN */
+  // Pin logic
   useEffect(() => {
     const saved = storageService.getItem('pinned-menus');
     if (saved) setPinnedMenus(JSON.parse(saved));
@@ -296,24 +262,34 @@ export default function Sidebar({
     );
   };
 
+  // flatten
+  const flattenMenus = (menus: MenuItem[]): MenuItem[] =>
+    menus.flatMap(menu => [
+      menu,
+      ...(menu.items ? flattenMenus(menu.items) : []),
+    ]);
+
+  const flatMenus = useMemo(() => flattenMenus(activeMenus), [activeMenus]);
+
+  const pinnedItems = useMemo(
+    () => flatMenus.filter(m => pinnedMenus.includes(m.menuid)),
+    [flatMenus, pinnedMenus]
+  );
+
   return (
     <>
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 z-20 md:hidden"
-          onClick={onClose}
-        />
-      )}
+      {isOpen && <div className="fixed inset-0 bg-black/40 z-20 md:hidden" onClick={onClose} />}
 
       <aside
         className={`
-          fixed top-16 left-0 bottom-0 bg-white border-r z-30
-          transition-all overflow-y-auto
+          fixed top-16 left-0 bottom-0 bg-white border-r border-gray-200 z-30
+          transition-all duration-300 ease-in-out overflow-y-auto
           ${collapsed ? 'md:w-16' : 'md:w-80'} w-80
           ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
         `}
       >
-        {/* SEARCH */}
+
+        {/* Search */}
         {!collapsed && (
           <div className="p-3">
             <div className="relative">
@@ -321,6 +297,7 @@ export default function Sidebar({
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search..."
+                name='search'
                 className="w-full pl-10 pr-3 py-2 border rounded-lg text-sm"
               />
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" />
@@ -328,14 +305,39 @@ export default function Sidebar({
           </div>
         )}
 
-        {/* MENU */}
+        {/* Pinned */}
+        {!collapsed && pinnedItems.length > 0 && (
+          <div className="px-3">
+            <div className="text-xs text-gray-400 mb-2">Pinned</div>
+            {pinnedItems.map(menu => (
+              <MenuItemComponent
+                key={menu.menuid}
+                menu={menu}
+                collapsed={collapsed}
+                expandedMenus={expandedMenus}
+                toggleMenu={toggleMenu}
+                handleNavigation={handleNavigation}
+                routerPath={router.pathname}
+                searchQuery={debouncedQuery}
+                togglePin={togglePin}
+                pinnedMenus={pinnedMenus}
+              />
+            ))}
+            <div className="border-b my-2" />
+          </div>
+        )}
+
+        {/* No results */}
+        {filteredMenus.length === 0 && (
+          <div className="px-3 text-sm text-gray-500">No results found</div>
+        )}
+
+        {/* Menu */}
         <nav className="p-3 space-y-1">
           {filteredMenus.map(menu => (
             <MenuItemComponent
               key={menu.menuid}
               menu={menu}
-              parentKey={undefined}
-              level={0}
               collapsed={collapsed}
               expandedMenus={expandedMenus}
               toggleMenu={toggleMenu}

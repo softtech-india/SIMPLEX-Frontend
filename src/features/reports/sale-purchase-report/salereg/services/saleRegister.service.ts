@@ -77,8 +77,8 @@ class SaleRegisterService {
       //   this.handleError(response);
       return response.data || [];
     } catch (error: any) {
-      console.error("Error fetching sale register:", error);
-      toast.error(error.message || "Failed to fetch sale register");
+     // console.error("Error fetching sale register:", error);
+     // toast.error(error.message || "Failed to fetch sale register");
       throw error;
     }
   }

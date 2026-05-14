@@ -98,25 +98,25 @@ const CustomDataGrid: React.FC<CustomDataGridProps> = ({
   remoteOperations = false,
   selectionMode = "single",
   selectedRowKeys = [],
-  pagerPageSizes = [15, 30, 50, "all"],
+  pagerPageSizes = [15, 30, 50, 100, 150, "all"],
   showFilterRow = false,
   showColumnChooser = false,
   scrollingMode = "virtual",
 }) => {
   return (
     <DataGrid
-      dataSource={dataSource}
+      dataSource={dataSource || []}
       keyExpr={keyExpr}
       height={height}
-      width={width}
-      columnAutoWidth={columnAutoWidth}
-      rowAlternationEnabled={false}
-      showBorders={false}
+      width="100%"
+      columnAutoWidth={false}
+      rowAlternationEnabled={true}
+      showBorders={true}
       showColumnLines={true}
       showRowLines={true}
-      focusedRowEnabled={focusedRowEnabled}
-      hoverStateEnabled={hoverStateEnabled}
-      allowColumnResizing={allowColumnResizing}
+      focusedRowEnabled={true}
+      hoverStateEnabled={true}
+      allowColumnResizing={true}
       allowColumnReordering={true}
       filterValue={filterValue ?? ""}
       disabled={disabled}
@@ -124,32 +124,48 @@ const CustomDataGrid: React.FC<CustomDataGridProps> = ({
       onRowClick={onRowClick}
       onSelectionChanged={onSelectionChanged}
       onExporting={onExporting}
-      wordWrapEnabled
+      wordWrapEnabled={true}
       remoteOperations={remoteOperations}
-      selectedRowKeys={selectedRowKeys} //  Added
+      selectedRowKeys={selectedRowKeys}
+
+      className="erp-grid"
     >
+      {/* Selection */}
       <Selection mode={selectionMode} />
-      {showFilterRow && <FilterRow visible={true} />}
+
+      {/* 🔍 Filter Row */}
+      {showFilterRow && <FilterRow visible />}
+
+      {/* 🧭 Column Chooser */}
+      {showColumnChooser && (
+        <ColumnChooser enabled mode="select" height={400}>
+          <ColumnChooserSearch enabled />
+          <ColumnChooserSelection allowSelectAll selectByClick recursive />
+        </ColumnChooser>
+      )}
+
+      {/* 📜 Scrolling */}
       <Scrolling mode={scrollingMode} />
+
+      {/* 📄 Paging */}
       <Paging defaultPageSize={50} />
       <Pager
         visible
         allowedPageSizes={pagerPageSizes}
-        displayMode="full"
+        displayMode="compact"
         showPageSizeSelector
         showInfo
         showNavigationButtons
       />
-      {/* <HeaderFilter visible /> */}
+
+      {/* ⏳ Loading */}
       <LoadPanel enabled />
 
-      {/* Group panel: drag a column header to group */}
-      <GroupPanel visible={false} />
-
-      {/* Grouping settings */}
+      {/* 📊 Grouping */}
+      <GroupPanel visible />
       <Grouping autoExpandAll={false} />
 
-      {/* Dynamic Columns */}
+      {/* 📌 Columns */}
       {columns.map((col) => (
         <Column
           key={col.dataField}
@@ -160,57 +176,22 @@ const CustomDataGrid: React.FC<CustomDataGridProps> = ({
           dataType={col.dataType as any}
           format={col.format}
           cellRender={col.cellRender}
-        >
-          {col.headerFilter && (
-            <HeaderFilter allowSelectAll>
-              {col.searchEnabled && <div />}{" "}
-              {/* Add Search customization if needed */}
-            </HeaderFilter>
-          )}
-        </Column>
+        />
       ))}
 
-      {/* Dynamic Summary */}
-      {(summaryItems && summaryItems.length > 0) || calculateCustomSummary ? (
+      {/* 📊 Summary */}
+      {summaryItems && (
         <Summary calculateCustomSummary={calculateCustomSummary}>
-          {summaryItems?.map((item, index) => {
-            if (item.summaryType === "custom") {
-              return (
-                <TotalItem
-                  key={item.name || `custom-${index}`}
-                  name={item.name}
-                  summaryType="custom"
-                  showInColumn={item.showInColumn}
-                  displayFormat={item.displayFormat}
-                  valueFormat={item.valueFormat}
-                />
-              );
-            }
-            return (
-              <TotalItem
-                key={item.column || `col-${index}`}
-                column={item.column}
-                summaryType={item.summaryType}
-                displayFormat={item.displayFormat}
-                valueFormat={item.valueFormat}
-              />
-            );
-          })}
+          {summaryItems.map((item, index) => (
+            <TotalItem
+              key={index}
+              column={item.column}
+              summaryType={item.summaryType}
+              displayFormat={item.displayFormat}
+            />
+          ))}
         </Summary>
-      ) : null}
-
-      {/* Column Chooser */}
-      {showColumnChooser && (
-        <ColumnChooser enabled mode="select" height={340}>
-          <ColumnChooserSearch
-            enabled
-            editorOptions={{ placeholder: "Search column..." }}
-          />
-          <ColumnChooserSelection allowSelectAll selectByClick recursive />
-        </ColumnChooser>
       )}
-
-      <Export enabled={false} allowExportSelectedData={false} />
     </DataGrid>
   );
 };
