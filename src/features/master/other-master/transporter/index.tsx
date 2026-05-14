@@ -13,6 +13,7 @@ import { exportToExcel, ExcelColumn } from '@/common/utility/exportToExcel';
 import { TransactionToolbar } from '@/common/components/barmanager/TransactionToolbar';
 import { useQuery } from '@tanstack/react-query';
 import { fetchBranchList } from "@/api/master/ledger-api";
+import { useReactiveStorage } from '@/hooks/useReactiveStorage';
 
 export default function TransporterModule() {
 
@@ -29,6 +30,8 @@ export default function TransporterModule() {
   const [toolbarBranchId, setToolbarBranchId] = useState<string | null>(null);
   const { userId, companyId, branchId, finid, branchnm } = useUserStore();
   const { data: TransporterList = [], isLoading, refetch } = useTransporters(toolbarBranchId);
+  const [sidebarState, setSidebarState] = useReactiveStorage('sidebarCollapsed');
+
 
 
   useEffect(() => {
@@ -134,7 +137,15 @@ export default function TransporterModule() {
       </div>
 
       {!isMobile && (
-        <div className="w-full px-2 sm:px-2 md:px-2 lg:px-2 max-w-full lg:max-w-355 bg-white rounded-xl shadow-sm border border-gray-200 p-2 overflow-x-auto my-4">
+        <div
+          className={`
+      ${sidebarState === '1' ? 'w-358' : 'w-294'}
+      transition-all duration-300 ease-in-out
+      px-2 sm:px-2 md:px-2 bg-white lg:px-2
+      rounded-xl shadow-sm border border-gray-200
+      p-2 overflow-x-auto my-4
+    `}
+        >
           <TransporterDataGrid
             dataSource={TransporterList}
             onSelectionChanged={handleSelectionChanged}

@@ -13,6 +13,7 @@ import { exportToExcel, ExcelColumn } from '@/common/utility/exportToExcel';
 import { fetchBranchList } from "@/api/master/ledger-api";
 import { useQuery } from '@tanstack/react-query';
 import useUserStore from '@/store/userStore';
+import { useReactiveStorage } from '@/hooks/useReactiveStorage';
 
 export default function OpeningStockModule() {
 
@@ -28,6 +29,7 @@ export default function OpeningStockModule() {
   const [formOpeningStockId, setFormOpeningStockId] = useState(0);
   const [toolbarBranchId, setToolbarBranchId] = useState<string | null>(null);
   const [formSelectedBranch, setFormSelectedBranch] = useState<string | null>(null);
+  const [sidebarState, setSidebarState] = useReactiveStorage('sidebarCollapsed');
 
   const { data: openingStockList = [], isLoading, refetch } =
     useOpeningStockList({
@@ -162,7 +164,15 @@ export default function OpeningStockModule() {
         </div>
 
         {!isMobile && (
-          <div className="w-full px-2 sm:px-2 md:px-2 lg:px-2 max-w-full lg:max-w-355 bg-white rounded-xl shadow-sm border border-gray-200 p-2 overflow-x-auto my-4">
+          <div
+            className={`
+      ${sidebarState === '1' ? 'w-358' : 'w-294'}
+      transition-all duration-300 ease-in-out
+      px-2 sm:px-2 md:px-2 bg-white lg:px-2
+      rounded-xl shadow-sm border border-gray-200
+      p-2 overflow-x-auto my-4
+    `}
+          >
             <OpeningStockDataGrid
               dataSource={openingStockList}
               onSelectionChanged={handleSelectionChanged}

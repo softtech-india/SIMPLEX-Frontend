@@ -14,6 +14,7 @@ import { fetchBranchList } from "@/api/master/ledger-api";
 import { useQuery } from '@tanstack/react-query';
 import useUserStore from '@/store/userStore';
 import { currentDate, formatDate } from '@/helpers/dateUtils';
+import { useReactiveStorage } from '@/hooks/useReactiveStorage';
 
 
 export default function SaleOrderModule() {
@@ -33,6 +34,7 @@ export default function SaleOrderModule() {
 
   const [fromDate, setFromDate] = useState<string | null>(currentDate);
   const [toDate, setToDate] = useState<string | null>(currentDate);
+  const [sidebarState, setSidebarState] = useReactiveStorage('sidebarCollapsed');
 
   const isRowApproved = selectedRow?.aprvstatus === "A";
 
@@ -202,7 +204,15 @@ export default function SaleOrderModule() {
         </div>
 
         {!isMobile && (
-          <div className="w-full px-2 sm:px-2 md:px-2 lg:px-2 max-w-full lg:max-w-355 bg-white rounded-xl shadow-sm border border-gray-200 p-2 overflow-x-auto my-4">
+          <div
+            className={`
+      ${sidebarState === '1' ? 'w-358' : 'w-294'}
+      transition-all duration-300 ease-in-out
+      px-2 sm:px-2 md:px-2 bg-white lg:px-2
+      rounded-xl shadow-sm border border-gray-200
+      p-2 overflow-x-auto my-4
+    `}
+          >
             <SaleOrderDataGrid
               dataSource={SaleOrderList}
               onSelectionChanged={handleSelectionChanged}

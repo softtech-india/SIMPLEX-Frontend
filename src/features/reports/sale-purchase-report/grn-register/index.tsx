@@ -17,6 +17,7 @@ import { currentDate } from '@/helpers/dateUtils';
 import GRNFilterCriteria from './components/GRNFilterCriteria';
 import { DEFAULT_GRN_FILTER } from './constants/grnRegisterDefaults';
 import { storageService } from '@/common/utility/storageService';
+import { useReactiveStorage } from '@/hooks/useReactiveStorage';
 
 export default function GRNRegisterModule() {
   const isMobile = useIsMobile();
@@ -33,7 +34,7 @@ export default function GRNRegisterModule() {
   const [toDate, setToDate] = useState<string | null>(currentDate);
 
   const stateId = storageService.getItem('stateid');
-  const sidebarState = storageService.getItem('sidebarCollapsed')
+  const [sidebarState, setSidebarState] = useReactiveStorage('sidebarCollapsed');
 
   const [filterParams, setFilterParams] = useState<GRNFilterState>({
     ...DEFAULT_GRN_FILTER,
@@ -198,9 +199,16 @@ export default function GRNRegisterModule() {
             periodTitle={`Period: ${fromDate} to ${toDate}`}
           />
         </div>
-
         {!isMobile && (
-          <div className="w-355 px-2 sm:px-2 md:px-2 lg:px-2 bg-white rounded-xl shadow-sm border border-gray-200 p-2 overflow-x-auto my-4 flex-1">
+          <div
+            className={`
+      ${sidebarState === '1' ? 'w-358' : 'w-294'}
+      transition-all duration-300 ease-in-out
+      px-2 sm:px-2 md:px-2 bg-white lg:px-2
+      rounded-xl shadow-sm border border-gray-200
+      p-2 overflow-x-auto my-4
+    `}
+          >
             <GRNDataGrid
               dataSource={grnList}
               onSelectionChanged={handleSelectionChanged}
@@ -213,7 +221,6 @@ export default function GRNRegisterModule() {
             />
           </div>
         )}
-
         <GRNFilterCriteria
           visible={isFilterFormOpen}
           filterParams={filterParams}

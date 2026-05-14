@@ -8,6 +8,8 @@ import useIsMobile from '@/common/hooks/useIsMobile';
 import { getStorageItem } from '@/common/utility/storage';
 import { storageService } from '@/common/utility/storageService';
 import { useAppStorage } from '@/hooks/useAuthStorage';
+import { useReactiveStorage } from '@/hooks/useReactiveStorage';
+import { set } from 'lodash';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -29,15 +31,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   });
   const [userPrivilege, setUserPrivilege] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [sidebarState, setSidebarState] = useReactiveStorage('sidebarCollapsed');
 
   const router = useRouter();
   const isMobile = useIsMobile();
   const { refreshStorage } = useAppStorage();
 
+
   // Save sidebar collapsed state to localStorage whenever it changes
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(SIDEBAR_COLLAPSED_KEY, sidebarCollapsed ? '1' : '0');
+      setSidebarState(sidebarCollapsed ? '1' : '0');
     }
   }, [sidebarCollapsed]);
 

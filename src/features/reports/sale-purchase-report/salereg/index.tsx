@@ -19,6 +19,7 @@ import {
 } from './types/saleRegister.type';
 import { DEFAULT_SALE_REGISTER_FILTER } from './constants/saleRegisterTrialDefaults';
 import { storageService } from '@/common/utility/storageService';
+import { useReactiveStorage } from '@/hooks/useReactiveStorage';
 
 export default function SaleRegisterModule() {
   // Hooks
@@ -37,6 +38,8 @@ export default function SaleRegisterModule() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<SaleRegister | null>(null);
   const [selectedBranchName, setSelectedBranchName] = useState<string>(branchnm || '');
+  const [sidebarState, setSidebarState] = useReactiveStorage('sidebarCollapsed');
+
 
   // Direct date state like Purchase Order
   const [fromDate, setFromDate] = useState<string | null>(currentDate);
@@ -263,7 +266,15 @@ export default function SaleRegisterModule() {
         </div>
 
         {!isMobile && (
-          <div className="w-full px-2 sm:px-2 md:px-2 lg:px-2 max-w-full lg:max-w-355 bg-white rounded-xl shadow-sm border border-gray-200 p-2 overflow-x-auto my-4">
+          <div
+            className={`
+      ${sidebarState === '1' ? 'w-358' : 'w-294'}
+      transition-all duration-300 ease-in-out
+      px-2 sm:px-2 md:px-2 bg-white lg:px-2
+      rounded-xl shadow-sm border border-gray-200
+      p-2 overflow-x-auto my-4
+    `}
+          >
             <SaleRegisterDataGrid
               dataSource={saleRegisterList}
               onSelectionChanged={handleSelectionChanged}

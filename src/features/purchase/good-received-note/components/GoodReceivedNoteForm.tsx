@@ -33,6 +33,7 @@ interface GoodReceivedNoteProps {
   formSelectedBranch: string;
   toolbarBranchId: number;
   isRowConfirmed: boolean;
+  onUpdated?: () => void;
 }
 
 type GrnPendingRow = {
@@ -41,7 +42,7 @@ type GrnPendingRow = {
   orderdt: string;
 };
 
-export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId, mode, formSelectedBranch, toolbarBranchId, isRowConfirmed }: GoodReceivedNoteProps) {
+export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId, mode, formSelectedBranch, toolbarBranchId, isRowConfirmed, onUpdated }: GoodReceivedNoteProps) {
 
   // hooks
   const {
@@ -493,7 +494,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(goodReceivedNoteFormDefaults);
-       // onClose();
+        // onClose();
         return;
       }
 
@@ -502,6 +503,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
           id: formGoodReceivedNoteId,
           data: payload,
         });
+        onUpdated?.();
         onClose();
       }
 

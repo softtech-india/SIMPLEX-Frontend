@@ -17,6 +17,7 @@ import { currentDate } from '@/helpers/dateUtils';
 import SalesOrderFilterCriteria from './components/SalesOrderFilterCriteria';
 import { DEFAULT_SALES_ORDER_FILTER } from './constants/salesOrderDefaults';
 import { storageService } from '@/common/utility/storageService';
+import { useReactiveStorage } from '@/hooks/useReactiveStorage';
 
 export default function SalesOrderRegisterModule() {
   // Hooks
@@ -30,6 +31,8 @@ export default function SalesOrderRegisterModule() {
   const [toolbarBranchId, setToolbarBranchId] = useState<string | null>(null);
   const [selectedBranchName, setSelectedBranchName] = useState<string>(branchnm || '');
   const [localFilters, setLocalFilters] = useState<Partial<SalesOrderFilterState>>({});
+  const [sidebarState, setSidebarState] = useReactiveStorage('sidebarCollapsed');
+
 
   // Direct date state
   const [fromDate, setFromDate] = useState<string | null>(currentDate);
@@ -215,7 +218,15 @@ export default function SalesOrderRegisterModule() {
         </div>
 
         {!isMobile && (
-          <div className="w-355 px-2 sm:px-2 md:px-2 lg:px-2 bg-white rounded-xl shadow-sm border border-gray-200 p-2 overflow-x-auto my-4 flex-1">
+          <div
+            className={`
+      ${sidebarState === '1' ? 'w-358' : 'w-294'}
+      transition-all duration-300 ease-in-out
+      px-2 sm:px-2 md:px-2 bg-white lg:px-2
+      rounded-xl shadow-sm border border-gray-200
+      p-2 overflow-x-auto my-4
+    `}
+          >
             <SalesOrderDataGrid
               dataSource={salesOrderList}
               onSelectionChanged={handleSelectionChanged}

@@ -34,9 +34,11 @@ interface DirectSaleFormProps {
   mode: OperationMode;
   formSelectedBranch: string;
   toolbarBranchId: number;
+
+  onUpdated?: () => void;
 }
 
-export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formSelectedBranch, toolbarBranchId }: DirectSaleFormProps) {
+export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formSelectedBranch, toolbarBranchId, onUpdated }: DirectSaleFormProps) {
 
   const {
     userId,
@@ -756,6 +758,9 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
           id: formDirectSaleId,
           data: payload,
         });
+
+        onUpdated?.();
+
         onClose();
       }
 

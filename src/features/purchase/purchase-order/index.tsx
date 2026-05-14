@@ -14,6 +14,7 @@ import { fetchBranchList } from "@/api/master/ledger-api";
 import { useQuery } from '@tanstack/react-query';
 import useUserStore from '@/store/userStore';
 import { currentDate, formatDate } from '@/helpers/dateUtils';
+import { useReactiveStorage } from '@/hooks/useReactiveStorage';
 
 
 export default function PurchaseOrderModule() {
@@ -30,7 +31,7 @@ export default function PurchaseOrderModule() {
   const [formPurchaseOrderId, setFormPurchaseOrderId] = useState(0);
   const [toolbarBranchId, setToolbarBranchId] = useState<string | null>(null);
   const [formSelectedBranch, setFormSelectedBranch] = useState<string | null>(null);
-
+  const [sidebarState, setSidebarState] = useReactiveStorage('sidebarCollapsed');
   const [fromDate, setFromDate] = useState<string | null>(currentDate);
   const [toDate, setToDate] = useState<string | null>(currentDate);
 
@@ -202,7 +203,15 @@ export default function PurchaseOrderModule() {
         </div>
 
         {!isMobile && (
-          <div className="w-full px-2 sm:px-2 md:px-2 lg:px-2 max-w-full lg:max-w-355 bg-white rounded-xl shadow-sm border border-gray-200 p-2 overflow-x-auto my-4">
+          <div
+            className={`
+      ${sidebarState === '1' ? 'w-358' : 'w-294'}
+      transition-all duration-300 ease-in-out
+      px-2 sm:px-2 md:px-2 bg-white lg:px-2
+      rounded-xl shadow-sm border border-gray-200
+      p-2 overflow-x-auto my-4
+    `}
+          >
             <PurchaseOrderDataGrid
               dataSource={purchaseOrderList}
               onSelectionChanged={handleSelectionChanged}
