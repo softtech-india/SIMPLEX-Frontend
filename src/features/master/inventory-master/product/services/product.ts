@@ -2,6 +2,7 @@ import { apiCall } from "@/utils/apiClient";
 import { Product, ProductFormData, HSN, HSNApiResponse, GST, GSTApiResponse, ProductApiResponse, ProdCategory, ProdCategoryApiResponse, ProdClass, ProdClassApiResponse, ProdGroup, ProdGroupApiResponse, ProdUnit, ProdUnitApiResponse } from '../types/product.types';
 import { toast } from "sonner";
 import { storageService } from "@/common/utility/storageService";
+import { handleApiResponse } from "@/helpers/apiResponseHandler";
 
 class ProductService {
 
@@ -13,13 +14,7 @@ class ProductService {
 
   private getUserId = (): string => this.getFromStorage("userId");
   private getCompanyId = (): string => this.getFromStorage("companyId");
-  private handleError(response: HSNApiResponse | ProductApiResponse) {
-    if (!response.success) {
-      const message = response.message || "Something went wrong";
-      toast.error(message);
-      throw new Error(message);
-    }
-  }
+
 
   async getAllHSNs(): Promise<HSN[]> {
     try {
@@ -28,7 +23,8 @@ class ProductService {
         { userid: this.getUserId(), compid: this.getCompanyId() }
       );
 
-      this.handleError(response);
+      //this.handleError(response);
+      handleApiResponse(response);
       return response.data || [];
 
     } catch (error: any) {
@@ -146,8 +142,9 @@ class ProductService {
         { userid: this.getUserId(), compid: this.getCompanyId(), id: id }
       );
 
-      this.handleError(response);
+      //this.handleError(response);
 
+      handleApiResponse(response);
       const product = response.data?.[0];
       if (!product) throw new Error("Product not found");
 
@@ -168,7 +165,12 @@ class ProductService {
         { userid: this.getUserId(), compid: this.getCompanyId() }
       );
 
-      this.handleError(response);
+      // this.handleError(response);
+    //  handleApiResponse(response);
+
+      if (!handleApiResponse(response)) {
+        throw new Error(response.message || "Failed to create product");
+      }
 
       return response;
 
@@ -187,7 +189,8 @@ class ProductService {
         { userid: this.getUserId(), compid: this.getCompanyId() }
       );
 
-      this.handleError(response);
+      //  this.handleError(response);
+      handleApiResponse(response);
 
       if (!response) throw new Error("response not found at update hsn");
 
@@ -207,7 +210,8 @@ class ProductService {
         { userid: this.getUserId(), compid: this.getCompanyId(), id }
       );
 
-      this.handleError(response);
+      //  this.handleError(response);
+      handleApiResponse(response);
 
       return response;
 
