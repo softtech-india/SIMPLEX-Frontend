@@ -23,7 +23,6 @@ import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
 import { SHORTCUTS } from "@/common/constants/shortcuts";
 import { apiCall } from "@/utils/apiClient";
 import { useSaleQrScanner } from "@/hooks/useSaleQrScanner";
-import { fetchProductList } from "@/api/master/product-api";
 import { usePathname } from "next/navigation";
 import { OrderbasedSaleItems } from "./OrderbasedSaleItems";
 
@@ -93,20 +92,6 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
   const isSubmitting = createMutation.isPending || approveMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
-
-  const { data: productList = [] } = useQuery({
-    queryKey: ["fetchProductList", userId, companyId, toolbarBranchId],
-    queryFn: () => fetchProductList(userId, companyId, toolbarBranchId,),
-    staleTime: 0,
-    enabled: !!userId && !!companyId && !!toolbarBranchId && !!visible,
-    retry: 1,
-    refetchOnWindowFocus: true,
-  });
-
-  // useEffect(() => { fetchProductStock
-  //   console.log('productList :', productList);
-  // }, [productList])
-
   const { control, register, handleSubmit, setFocus, reset, watch, setValue, getValues, trigger, formState: { errors }, } = useDirectSaleForm(isApproveMode);
 
   const { fields, append, remove, replace } = useFieldArray({
@@ -120,9 +105,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
     name: "itemdtl",
   }) || [];
 
-  useEffect(() => {
-    console.log('watchedItems :', watchedItems);
-  }, [watchedItems])
+
 
   const totalQty = (watchedItems || []).reduce((sum, item) => {
     return sum + (Number(item?.qty1) || 0);
@@ -135,18 +118,33 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
     return sum + qty * rate;
   }, 0) || 0;
 
-  const { scanInputRef, handleScan } = useSaleQrScanner({
-    productList,
-    setValue,
-    // onUpdateItems: (updater) => {
-    //   replace(updater(watchedItems));
-    // }
-    onUpdateItems: (updater) => {
-      replace(updater(getValues("itemdtl") || []));
-      trigger("itemdtl");
-    }
+  // const { scanInputRef, handleScan } = useSaleQrScanner({
+  // //  productList,
+  //   setValue,
+  //   // onUpdateItems: (updater) => {
+  //   //   replace(updater(watchedItems));
+  //   // }
+  //   onUpdateItems: (updater) => {
+  //     replace(updater(getValues("itemdtl") || []));
+  //     trigger("itemdtl");
+  //   }
 
+  // });
+
+  const { scanInputRef, handleScan } = useSaleQrScanner({
+    setValue,
+    onUpdateItems: (updater) => {
+      const currentItems = getValues("itemdtl") || [];
+      const updatedItems = updater(currentItems);
+
+      replace(updatedItems);
+      trigger("itemdtl");
+    },
   });
+
+  useEffect(() => {
+    console.log('watchedItems :', watchedItems);
+  }, [watchedItems])
 
   // 
   const billdt = watch("billdt");

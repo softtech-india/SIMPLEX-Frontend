@@ -169,8 +169,8 @@ export const PurchaseOrderDataGrid = forwardRef<any, PurchaseOrderDataGridProps>
         }
       },
       {
-        dataField: "purchaseqty",
-        caption: "Purchase Qty",
+        dataField: "recvqty",
+        caption: "Receive Qty",
         width: 70,
         headerFilter: true,
         cellRender: (data: any) => {
