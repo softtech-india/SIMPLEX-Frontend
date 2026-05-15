@@ -12,6 +12,7 @@ import { usePrivileges } from '@/common/hooks/usePrivileges';
 import { exportToExcel, ExcelColumn } from '@/common/utility/exportToExcel';
 import { productService } from './services/product';
 import jsPDF from 'jspdf';
+import { useReactiveStorage } from '@/hooks/useReactiveStorage';
 
 export default function ProductModule() {
 
@@ -25,6 +26,8 @@ export default function ProductModule() {
   const [formMode, setFormMode] = useState<OperationMode>('Add');
   const [formProductId, setFormProductId] = useState(0);
   const { data: ProductList = [], isLoading, refetch } = useProducts();
+  const [sidebarState, setSidebarState] = useReactiveStorage('sidebarCollapsed');
+
   const gridRef = useRef<any>(null);
   const { mutateAsync: getQR } = useProductQR();
   // handler
@@ -155,7 +158,15 @@ export default function ProductModule() {
       </div>
 
       {!isMobile && (
-        <div className="w-full px-2 sm:px-2 md:px-2 lg:px-2 max-w-full lg:max-w-355 bg-white rounded-xl shadow-sm border border-gray-200 p-2 overflow-x-auto my-4">
+        <div
+          className={`
+      ${sidebarState === '1' ? 'w-358' : 'w-294'}
+      transition-all duration-300 ease-in-out
+      px-2 sm:px-2 md:px-2 bg-white lg:px-2
+      rounded-xl shadow-sm border border-gray-200
+      p-2 overflow-x-auto my-4
+    `}
+        >
           <ProductDataGrid
             dataSource={ProductList}
             onSelectionChanged={handleSelectionChanged}

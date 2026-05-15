@@ -15,6 +15,7 @@ import { StockLedgersModal } from './components/StockLedgerModal';
 import { StockTrialFilterState } from './types/stockTrial.types';
 import { DEFAULT_STOCK_TRIAL_FILTER } from './constants/stockTrialDefaults';
 import { storageService } from '@/common/utility/storageService';
+import { useReactiveStorage } from '@/hooks/useReactiveStorage';
 
 export default function StockTrialModule() {
   // Hooks
@@ -31,6 +32,8 @@ export default function StockTrialModule() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<StockTrial | null>(null);
   const [selectedBranchName, setSelectedBranchName] = useState<string>(branchnm || '');
+  const [sidebarState, setSidebarState] = useReactiveStorage('sidebarCollapsed');
+
 
   // Get branch ID from local storage via userStore (already has it)
   const defaultBranchId = Number(branchId);
@@ -185,7 +188,15 @@ export default function StockTrialModule() {
         </div>
 
         {!isMobile && (
-          <div className="w-full px-2 sm:px-2 md:px-2 lg:px-2 max-w-full lg:max-w-355 bg-white rounded-xl shadow-sm border border-gray-200 p-2 overflow-x-auto my-4">
+          <div
+            className={`
+      ${sidebarState === '1' ? 'w-358' : 'w-294'}
+      transition-all duration-300 ease-in-out
+      px-2 sm:px-2 md:px-2 bg-white lg:px-2
+      rounded-xl shadow-sm border border-gray-200
+      p-2 overflow-x-auto my-4
+    `}
+          >
             <StockTrialDataGrid
               dataSource={stockTrialList}
               onSelectionChanged={handleSelectionChanged}

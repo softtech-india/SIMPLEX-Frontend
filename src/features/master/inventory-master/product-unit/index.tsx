@@ -10,6 +10,7 @@ import useIsMobile from "@/common/hooks/useIsMobile";
 import { MasterToolbar } from '@/common/components/barmanager/MasterToolbar';
 import { usePrivileges } from '@/common/hooks/usePrivileges';
 import { exportToExcel, ExcelColumn } from '@/common/utility/exportToExcel';
+import { useReactiveStorage } from '@/hooks/useReactiveStorage';
 
 export default function ProdUnitModule() {
 
@@ -23,6 +24,8 @@ export default function ProdUnitModule() {
   const [formMode, setFormMode] = useState<OperationMode>('Add');
   const [formProdUnitId, setFormProdUnitId] = useState(0);
   const { data: ProdUnitList = [], isLoading, refetch } = useProdUnits();
+  const [sidebarState, setSidebarState] = useReactiveStorage('sidebarCollapsed');
+
   const gridRef = useRef<any>(null);
 
   // handler
@@ -107,7 +110,15 @@ export default function ProdUnitModule() {
       </div>
 
       {!isMobile && (
-        <div className="w-full px-2 sm:px-2 md:px-2 lg:px-2 max-w-full lg:max-w-355 bg-white rounded-xl shadow-sm border border-gray-200 p-2 overflow-x-auto my-4">
+        <div
+          className={`
+      ${sidebarState === '1' ? 'w-358' : 'w-294'}
+      transition-all duration-300 ease-in-out
+      px-2 sm:px-2 md:px-2 bg-white lg:px-2
+      rounded-xl shadow-sm border border-gray-200
+      p-2 overflow-x-auto my-4
+    `}
+        >
           <ProdUnitDataGrid
             dataSource={ProdUnitList}
             onSelectionChanged={handleSelectionChanged}

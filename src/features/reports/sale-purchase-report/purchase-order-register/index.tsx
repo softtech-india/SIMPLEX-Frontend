@@ -15,6 +15,7 @@ import { currentDate } from '@/helpers/dateUtils';
 import PurchaseOrderFilterCriteria from './components/PurchaseOrderFilterCriteria';
 import { DEFAULT_PURCHASE_ORDER_FILTER } from './constants/purchaseOrderDefaults';
 import { storageService } from '@/common/utility/storageService';
+import { useReactiveStorage } from '@/hooks/useReactiveStorage';
 
 export default function PurchaseOrderRegisterModule() {
   // Hooks
@@ -28,6 +29,8 @@ export default function PurchaseOrderRegisterModule() {
   const [toolbarBranchId, setToolbarBranchId] = useState<string | null>(null);
   const [selectedBranchName, setSelectedBranchName] = useState<string>(branchnm || '');
   const [localFilters, setLocalFilters] = useState<Partial<PurchaseOrderFilterState>>({});
+  const [sidebarState, setSidebarState] = useReactiveStorage('sidebarCollapsed');
+
 
   // Direct date state
   const [fromDate, setFromDate] = useState<string | null>(currentDate);
@@ -213,7 +216,15 @@ export default function PurchaseOrderRegisterModule() {
         </div>
 
         {!isMobile && (
-          <div className="w-355 px-2 sm:px-2 md:px-2 lg:px-2 bg-white rounded-xl shadow-sm border border-gray-200 p-2 overflow-x-auto my-4 flex-1">
+          <div
+            className={`
+      ${sidebarState === '1' ? 'w-358' : 'w-294'}
+      transition-all duration-300 ease-in-out
+      px-2 sm:px-2 md:px-2 bg-white lg:px-2
+      rounded-xl shadow-sm border border-gray-200
+      p-2 overflow-x-auto my-4
+    `}
+          >
             <PurchaseOrderDataGrid
               dataSource={purchaseOrderList}
               onSelectionChanged={handleSelectionChanged}
