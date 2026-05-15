@@ -303,8 +303,8 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
       visible={visible}
       onHiding={onClose}
       title={`${mode} Product`}
-      width="97vw"
-      height="84vh"
+      width="95vw"
+      height="90vh"
       dragEnabled
       showTitle
       showCloseButton={false}
@@ -339,7 +339,7 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
 
                 {/* Product Name */}
                 <div>
-                  <label className="block text-gray-700 font-medium mb-1">Product Name<span className="text-red-500">*</span></label>
+                  <label className="block text-gray-700 font-medium mb-1">Product Name <strong className="text-red-500 text-sm"> * </strong> </label>
                   <input
                     type="text"
                     {...register("productname")}
@@ -351,7 +351,7 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
                 </div>
                 {/* Print Name */}
                 <div>
-                  <label className="block text-gray-700 font-medium mb-1">Print Name<span className="text-red-500">*</span></label>
+                  <label className="block text-gray-700 font-medium mb-1">Print Name <strong className="text-red-500 text-sm"> * </strong> </label>
                   <input
                     type="text"
                     {...register("aliasname")}
@@ -369,7 +369,7 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
                 <div className="pr-2 border-r-3">
                   {/* Category */}
                   <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Category</label>
+                    <label className="block text-gray-700 font-medium mb-1">Category <strong className="text-red-500 text-sm"> * </strong> </label>
                     <FormSelect
                       name="productcategoryid"
                       control={control}
@@ -379,7 +379,7 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
 
                   {/* Class */}
                   <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Class</label>
+                    <label className="block text-gray-700 font-medium mb-1">Class <strong className="text-red-500 text-sm"> * </strong></label>
                     <FormSelect
                       name="productclassid"
                       control={control}
@@ -389,7 +389,7 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
 
                   {/* Product Group */}
                   <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Product Group</label>
+                    <label className="block text-gray-700 font-medium mb-1">Product Group <strong className="text-red-500 text-sm"> * </strong></label>
                     <FormSelect
                       name="productsubclassid"
                       control={control}
@@ -399,7 +399,7 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
 
                   {/* Base Unit */}
                   <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Base Unit</label>
+                    <label className="block text-gray-700 font-medium mb-1">Base Unit <strong className="text-red-500 text-sm"> * </strong></label>
                     <FormSelect
                       name="unitid"
                       control={control}
@@ -410,7 +410,7 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
 
                   {/* Product Type */}
                   <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Product Type</label>
+                    <label className="block text-gray-700 font-medium mb-1">Product Type <strong className="text-red-500 text-sm"> * </strong></label>
                     <FormSelect
                       name="producttype"
                       control={control}
@@ -423,7 +423,7 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
 
                   {/* Minimum Level */}
                   <div>
-                    <label className="block text-gray-700 font-medium mb-1">Minimum Level<span className="text-red-500">*</span></label>
+                    <label className="block text-gray-700 font-medium mb-1">Minimum Level <strong className="text-red-500 text-sm"> * </strong> </label>
                     <input
                       type="text"
                       {...register("minimumlevel", { valueAsNumber: true })}
@@ -436,20 +436,20 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
 
                   {/* Reorder Level */}
                   <div>
-                    <label className="block text-gray-700 font-medium mb-1">Reorder Level<span className="text-red-500">*</span></label>
+                    <label className="block text-gray-700 font-medium mb-1">Reorder Level <strong className="text-red-500 text-sm"> * </strong> </label>
                     <input
                       type="text"
                       {...register("reorderlevel", { valueAsNumber: true })}
                       disabled={isReadOnly}
                       className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.reorderlevel ? "border-red-500" : "border-gray-300"}`}
-                      placeholder="Enter minimum level"
+                      placeholder="Enter reorder level"
                     />
                     {errors.reorderlevel && <p className="text-red-500 mt-1 text-sm">{errors.reorderlevel.message}</p>}
                   </div>
 
                   {/* Valuation Type */}
                   <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Valuation Type</label>
+                    <label className="block text-gray-700 font-medium mb-1">Valuation Type <strong className="text-red-500 text-sm"> * </strong> </label>
                     <FormSelect
                       name="valuationtype"
                       control={control}
@@ -459,7 +459,7 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
 
                   {/* Batch Require */}
                   <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Batch Require</label>
+                    <label className="block text-gray-700 font-medium mb-1">Batch Require <strong className="text-red-500 text-sm"> * </strong></label>
                     <FormSelect
                       name="batchrequire"
                       control={control}
@@ -472,7 +472,7 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
                   {/* Alter Unit */}
 
                   <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Alter Unit</label>
+                    <label className="block text-gray-700 font-medium mb-1">Alter Unit <strong className="text-red-500 text-sm"> * </strong></label>
                     <FormSelect
                       name="alterunitid"
                       control={control}
@@ -482,20 +482,20 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
 
                   {/* Alter Unit Factor */}
                   <div>
-                    <label className="block text-gray-700 font-medium mb-1">Alter Unit Factor<span className="text-red-500">*</span></label>
+                    <label className="block text-gray-700 font-medium mb-1">Alter Unit Factor <strong className="text-red-500 text-sm"> * </strong></label>
                     <input
                       type="number"
                       {...register("alterunitfactor", { valueAsNumber: true })}
                       disabled={isReadOnly}
                       className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.alterunitfactor ? "border-red-500" : "border-gray-300"}`}
-                      placeholder="Enter minimum level"
+                      placeholder="Enter alter unit factor"
                     />
                     {errors.alterunitfactor && <p className="text-red-500 mt-1 text-sm">{errors.alterunitfactor.message}</p>}
                   </div>
 
                   {/* Alter Unit Factor Type */}
                   <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Alter Unit Factor Type</label>
+                    <label className="block text-gray-700 font-medium mb-1">Alter Unit Factor Type <strong className="text-red-500 text-sm"> * </strong></label>
                     <FormSelect
                       name="alterunitfactortype"
                       control={control}
@@ -504,7 +504,7 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
                   </div>
                   {/* Alter Unit Method */}
                   <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Alter Unit Method</label>
+                    <label className="block text-gray-700 font-medium mb-1">Alter Unit Method <strong className="text-red-500 text-sm"> * </strong></label>
                     <FormSelect
                       name="alterunitmethod"
                       control={control}
@@ -513,7 +513,7 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
                   </div>
                   {/* Purchase Rate On */}
                   <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Purchase Rate On</label>
+                    <label className="block text-gray-700 font-medium mb-1">Purchase Rate On <strong className="text-red-500 text-sm"> * </strong></label>
                     <FormSelect
                       name="purchaserateon"
                       control={control}
@@ -524,7 +524,7 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
                   {/* Sale Rate On */}
 
                   <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Sale Rate On</label>
+                    <label className="block text-gray-700 font-medium mb-1">Sale Rate On <strong className="text-red-500 text-sm"> * </strong></label>
                     <FormSelect
                       name="salerateon"
                       control={control}
@@ -535,7 +535,7 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
                 <div>
                   {/* MRP */}
                   <div>
-                    <label className="block text-gray-700 font-medium mb-1">MRP<span className="text-red-500">*</span></label>
+                    <label className="block text-gray-700 font-medium mb-1">MRP <strong className="text-red-500 text-sm"> * </strong></label>
                     <input
                       type="number"
                       {...register("mrp", { valueAsNumber: true })}
@@ -548,7 +548,7 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
 
                   {/* HSN */}
                   <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">HSN</label>
+                    <label className="block text-gray-700 font-medium mb-1">HSN <strong className="text-red-500 text-sm"> * </strong></label>
                     <FormSelect
                       name="hsnid"
                       control={control}
@@ -558,7 +558,7 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
                   </div>
                   {/* GST */}
                   <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">GST</label>
+                    <label className="block text-gray-700 font-medium mb-1">GST <strong className="text-red-500 text-sm"> * </strong></label>
                     <FormSelect
                       name="gstid"
                       control={control}
@@ -568,7 +568,7 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
 
                   {/* Status */}
                   <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Status</label>
+                    <label className="block text-gray-700 font-medium mb-1">Status <strong className="text-red-500 text-sm"> * </strong></label>
                     <FormSelect
                       name="closedtag"
                       control={control}

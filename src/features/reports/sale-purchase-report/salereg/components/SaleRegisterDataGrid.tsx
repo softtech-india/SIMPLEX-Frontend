@@ -81,6 +81,10 @@ export const SaleRegisterDataGrid = forwardRef<any, SaleRegisterDataGridProps>(
         onExporting={onExporting}
         selectionMode="single"
         height={500}
+
+        enableExport={true}
+        exportFormats={["xlsx", "pdf"]}
+        exportFileName="Sale Register"
       />
     );
   }

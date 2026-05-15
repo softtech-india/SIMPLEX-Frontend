@@ -243,6 +243,10 @@ export const SalesOrderDataGrid = forwardRef<any, SalesOrderDataGridProps>(
           selectionMode="single"
           height={height}
           scrollingMode="standard"
+
+          enableExport={true}
+          exportFormats={["xlsx", "pdf"]}
+          exportFileName="Sale Order Register"
         />
       </div>
     );
