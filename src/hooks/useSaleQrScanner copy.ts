@@ -1,7 +1,7 @@
 import { fetchProductByScanId } from "@/api/master/product-api";
 import { DirectSaleItem } from "@/features/sale/direct-sale/types/directSale.types";
 import useUserStore from "@/store/userStore";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useRef } from "react";
 import { toast } from "sonner";
 
@@ -10,7 +10,7 @@ const safeNumber = (val: any) => {
   return isNaN(n) ? 0 : n;
 };
 
-type Product = {
+type ProductMaster = {
   id: number;
   productname: string;
   productcategoryid: number;
@@ -19,20 +19,24 @@ type Product = {
 };
 
 type Params = {
+  // productList: ProductMaster[];
   setValue: any;
-  onUpdateItems: (
-    updater: (prev: DirectSaleItem[]) => DirectSaleItem[]
-  ) => void;
+  onUpdateItems: (updater: (prev: DirectSaleItem[]) => DirectSaleItem[]) => void;
 };
 
 export const useSaleQrScanner = ({
+  //productList,
   setValue,
   onUpdateItems,
 }: Params) => {
-  const { userId, companyId } = useUserStore();
 
-  const queryClient = useQueryClient();
 
+  const {
+    userId,
+    companyId,
+    branchId,
+    finid,
+  } = useUserStore();
   const scanInputRef = useRef<HTMLInputElement | null>(null);
 
   const focusInput = () => {
@@ -41,8 +45,7 @@ export const useSaleQrScanner = ({
     }, 0);
   };
 
-  const handleScan = async (value: string) => {
-
+  const handleScan = (value: string) => {
     const rawValue = value
       ?.replace(/\u00A0/g, " ")
       ?.replace(/\s+/g, "")
@@ -70,14 +73,18 @@ export const useSaleQrScanner = ({
       console.log('Scanned ID:', scannedId);
       if (!scannedId) throw new Error("Invalid");
 
-      // Fetch product
-      const response: Product[] | null = await queryClient.fetchQuery({
+      const { data: matchedProduct = [] } = useQuery({
         queryKey: ["fetchProductByScanId", userId, companyId, scannedId],
         queryFn: () => fetchProductByScanId(userId, companyId, scannedId),
         staleTime: 0,
+        enabled: !!userId && !!companyId && !!scannedId,
+        retry: 1,
+        refetchOnWindowFocus: true,
       });
 
-      const matchedProduct = response?.[0] ?? null;
+      // const matchedProduct = productList.find(
+      //   (item : any) => item.id === scannedId
+      // );
 
       if (!matchedProduct) {
         toast.error("Product not found");
@@ -125,8 +132,7 @@ export const useSaleQrScanner = ({
       }
 
       focusInput();
-
-    } catch (error) {
+    } catch (err) {
       toast.error("Invalid Barcode");
       setValue("qrcode", "");
       focusInput();

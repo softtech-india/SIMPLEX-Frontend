@@ -29,20 +29,18 @@ export const fetchCategoryList = async (
 }
 
 
-export const fetchProductList = async (
+export const fetchProductByScanId = async (
   userId: string | number | null,
   companyId: string | number | null,
-  selectedCategoryId?: string | number | null
+  id?: string | number | null
 ) => {
   try {
     const response: any = await apiCall.get(
-      `${process.env.NEXT_PUBLIC_PROJECT_API_ENDPOINT}product`,
+      `${process.env.NEXT_PUBLIC_PROJECT_API_ENDPOINT}product/id`,
       {
         userid: userId,
         compid: companyId,
-        brand: selectedCategoryId,
-        skip: 0,
-        take: 200,
+        id: id,
       }
     );
 
@@ -54,7 +52,7 @@ export const fetchProductList = async (
     return response?.data ?? [];
 
   } catch (error) {
-    console.error("fetchProductList error:", error);
+    console.error("fetchProductByScanId error:", error);
     return [];
   }
 }
