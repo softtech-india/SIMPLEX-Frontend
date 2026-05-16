@@ -152,7 +152,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
     if (!visible) return;
 
     setTimeout(() => {
-      setFocus("orderdt");
+      setFocus("grndt");
     }, 1000);
 
     if (isAddMode) {
@@ -611,29 +611,36 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
               </div>
 
               <div className="w-110">
-                <label className="block text-gray-700 font-medium mb-1">Vendor <span className="text-red-500">*</span> </label>
+                <label className="block text-gray-700 font-medium mb-1">Vendor <span className="text-red-500"> * </span> </label>
                 <input
                   type="text"
                   value={vendorName || ''}
                   disabled={isReadOnly}
                   readOnly
                   onClick={() => setVendorModalOpen(true)}
-                  className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
+                  className={`inputField w-full border 
+                    ${errors.vendorid && !vendorName ? "border-red-500" : "border-gray-400"}
+                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}
+                  `}
                   placeholder="Select Vendor"
                 />
+                {errors.vendorid && !vendorName && <p className="text-red-500 mt-1 text-xs">{errors.vendorid.message}</p>}
               </div>
 
               <div className="w-68">
-                <label className="block text-gray-700 font-medium mb-1">PO No. & Date <span className="text-red-500">*</span> </label>
+                <label className="block text-gray-700 font-medium mb-1">PO No. & Date <span className="text-red-500 text-sm"> * </span> </label>
                 <input
                   type="text"
                   value={orderno ? `${orderno} - ${formatDate(orderdt)}` : ""}
                   disabled={isReadOnly}
                   readOnly
                   onClick={() => setGrnPendingModalOpen(true)}
-                  className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
+                  className={`inputField w-full border
+                    ${errors.orderno ? "border-red-500" : "border-gray-400"}
+                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
                   placeholder="Select PO No. & Date"
                 />
+                {errors.orderno && <p className="text-red-500 mt-1 text-xs">{errors.orderno.message}</p>}
               </div>
 
               <div className="w-48">
@@ -775,6 +782,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                 <input
                   type="number"
                   value={totalQty}
+                  tabIndex={-1}
                   readOnly
                   className="inputField w-full bg-gray-100 cursor-not-allowed"
                 />
@@ -787,6 +795,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                 <input
                   type="number"
                   value={totalValue}
+                  tabIndex={-1}
                   readOnly
                   className="inputField w-full bg-gray-100 cursor-not-allowed"
                 />

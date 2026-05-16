@@ -301,7 +301,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(pruchaseOrderFormDefaults);
-       // onClose();
+        // onClose();
         return;
       }
 

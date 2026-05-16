@@ -156,13 +156,13 @@ export default function SaleOrderModule() {
             permissions={permissions}
             onAdd={handleAddClick}
             onEdit={handleEditClick}
-            onApprove={handleApproveClick}
+            // onApprove={handleApproveClick}
             onDelete={handleDeleteClick}
             onRefresh={handleRefresh}
             onView={handleViewClick}
             onPrint={handlePrintClick}
 
-            isRowApproved={isRowApproved}
+            // isRowApproved={isRowApproved}
 
             selectFromDate={{
               name: "fromDate",

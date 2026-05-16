@@ -142,9 +142,15 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
     },
   });
 
-  useEffect(() => {
-    console.log('watchedItems :', watchedItems);
-  }, [watchedItems])
+  const handleExit = () => {
+    reset(directSaleFormDefaults);
+    replace([]);
+    onClose();
+  };
+
+  // useEffect(() => {
+  //   console.log('watchedItems :', watchedItems);
+  // }, [watchedItems])
 
   // 
   const billdt = watch("billdt");
@@ -155,102 +161,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
     setTimeout(() => {
       setFocus("billdt");
-    }, 100);
-
-    // if (DirectSale) {
-    //   reset({
-    //     ...directSaleFormDefaults,
-
-    //     ...DirectSale,
-
-    //     billdt: DirectSale.billdt ? formatDateForInput(DirectSale.billdt) : "",
-
-    //     compid: Number(DirectSale.compid ?? 0),
-    //     branchid: Number(DirectSale.branchid ?? 0),
-    //     finid: Number(DirectSale.finid ?? 0),
-
-    //     vnumid: Number(DirectSale.vnumid ?? 0),
-
-    //     billtypeid: Number(DirectSale.billtypeid ?? 0),
-    //     customerid: Number(DirectSale.customerid ?? 0),
-    //     saledgerid: Number(DirectSale.saledgerid ?? 0),
-    //     godownid: Number(DirectSale.godownid ?? 0),
-    //     smid: Number(DirectSale.smid ?? 0),
-    //     transporterid: Number(DirectSale.transporterid || 0),
-
-    //     crdays: Number(DirectSale.crdays ?? 0),
-
-    //     qty1: Number(DirectSale.qty1 ?? 0),
-    //     qtyrateval: Number(DirectSale.qtyrateval ?? 0),
-
-    //     discval: Number(DirectSale.discval ?? 0),
-    //     netval: Number(DirectSale.netval ?? 0),
-    //     beftaxval: Number(DirectSale.beftaxval ?? 0),
-    //     taxableval: Number(DirectSale.taxableval ?? 0),
-    //     taxval: Number(DirectSale.taxval ?? 0),
-    //     amtwithtaxval: Number(DirectSale.amtwithtaxval ?? 0),
-    //     afttaxval: Number(DirectSale.afttaxval ?? 0),
-    //     billamt: Number(DirectSale.billamt ?? 0),
-
-    //     sgstval: Number(DirectSale.sgstval ?? 0),
-    //     cgstval: Number(DirectSale.cgstval ?? 0),
-    //     igstval: Number(DirectSale.igstval ?? 0),
-
-    //     itemdtl:
-    //       DirectSale.itemdtl?.map((item, index) => ({
-    //         tag: item.tag ?? "I",
-
-    //         sl: Number(item.sl ?? index + 1),
-    //         dtlid: Number(item.dtlid ?? index + 1),
-
-    //         pcategoryid: Number(item.pcategoryid ?? 0),
-    //         pcategorynm: item.pcategorynm ?? "",
-
-    //         productid: Number(item.productid ?? 0),
-    //         productnm: item.productnm ?? "",
-
-    //         qty1: Number(item.qty1 ?? 0),
-    //         rate: Number(item.rate ?? 0),
-    //         value: Number(item.value ?? 0),
-
-    //         discpct: Number(item.discpct ?? 0),
-    //         discamt: Number(item.discamt ?? 0),
-
-    //         netval: Number(item.netval ?? 0),
-
-    //         taxablerate: Number(item.taxablerate ?? 0),
-    //         taxableval: Number(item.taxableval ?? 0),
-
-    //         taxid: Number(item.taxid ?? 0),
-    //         taxval: Number(item.taxval ?? 0),
-
-    //         finalval: Number(item.finalval ?? 0),
-    //         stockval: Number(item.stockval ?? 0),
-
-    //         cgstpct: Number(item.cgstpct ?? 0),
-    //         cgstval: Number(item.cgstval ?? 0),
-    //         cgstledgerid: Number(item.cgstledgerid ?? 0),
-
-    //         sgstpct: Number(item.sgstpct ?? 0),
-    //         sgstval: Number(item.sgstval ?? 0),
-    //         sgstledgerid: Number(item.sgstledgerid ?? 0),
-
-    //         igstpct: Number(item.igstpct ?? 0),
-    //         igstval: Number(item.igstval ?? 0),
-    //         igstledgerid: Number(item.igstledgerid ?? 0),
-
-    //         hsnid: Number(item.hsnid ?? 0),
-    //         hsnno: item.hsnno ?? "",
-    //         orderdtlid: item.orderdtlid || 0,
-
-    //         mrp: Number(item.mrp ?? 0),
-    //         clqty: Number(item.clqty ?? 0),
-    //         balanceqty1: Number(item.balanceqty1 ?? 0),
-    //         unit: item.unit ?? '',
-
-    //       })) ?? [],
-    //   });
-    // }
+    }, 1000);
 
     if (DirectSale) {
       const mappedItems =
@@ -266,7 +177,8 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
           productnm: item.productnm ?? "",
 
           qty1: Number(item.qty1 ?? 0),
-          rate: Number(item.rate ?? 0),
+          //  rate: Number(item.rate ?? 0),
+          rate: Number(0),
           value: Number(item.value ?? 0),
 
           discpct: Number(item.discpct ?? 0),
@@ -864,6 +776,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                   type="text"
                   value={BillTypeName || ''}
                   disabled={isReadOnly}
+                  tabIndex={-1}
                   readOnly
                   onClick={() => setBillTypeModalOpen(true)}
                   className={`inputField w-full border border-gray-300 
@@ -907,6 +820,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                   type="number"
                   {...register("crdays", { valueAsNumber: true })}
                   disabled={isReadOnly}
+                  tabIndex={-1}
                   className={`inputField ${errors.crdays ? "" : "border-gray-400"}`}
                 />
               </div>
@@ -935,6 +849,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                   value={SaleLedgerName || ''}
                   disabled={isReadOnly}
                   readOnly
+                  tabIndex={-1}
                   onClick={() => setSaleLedgerModalOpen(true)}
                   className={`inputField w-full border border-gray-300 
                     ${errors.saledgerid && !SaleLedgerName ? "border-red-500" : "border-gray-400"}
@@ -1149,6 +1064,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                   type="number"
                   value={totalQty}
                   readOnly
+                  tabIndex={-1}
                   className="inputField w-full bg-gray-100"
                 />
               </div>
@@ -1168,6 +1084,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                 <input
                   type="number"
                   value={Number(totalValue.toFixed(2))}
+                  tabIndex={-1}
                   readOnly
                   className="inputField w-full bg-gray-100"
                 />
@@ -1214,7 +1131,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
           )}
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleExit}
             disabled={isSubmitting}
             className="secondary-btn disabled:opacity-50 disabled:cursor-not-allowed"
           >

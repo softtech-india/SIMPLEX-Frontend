@@ -19,31 +19,31 @@ export const SaleOrderDataGrid = forwardRef<any, SaleOrderDataGridProps>(
 
     const columns = [
       { dataField: "orderno", caption: "Order No.", width: 150, headerFilter: true },
-      {
-        dataField: "aprvstatus", caption: "Approve", width: 90, headerFilter: true,
-        cellRender: (data: any) => {
-          const value = data.value;
+      // {
+      //   dataField: "aprvstatus", caption: "Approve", width: 90, headerFilter: true,
+      //   cellRender: (data: any) => {
+      //     const value = data.value;
 
-          const isApproved =
-            value === "Approved" || value === "A" || value === true;
+      //     const isApproved =
+      //       value === "Approved" || value === "A" || value === true;
 
-          return (
-            <div className='flex gap-2' >
-              {isApproved ? (
-                <>
-                  <CheckCircle color="green" size={18} />
-                  <span className='text-green-600 font-bold'> Approve </span>
-                </>
-              ) : (
-                <>
-                  {/* <XCircle color="yellow" size={18} /> */}
-                  <span className='text-yellow-600 font-bold'> Pending </span>
-                </>
-              )}
-            </div>
-          );
-        },
-      },
+      //     return (
+      //       <div className='flex gap-2' >
+      //         {isApproved ? (
+      //           <>
+      //             <CheckCircle color="green" size={18} />
+      //             <span className='text-green-600 font-bold'> Approve </span>
+      //           </>
+      //         ) : (
+      //           <>
+      //             {/* <XCircle color="yellow" size={18} /> */}
+      //             <span className='text-yellow-600 font-bold'> Pending </span>
+      //           </>
+      //         )}
+      //       </div>
+      //     );
+      //   },
+      // },
       { dataField: "orderdt", caption: "Order date", dataType: "date", format: "dd-MM-yyyy", width: 120, },
       { dataField: "customernm", caption: "Customer", width: 200, headerFilter: true },
       { dataField: "qty1", caption: "Quantity", width: 80, headerFilter: true },
