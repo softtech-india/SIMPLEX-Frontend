@@ -15,6 +15,20 @@ class ProductService {
   private getUserId = (): string => this.getFromStorage("userId");
   private getCompanyId = (): string => this.getFromStorage("companyId");
 
+  private handleError(response: ProductApiResponse): boolean {
+    if (!response) {
+      toast.error("No response from server");
+      return false;
+    }
+    if (!response.success) {
+      const message = response.message || "Something went wrong";
+      toast.error(message);
+      return false;
+    }
+    return true;
+  }
+
+
 
   async getAllHSNs(): Promise<HSN[]> {
     try {
@@ -23,8 +37,6 @@ class ProductService {
         { userid: this.getUserId(), compid: this.getCompanyId() }
       );
 
-      //this.handleError(response);
-      handleApiResponse(response);
       return response.data || [];
 
     } catch (error: any) {
@@ -142,9 +154,8 @@ class ProductService {
         { userid: this.getUserId(), compid: this.getCompanyId(), id: id }
       );
 
-      //this.handleError(response);
+      this.handleError(response);
 
-      handleApiResponse(response);
       const product = response.data?.[0];
       if (!product) throw new Error("Product not found");
 
@@ -165,12 +176,7 @@ class ProductService {
         { userid: this.getUserId(), compid: this.getCompanyId() }
       );
 
-      // this.handleError(response);
-    //  handleApiResponse(response);
-
-      if (!handleApiResponse(response)) {
-        throw new Error(response.message || "Failed to create product");
-      }
+      this.handleError(response);
 
       return response;
 
@@ -189,8 +195,7 @@ class ProductService {
         { userid: this.getUserId(), compid: this.getCompanyId() }
       );
 
-      //  this.handleError(response);
-      handleApiResponse(response);
+      this.handleError(response);
 
       if (!response) throw new Error("response not found at update hsn");
 
@@ -210,8 +215,7 @@ class ProductService {
         { userid: this.getUserId(), compid: this.getCompanyId(), id }
       );
 
-      //  this.handleError(response);
-      handleApiResponse(response);
+      this.handleError(response);
 
       return response;
 

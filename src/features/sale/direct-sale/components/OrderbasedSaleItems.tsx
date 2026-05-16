@@ -78,38 +78,6 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
     refetchOnWindowFocus: false,
   });
 
-  // useEffect(() => {
-  //   if (!currentProductStock?.length) return;
-
-  //   const stockData = currentProductStock[0];
-
-  //   const clqty = Number(stockData?.clqty || 0);
-  //   const clrate = Number(stockData?.clrate || 0);
-
-  //   setValue(`itemdtl.${index}.clqty`, clqty);
-
-  //   // Get current form rate
-  //   const existingRate = Number(watchedItems?.[index]?.rate || 0);
-  //   // Only set default rate if empty/not entered yet
-  //   if (!existingRate) {
-  //     setValue(`itemdtl.${index}.rate`, clrate);
-  //   }
-
-  //   const currentQty = Number(watchedItems?.[index]?.qty1 || 1);
-  //   const balanceqty1 = Number(watchedItems?.[index]?.balanceqty1) || 0;
-
-  //   if (clqty === 0) {
-  //     setValue(`itemdtl.${index}.qty1`, 0);
-  //     toast.error("This product is out of stock");
-  //     return;
-  //   }
-  //   if (currentQty > clqty) {
-  //     setValue(`itemdtl.${index}.qty1`, clqty);
-  //     toast.error(`Qty adjusted to available stock (${clqty})`);
-  //   }
-
-  // }, [currentProductStock, index, setValue]);
-
   useEffect(() => {
     if (!currentProductStock?.length) return;
 
@@ -119,10 +87,10 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
 
     setValue(`itemdtl.${index}.clqty`, clqty);
 
-    const existingRate = Number(watchedItems?.[index]?.rate || 0);
-    if (!existingRate) {
-      setValue(`itemdtl.${index}.rate`, clrate);
-    }
+    // const existingRate = Number(watchedItems?.[index]?.rate || 0);
+    // if (!existingRate) {
+    //   setValue(`itemdtl.${index}.rate`, clrate);
+    // }
 
     const balanceqty1 = Number(watchedItems?.[index]?.balanceqty1) || 0;
     const currentQty = Number(watchedItems?.[index]?.qty1 || 1);
@@ -143,7 +111,7 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
 
   }, [currentProductStock, index, setValue]);
 
-  // Model Search Category Modal Handlers
+  // Model Search Brand Modal Handlers
   const baseCategoryParams = {
     userid: userId,
     compid: companyId,
@@ -153,7 +121,7 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
   };
 
   const searchCategoryColumns = [
-    { key: "pcategorynm", label: "Category Name" },
+    { key: "pcategorynm", label: "Brand Name" },
     { key: "productnm", label: "Product Name" },
     { key: "unit", label: "Unit" },
     { key: "qty1", label: "Quantity" },
@@ -189,7 +157,7 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
 
       <div className="w-68">
         <label className="block text-gray-700  font-medium mb-1">
-          Category
+          Brand
         </label>
 
         <input
@@ -198,7 +166,7 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
           readOnly
           onClick={() => setCategoryModalOpen(true)}
           className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"} `}
-          placeholder="Select Category"
+          placeholder="Select Brand"
         />
       </div>
 
@@ -225,35 +193,39 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
         )} */}
       </div>
 
+
       <div className="w-14">
-        <label className="block text-gray-700  font-medium mb-1">
+        <label className="block text-gray-700 font-medium mb-1">
           Quantity
         </label>
+
         <input
           type="number"
           min={0}
-          onChange={(e) => {
-            let value = Number(e.target.value);
-            if (value < 1) value = 1;
-            const balanceqty1 = Number(watchedItems?.[index]?.balanceqty1) || 0;
-            const clqty = Number(watchedItems?.[index]?.clqty) || 0;
-            const maxQty = Math.min(balanceqty1, clqty);
+          {...register(`itemdtl.${index}.qty1`, {
+            valueAsNumber: true,
+            onChange: (e: any) => {
+              let value = Number(e.target.value);
+              if (value < 1) value = 1;
 
-            if (value > maxQty) {
-              toast.error(`Sale quantity cannot exceed available limit (${maxQty})`);
-              value = maxQty;
-            }
+              const balanceqty1 = Number(watchedItems?.[index]?.balanceqty1) || 0;
+              const clqty = Number(watchedItems?.[index]?.clqty) || 0;
+              const maxQty = Math.min(balanceqty1, clqty) || 0;
+              if (value > maxQty) {
+                toast.error(`Sale quantity cannot exceed available limit (${maxQty})`);
+                value = maxQty;
+              }
 
-            setValue(`itemdtl.${index}.qty1`, value);
-          }}
+              setValue(`itemdtl.${index}.qty1`, value);
+            },
+          })}
           disabled={isReadOnly || Number(watchedItems?.[index]?.clqty) === 0}
           className={`inputField 
-        
-            ${isReadOnly || Number(watchedItems?.[index]?.clqty) === 0 ? "bg-gray-100 cursor-not-allowed" : ""}
+            ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-300"} 
+            ${isReadOnly || Number(watchedItems?.[index]?.clqty) === 0  ? "bg-gray-100 cursor-not-allowed" : "" }
           `}
           onKeyDown={(e) => { if (e.key === "-") e.preventDefault(); }}
         />
-        {/* ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-300"}  */}
       </div>
 
       <div className="w-14">
@@ -322,18 +294,16 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
           className={`inputField  bg-gray-100 border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
         />
       </div>
-      <div className="w-14">
+      <div className="w-16">
         <label className="block text-gray-700  font-medium mb-1">
-          Bal. Qty.
+          Order Qty.
         </label>
         <input
           type="number"
           min={0}
           {...register(`itemdtl.${index}.balanceqty1`)}
           readOnly
-          className={` inputField  bg-gray-100 cursor-not-allowed"
-             ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-300"}
-          `}
+          className={` inputField  bg-gray-100 cursor-not-allowed"`}
         />
       </div>
 

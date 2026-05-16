@@ -14,13 +14,19 @@ class ProdCategoryService {
   private getUserId = (): string => this.getFromStorage("userId");
   private getCompanyId = (): string => this.getFromStorage("companyId");
 
-  private handleError(response: ProdCategoryApiResponse) {
+  private handleError(response: ProdCategoryApiResponse): boolean {
+    if (!response) {
+      toast.error("No response from server");
+      return false;
+    }
     if (!response.success) {
       const message = response.message || "Something went wrong";
       toast.error(message);
-      throw new Error(message);
+      return false;
     }
+    return true;
   }
+
 
   async getAllProdCategories(): Promise<ProdCategory[]> {
     try {

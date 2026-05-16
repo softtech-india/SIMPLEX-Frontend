@@ -67,7 +67,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
   // NOT based on scanqty
   const isScanned = item?.productid && item?.productid > 0;
 
-  // Model Search Category Modal Handlers
+  // Model Search Brand Modal Handlers
   const baseCategoryParams = {
     userid: userId,
     compid: companyId,
@@ -77,7 +77,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
   };
 
   const searchCategoryColumns = [
-    { key: "pcategorynm", label: "Category Name" },
+    { key: "pcategorynm", label: "Brand Name" },
     { key: "productnm", label: "Product Name" },
     { key: "unit", label: "Unit" },
     { key: "qty1", label: "Quantity" },
@@ -113,7 +113,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
 
       <div className="w-60">
         <label className="block text-gray-700 text-sm font-medium mb-1">
-          Category
+          Brand
         </label>
 
         <input
@@ -122,7 +122,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
           readOnly
           onClick={() => setCategoryModalOpen(true)}
           className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"} `}
-          placeholder="Select Category"
+          placeholder="Select brand"
         />
       </div>
 
@@ -271,7 +271,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
             </label>
 
             <div
-              className={`inputField flex items-center justify-center h-[42px] border rounded-md font-medium ${item?.isScanned
+              className={`inputField flex items-center justify-center h-10.5 border rounded-md font-medium ${item?.isScanned
                 ? "bg-green-50 border-green-300 text-green-600"
                 : "bg-red-50 border-red-300 text-red-600"
                 }`}
@@ -311,7 +311,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
                   setValue(`itemdtl.${index}.excessqty`, excessQty);
                 },
               })}
-              className="inputField border border-gray-300 rounded-md h-[42px]"
+              className="inputField border border-gray-300 rounded-md h-10.5"
               onKeyDown={(e) => {
                 if (e.key === "-") e.preventDefault();
               }}
@@ -330,7 +330,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
               min={0}
               disabled
               value={item?.shortqty || 0}
-              className="inputField border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed h-[42px]"
+              className="inputField border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed h-10.5"
             />
           </div>
 
@@ -345,7 +345,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
               min={0}
               disabled
               value={item?.excessqty || 0}
-              className="inputField border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed h-[42px]"
+              className="inputField border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed h-10.5"
             />
           </div>
 
@@ -360,7 +360,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
               min={0}
               value={actualValue}
               readOnly
-              className={`inputField border border-gray-300 rounded-md h-[42px] bg-gray-100 ${isReadOnly ? "cursor-not-allowed" : ""
+              className={`inputField border border-gray-300 rounded-md h-10.5 bg-gray-100 ${isReadOnly ? "cursor-not-allowed" : ""
                 }`}
             />
           </div>

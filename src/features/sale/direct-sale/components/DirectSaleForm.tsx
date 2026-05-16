@@ -142,9 +142,15 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
     },
   });
 
-  useEffect(() => {
-    console.log('watchedItems :', watchedItems);
-  }, [watchedItems])
+  const handleExit = () => {
+    reset(directSaleFormDefaults);
+    replace([]);
+    onClose();
+  };
+
+  // useEffect(() => {
+  //   console.log('watchedItems :', watchedItems);
+  // }, [watchedItems])
 
   // 
   const billdt = watch("billdt");
@@ -155,102 +161,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
     setTimeout(() => {
       setFocus("billdt");
-    }, 100);
-
-    // if (DirectSale) {
-    //   reset({
-    //     ...directSaleFormDefaults,
-
-    //     ...DirectSale,
-
-    //     billdt: DirectSale.billdt ? formatDateForInput(DirectSale.billdt) : "",
-
-    //     compid: Number(DirectSale.compid ?? 0),
-    //     branchid: Number(DirectSale.branchid ?? 0),
-    //     finid: Number(DirectSale.finid ?? 0),
-
-    //     vnumid: Number(DirectSale.vnumid ?? 0),
-
-    //     billtypeid: Number(DirectSale.billtypeid ?? 0),
-    //     customerid: Number(DirectSale.customerid ?? 0),
-    //     saledgerid: Number(DirectSale.saledgerid ?? 0),
-    //     godownid: Number(DirectSale.godownid ?? 0),
-    //     smid: Number(DirectSale.smid ?? 0),
-    //     transporterid: Number(DirectSale.transporterid || 0),
-
-    //     crdays: Number(DirectSale.crdays ?? 0),
-
-    //     qty1: Number(DirectSale.qty1 ?? 0),
-    //     qtyrateval: Number(DirectSale.qtyrateval ?? 0),
-
-    //     discval: Number(DirectSale.discval ?? 0),
-    //     netval: Number(DirectSale.netval ?? 0),
-    //     beftaxval: Number(DirectSale.beftaxval ?? 0),
-    //     taxableval: Number(DirectSale.taxableval ?? 0),
-    //     taxval: Number(DirectSale.taxval ?? 0),
-    //     amtwithtaxval: Number(DirectSale.amtwithtaxval ?? 0),
-    //     afttaxval: Number(DirectSale.afttaxval ?? 0),
-    //     billamt: Number(DirectSale.billamt ?? 0),
-
-    //     sgstval: Number(DirectSale.sgstval ?? 0),
-    //     cgstval: Number(DirectSale.cgstval ?? 0),
-    //     igstval: Number(DirectSale.igstval ?? 0),
-
-    //     itemdtl:
-    //       DirectSale.itemdtl?.map((item, index) => ({
-    //         tag: item.tag ?? "I",
-
-    //         sl: Number(item.sl ?? index + 1),
-    //         dtlid: Number(item.dtlid ?? index + 1),
-
-    //         pcategoryid: Number(item.pcategoryid ?? 0),
-    //         pcategorynm: item.pcategorynm ?? "",
-
-    //         productid: Number(item.productid ?? 0),
-    //         productnm: item.productnm ?? "",
-
-    //         qty1: Number(item.qty1 ?? 0),
-    //         rate: Number(item.rate ?? 0),
-    //         value: Number(item.value ?? 0),
-
-    //         discpct: Number(item.discpct ?? 0),
-    //         discamt: Number(item.discamt ?? 0),
-
-    //         netval: Number(item.netval ?? 0),
-
-    //         taxablerate: Number(item.taxablerate ?? 0),
-    //         taxableval: Number(item.taxableval ?? 0),
-
-    //         taxid: Number(item.taxid ?? 0),
-    //         taxval: Number(item.taxval ?? 0),
-
-    //         finalval: Number(item.finalval ?? 0),
-    //         stockval: Number(item.stockval ?? 0),
-
-    //         cgstpct: Number(item.cgstpct ?? 0),
-    //         cgstval: Number(item.cgstval ?? 0),
-    //         cgstledgerid: Number(item.cgstledgerid ?? 0),
-
-    //         sgstpct: Number(item.sgstpct ?? 0),
-    //         sgstval: Number(item.sgstval ?? 0),
-    //         sgstledgerid: Number(item.sgstledgerid ?? 0),
-
-    //         igstpct: Number(item.igstpct ?? 0),
-    //         igstval: Number(item.igstval ?? 0),
-    //         igstledgerid: Number(item.igstledgerid ?? 0),
-
-    //         hsnid: Number(item.hsnid ?? 0),
-    //         hsnno: item.hsnno ?? "",
-    //         orderdtlid: item.orderdtlid || 0,
-
-    //         mrp: Number(item.mrp ?? 0),
-    //         clqty: Number(item.clqty ?? 0),
-    //         balanceqty1: Number(item.balanceqty1 ?? 0),
-    //         unit: item.unit ?? '',
-
-    //       })) ?? [],
-    //   });
-    // }
+    }, 1000);
 
     if (DirectSale) {
       const mappedItems =
@@ -266,7 +177,8 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
           productnm: item.productnm ?? "",
 
           qty1: Number(item.qty1 ?? 0),
-          rate: Number(item.rate ?? 0),
+          //  rate: Number(item.rate ?? 0),
+          rate: Number(0),
           value: Number(item.value ?? 0),
 
           discpct: Number(item.discpct ?? 0),
@@ -784,6 +696,13 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
     return "Save";
   };
 
+  const handleKeyOpen = (e: React.KeyboardEvent, openFn: () => void) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openFn();
+    }
+  };
+
   // Debug validation issues 
   const onError = (err: any) => {
     console.error("Validation errors:", err);
@@ -859,11 +778,12 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Bill Type <strong className="text-red-500"> * </strong></label>
+                <label className="block text-gray-700 font-medium mb-1">Bill Type <strong className="text-red-500 text-sm"> * </strong></label>
                 <input
                   type="text"
                   value={BillTypeName || ''}
                   disabled={isReadOnly}
+                  tabIndex={-1}
                   readOnly
                   onClick={() => setBillTypeModalOpen(true)}
                   className={`inputField w-full border border-gray-300 
@@ -872,7 +792,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                   }
                   placeholder="Select bill type"
                 />
-                {errors.billtypeid && !BillTypeName && <p className="text-red-500 mt-1 text-sm">{errors.billtypeid.message}</p>}
+                {errors.billtypeid && !BillTypeName && <p className="text-red-500 text-xs">{errors.billtypeid.message}</p>}
               </div>
 
               <div className="w-48">
@@ -885,20 +805,23 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
               </div>
 
               <div className="w-100">
-                <label className="block text-gray-700 font-medium mb-1"> Customer <strong className="text-red-500"> * </strong> </label>
+                <label className="block text-gray-700 font-medium mb-1"> Customer <strong className="text-red-500 text-sm"> * </strong> </label>
                 <input
                   type="text"
                   value={customerName || ''}
                   disabled={isReadOnly}
                   readOnly
+                  tabIndex={0}
+                  role="button"
                   onClick={() => setCustomerModalOpen(true)}
+                  onKeyDown={(e) => handleKeyOpen(e, () => setCustomerModalOpen(true))}
                   className={`inputField w-full border border-gray-300 
                     ${errors.customerid && !customerName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
                   }
                   placeholder="Select Customer"
                 />
-                {errors.customerid && !customerName && <p className="text-red-500 mt-1 text-sm">{errors.customerid.message}</p>}
+                {errors.customerid && !customerName && <p className="text-red-500 text-xs">{errors.customerid.message}</p>}
               </div>
 
               <div className="w-48">
@@ -907,6 +830,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                   type="number"
                   {...register("crdays", { valueAsNumber: true })}
                   disabled={isReadOnly}
+                  tabIndex={-1}
                   className={`inputField ${errors.crdays ? "" : "border-gray-400"}`}
                 />
               </div>
@@ -914,7 +838,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
               {isOrderBasedSale && (
                 <>
                   <div className="w-68">
-                    <label className="block text-gray-700 font-medium mb-1">So No. & Date <span className="text-red-500"> * </span> </label>
+                    <label className="block text-gray-700 font-medium mb-1">So No. & Date <span className="text-red-500 text-sm"> * </span> </label>
                     <input
                       type="text"
                       value={orderno ? `${orderno} - ${formatDate(orderdt)}` : ""}
@@ -929,41 +853,46 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
               )}
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Sale Ledger <strong className="text-red-500"> * </strong> </label>
+                <label className="block text-gray-700 font-medium mb-1">Sale Ledger <strong className="text-red-500 text-sm"> * </strong> </label>
                 <input
                   type="text"
                   value={SaleLedgerName || ''}
                   disabled={isReadOnly}
                   readOnly
+                  tabIndex={-1}
+                  role="button"
                   onClick={() => setSaleLedgerModalOpen(true)}
+                  onKeyDown={(e) => handleKeyOpen(e, () => setSaleLedgerModalOpen(true))}
                   className={`inputField w-full border border-gray-300 
                     ${errors.saledgerid && !SaleLedgerName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
                   }
                   placeholder="Select sale ledger"
                 />
-                {errors.saledgerid && !SaleLedgerName && <p className="text-red-500 mt-1 text-sm">{errors.saledgerid.message}</p>}
+                {errors.saledgerid && !SaleLedgerName && <p className="text-red-500 text-xs">{errors.saledgerid.message}</p>}
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Saleman <strong className="text-red-500"> * </strong> </label>
+                <label className="block text-gray-700 font-medium mb-1">Saleman <strong className="text-red-500 text-sm"> * </strong> </label>
                 <input
                   type="text"
                   value={SalemanName || ''}
                   disabled={isReadOnly}
                   readOnly
+                  role="button"
                   onClick={() => setSalemanModalOpen(true)}
+                  onKeyDown={(e) => handleKeyOpen(e, () => setSalemanModalOpen(true))}
                   className={`inputField w-full border border-gray-300 
                     ${errors.smid && !SalemanName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
                   }
                   placeholder="Select saleman"
                 />
-                {errors.smid && !SalemanName && <p className="text-red-500 mt-1 text-sm">{errors.smid.message}</p>}
+                {errors.smid && !SalemanName && <p className="text-red-500 text-xs">{errors.smid.message}</p>}
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Godown <strong className="text-red-500"> * </strong></label>
+                <label className="block text-gray-700 font-medium mb-1">Godown <strong className="text-red-500 text-sm"> * </strong></label>
                 <input
                   type="text"
                   value={GodownName || ''}
@@ -976,11 +905,11 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                   }
                   placeholder="Select godown"
                 />
-                {errors.godownid && !GodownName && <p className="text-red-500 mt-1 text-sm">{errors.godownid.message}</p>}
+                {errors.godownid && !GodownName && <p className="text-red-500 text-xs">{errors.godownid.message}</p>}
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Transporter <strong className="text-red-500"> * </strong></label>
+                <label className="block text-gray-700 font-medium mb-1">Transporter <strong className="text-red-500 text-sm"> * </strong></label>
                 <input
                   type="text"
                   value={transporterName || ''}
@@ -993,7 +922,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                   }
                   placeholder="Select transporter "
                 />
-                {errors.transporterid && !transporterName && <p className="text-red-500 mt-1 text-sm">{errors.transporterid.message}</p>}
+                {errors.transporterid && !transporterName && <p className="text-red-500 text-xs">{errors.transporterid.message}</p>}
               </div>
 
               <div className="w-48">
@@ -1003,6 +932,27 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                   {...register("billtime")}
                   disabled={isReadOnly}
                   className={`inputField ${errors.billtime ? "text-red-500" : "border-gray-400"}`}
+                />
+              </div>
+
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">No. of Cartoons</label>
+                <input
+                  type="text"
+                  {...register("cartoonno")}
+                  disabled={isReadOnly}
+                  placeholder="Enter no. of cartoons"
+                  className={`inputField ${errors.cartoonno ? "text-red-500" : "border-gray-400"}`}
+                />
+              </div>
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">No. of Lots</label>
+                <input
+                  type="text"
+                  {...register("lotno")}
+                  disabled={isReadOnly}
+                  placeholder="Enter no. of lots "
+                  className={`inputField ${errors.lotno ? "text-red-500" : "border-gray-400"}`}
                 />
               </div>
 
@@ -1149,6 +1099,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                   type="number"
                   value={totalQty}
                   readOnly
+                  tabIndex={-1}
                   className="inputField w-full bg-gray-100"
                 />
               </div>
@@ -1168,6 +1119,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                 <input
                   type="number"
                   value={Number(totalValue.toFixed(2))}
+                  tabIndex={-1}
                   readOnly
                   className="inputField w-full bg-gray-100"
                 />
@@ -1214,7 +1166,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
           )}
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleExit}
             disabled={isSubmitting}
             className="secondary-btn disabled:opacity-50 disabled:cursor-not-allowed"
           >

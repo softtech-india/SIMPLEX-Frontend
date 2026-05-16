@@ -14,15 +14,18 @@ class ProdUnitService {
   private getUserId = (): string => this.getFromStorage("userId");
   private getCompanyId = (): string => this.getFromStorage("companyId");
 
-  private handleError(response: ProdUnitApiResponse | GstUnitApiResponse) {
+  private handleError(response: ProdUnitApiResponse): boolean {
+    if (!response) {
+      toast.error("No response from server");
+      return false;
+    }
     if (!response.success) {
       const message = response.message || "Something went wrong";
       toast.error(message);
-      throw new Error(message);
+      return false;
     }
+    return true;
   }
-
-
 
 
   async getAllProdUnits(): Promise<ProdUnit[]> {
@@ -49,7 +52,6 @@ class ProdUnitService {
         { userid: this.getUserId() }
       );
 
-      this.handleError(response);
       return response.data || [];
 
     } catch (error: any) {

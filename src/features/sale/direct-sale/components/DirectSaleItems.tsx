@@ -74,17 +74,17 @@ export const DirectSaleItems: React.FC<DirectSaleItemsProps> = ({
 
     const stockData = currentProductStock[0];
     const clqty = Number(stockData?.clqty || 0);
+    const currentQty = Number(watchedItems?.[index]?.qty1 || 1);
     const clrate = Number(stockData?.clrate || 0);
 
     setValue(`itemdtl.${index}.clqty`, clqty);
 
     // Get current form rate
-    const existingRate = Number(watchedItems?.[index]?.rate || 0);
-    const currentQty = Number(watchedItems?.[index]?.qty1 || 1);
+    // const existingRate = Number(watchedItems?.[index]?.rate || 0);
     // Only set default rate if empty/not entered yet
-    if (!existingRate) {
-      setValue(`itemdtl.${index}.rate`, clrate);
-    }
+    // if (!existingRate) {
+    //   setValue(`itemdtl.${index}.rate`, clrate);
+    // }
 
     if (clqty === 0) {
       setValue(`itemdtl.${index}.qty1`, 0);

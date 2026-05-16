@@ -16,6 +16,7 @@ interface FormSelectProps<T extends FieldValues, V = string | number> {
   isLoading?: boolean;
   className?: string;
   onChange?: (option: Option<V> | null) => void;
+  tabIndex?: number;
 }
 
 export function FormSelect<T extends FieldValues, V = string | number>({
@@ -28,6 +29,7 @@ export function FormSelect<T extends FieldValues, V = string | number>({
   isClearable = true,
   isLoading = false,
   className,
+  tabIndex,
 }: FormSelectProps<T, V>) {
   return (
     <Controller
@@ -51,6 +53,7 @@ export function FormSelect<T extends FieldValues, V = string | number>({
                 field.onChange(val?.value ?? "");
                 onChange?.(val);
               }}
+              tabIndex={tabIndex}
               onBlur={field.onBlur}
               isDisabled={isDisabled}
               isClearable={isClearable}

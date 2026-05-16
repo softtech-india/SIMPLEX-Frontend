@@ -9,12 +9,17 @@ class CompanyService {
     return storageService.getItem("userId") || "";
   };
 
-  private handleError(response: CompanyApiResponse) {
+  private handleError(response: CompanyApiResponse): boolean {
+    if (!response) {
+      toast.error("No response from server");
+      return false;
+    }
     if (!response.success) {
       const message = response.message || "Something went wrong";
       toast.error(message);
-      throw new Error(message);
+      return false;
     }
+    return true;
   }
 
   async getAllCompanies(): Promise<Company[]> {

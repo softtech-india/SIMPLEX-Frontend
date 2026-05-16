@@ -13,13 +13,19 @@ class UserGroupService {
 
   private getUserId = (): string => this.getFromStorage("userId");
 
-  private handleError(response: UserGroupApiResponse) {
+  private handleError(response: UserGroupApiResponse): boolean {
+    if (!response) {
+      toast.error("No response from server");
+      return false;
+    }
     if (!response.success) {
       const message = response.message || "Something went wrong";
       toast.error(message);
-      throw new Error(message);
+      return false;
     }
+    return true;
   }
+
 
   async getAllUserGroup(): Promise<UserGroup[]> {
     try {

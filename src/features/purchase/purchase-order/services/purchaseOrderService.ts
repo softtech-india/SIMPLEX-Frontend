@@ -28,15 +28,11 @@ class PurchaseOrderService {
       toast.error("No response from server");
       return false;
     }
-
     if (!response.success) {
       const message = response.message || "Something went wrong";
-
       toast.error(message);
-
       return false;
     }
-
     return true;
   }
 

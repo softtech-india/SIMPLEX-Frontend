@@ -21,12 +21,18 @@ class TransporterService {
   private getCompanyId = (): string => this.getFromStorage("companyId");
 
   private handleError(response: TransporterApiResponse) {
+    if (!response) {
+      toast.error("No response from server");
+      return false;
+    }
     if (!response.success) {
       const message = response.message || "Something went wrong";
       toast.error(message);
-      throw new Error(message);
+      return false;
     }
+    return true;
   }
+
 
 
   async getAllTransporter(branchId: string | null): Promise<Transporter[]> {
@@ -55,7 +61,7 @@ class TransporterService {
         { userid: this.getUserId(), compid: this.getCompanyId(), id }
       );
 
-      // this.handleError(response);
+      this.handleError(response);
 
       const hsn = response.data?.[0];
       if (!hsn) throw new Error("HSN not found");
@@ -80,7 +86,7 @@ class TransporterService {
         }
       );
 
-      // this.handleError(response);
+      this.handleError(response);
 
       return response;
     } catch (error: any) {
@@ -101,7 +107,7 @@ class TransporterService {
         }
       );
 
-      // this.handleError(response);
+      this.handleError(response);
 
       if (!response) {
         throw new Error("Response not found while updating transporter");
@@ -126,7 +132,7 @@ class TransporterService {
         }
       );
 
-      // this.handleError(response);
+      this.handleError(response);
 
       return response;
     } catch (error: any) {
