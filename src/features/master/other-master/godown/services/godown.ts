@@ -16,15 +16,17 @@ class GodownService {
   private getCompanyId = (): string => this.getFromStorage("companyId");
 
   private handleError(response: GodownApiResponse | BranchApiResponse) {
+    if (!response) {
+      toast.error("No response from server");
+      return false;
+    }
     if (!response.success) {
       const message = response.message || "Something went wrong";
       toast.error(message);
-      throw new Error(message);
+      return false;
     }
+    return true;
   }
-
-
-
 
   async getAllGodowns(): Promise<Godown[]> {
     try {

@@ -21,12 +21,18 @@ class SalesManService {
   private getCompanyId = (): string => this.getFromStorage("companyId");
 
   private handleError(response: SalesManApiResponse) {
+    if (!response) {
+      toast.error("No response from server");
+      return false;
+    }
     if (!response.success) {
       const message = response.message || "Something went wrong";
       toast.error(message);
-      throw new Error(message);
+      return false;
     }
+    return true;
   }
+
 
   async getAllBranch(): Promise<SalesMan[]> {
     try {

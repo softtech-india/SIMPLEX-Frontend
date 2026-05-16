@@ -21,9 +21,9 @@ export function useFinyears() {
     staleTime: 0,
     gcTime: 0,
 
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    // refetchOnMount: 'always',
+    // refetchOnWindowFocus: true,
+   // refetchOnReconnect: true,
 
   });
 }
@@ -36,10 +36,7 @@ export function useFinyear(id: number) {
 
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    enabled: !!id,
   });
 }
 
