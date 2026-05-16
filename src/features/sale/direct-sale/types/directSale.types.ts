@@ -93,6 +93,9 @@ export interface DirectSale {
     aprvstatus?: string;
     qrcode?: string;
 
+    cartoonno?: string;
+    lotno?: string;
+
     // Order based sale
     orderid?: number;
     orderno?: string;

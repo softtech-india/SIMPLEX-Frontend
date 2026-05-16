@@ -696,6 +696,13 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
     return "Save";
   };
 
+  const handleKeyOpen = (e: React.KeyboardEvent, openFn: () => void) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openFn();
+    }
+  };
+
   // Debug validation issues 
   const onError = (err: any) => {
     console.error("Validation errors:", err);
@@ -771,7 +778,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Bill Type <strong className="text-red-500"> * </strong></label>
+                <label className="block text-gray-700 font-medium mb-1">Bill Type <strong className="text-red-500 text-sm"> * </strong></label>
                 <input
                   type="text"
                   value={BillTypeName || ''}
@@ -785,7 +792,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                   }
                   placeholder="Select bill type"
                 />
-                {errors.billtypeid && !BillTypeName && <p className="text-red-500 mt-1 text-sm">{errors.billtypeid.message}</p>}
+                {errors.billtypeid && !BillTypeName && <p className="text-red-500 text-xs">{errors.billtypeid.message}</p>}
               </div>
 
               <div className="w-48">
@@ -798,20 +805,23 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
               </div>
 
               <div className="w-100">
-                <label className="block text-gray-700 font-medium mb-1"> Customer <strong className="text-red-500"> * </strong> </label>
+                <label className="block text-gray-700 font-medium mb-1"> Customer <strong className="text-red-500 text-sm"> * </strong> </label>
                 <input
                   type="text"
                   value={customerName || ''}
                   disabled={isReadOnly}
                   readOnly
+                  tabIndex={0}
+                  role="button"
                   onClick={() => setCustomerModalOpen(true)}
+                  onKeyDown={(e) => handleKeyOpen(e, () => setCustomerModalOpen(true))}
                   className={`inputField w-full border border-gray-300 
                     ${errors.customerid && !customerName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
                   }
                   placeholder="Select Customer"
                 />
-                {errors.customerid && !customerName && <p className="text-red-500 mt-1 text-sm">{errors.customerid.message}</p>}
+                {errors.customerid && !customerName && <p className="text-red-500 text-xs">{errors.customerid.message}</p>}
               </div>
 
               <div className="w-48">
@@ -828,7 +838,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
               {isOrderBasedSale && (
                 <>
                   <div className="w-68">
-                    <label className="block text-gray-700 font-medium mb-1">So No. & Date <span className="text-red-500"> * </span> </label>
+                    <label className="block text-gray-700 font-medium mb-1">So No. & Date <span className="text-red-500 text-sm"> * </span> </label>
                     <input
                       type="text"
                       value={orderno ? `${orderno} - ${formatDate(orderdt)}` : ""}
@@ -843,42 +853,46 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
               )}
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Sale Ledger <strong className="text-red-500"> * </strong> </label>
+                <label className="block text-gray-700 font-medium mb-1">Sale Ledger <strong className="text-red-500 text-sm"> * </strong> </label>
                 <input
                   type="text"
                   value={SaleLedgerName || ''}
                   disabled={isReadOnly}
                   readOnly
                   tabIndex={-1}
+                  role="button"
                   onClick={() => setSaleLedgerModalOpen(true)}
+                  onKeyDown={(e) => handleKeyOpen(e, () => setSaleLedgerModalOpen(true))}
                   className={`inputField w-full border border-gray-300 
                     ${errors.saledgerid && !SaleLedgerName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
                   }
                   placeholder="Select sale ledger"
                 />
-                {errors.saledgerid && !SaleLedgerName && <p className="text-red-500 mt-1 text-sm">{errors.saledgerid.message}</p>}
+                {errors.saledgerid && !SaleLedgerName && <p className="text-red-500 text-xs">{errors.saledgerid.message}</p>}
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Saleman <strong className="text-red-500"> * </strong> </label>
+                <label className="block text-gray-700 font-medium mb-1">Saleman <strong className="text-red-500 text-sm"> * </strong> </label>
                 <input
                   type="text"
                   value={SalemanName || ''}
                   disabled={isReadOnly}
                   readOnly
+                  role="button"
                   onClick={() => setSalemanModalOpen(true)}
+                  onKeyDown={(e) => handleKeyOpen(e, () => setSalemanModalOpen(true))}
                   className={`inputField w-full border border-gray-300 
                     ${errors.smid && !SalemanName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
                   }
                   placeholder="Select saleman"
                 />
-                {errors.smid && !SalemanName && <p className="text-red-500 mt-1 text-sm">{errors.smid.message}</p>}
+                {errors.smid && !SalemanName && <p className="text-red-500 text-xs">{errors.smid.message}</p>}
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Godown <strong className="text-red-500"> * </strong></label>
+                <label className="block text-gray-700 font-medium mb-1">Godown <strong className="text-red-500 text-sm"> * </strong></label>
                 <input
                   type="text"
                   value={GodownName || ''}
@@ -891,11 +905,11 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                   }
                   placeholder="Select godown"
                 />
-                {errors.godownid && !GodownName && <p className="text-red-500 mt-1 text-sm">{errors.godownid.message}</p>}
+                {errors.godownid && !GodownName && <p className="text-red-500 text-xs">{errors.godownid.message}</p>}
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Transporter <strong className="text-red-500"> * </strong></label>
+                <label className="block text-gray-700 font-medium mb-1">Transporter <strong className="text-red-500 text-sm"> * </strong></label>
                 <input
                   type="text"
                   value={transporterName || ''}
@@ -908,7 +922,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                   }
                   placeholder="Select transporter "
                 />
-                {errors.transporterid && !transporterName && <p className="text-red-500 mt-1 text-sm">{errors.transporterid.message}</p>}
+                {errors.transporterid && !transporterName && <p className="text-red-500 text-xs">{errors.transporterid.message}</p>}
               </div>
 
               <div className="w-48">
@@ -918,6 +932,27 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                   {...register("billtime")}
                   disabled={isReadOnly}
                   className={`inputField ${errors.billtime ? "text-red-500" : "border-gray-400"}`}
+                />
+              </div>
+
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">No. of Cartoons</label>
+                <input
+                  type="text"
+                  {...register("cartoonno")}
+                  disabled={isReadOnly}
+                  placeholder="Enter no. of cartoons"
+                  className={`inputField ${errors.cartoonno ? "text-red-500" : "border-gray-400"}`}
+                />
+              </div>
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">No. of Lots</label>
+                <input
+                  type="text"
+                  {...register("lotno")}
+                  disabled={isReadOnly}
+                  placeholder="Enter no. of lots "
+                  className={`inputField ${errors.lotno ? "text-red-500" : "border-gray-400"}`}
                 />
               </div>
 

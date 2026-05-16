@@ -65,22 +65,22 @@ export const DirectSaleBaseSchema = z.object({
   billdt: z.string().optional(),
   billno: z.string().optional(),
 
-  billtypeid: z.number().min(1,"Please select a bill type"),
+  billtypeid: z.number().min(1, "Please select a bill type"),
   billtypenm: z.string().optional(),
 
-  customerid: z.number().min(1,"Please select a customer"),
+  customerid: z.number().min(1, "Please select a customer"),
   customernm: z.string().optional(),
 
-  smid: z.number().min(1,"Please select a saleman"),
+  smid: z.number().min(1, "Please select a saleman"),
   smnm: z.string().optional(),
 
-  godownid: z.number().min(1,"Please select a godown"),
+  godownid: z.number().min(1, "Please select a godown"),
   godownnm: z.string().optional(),
 
-  saledgerid: z.number().min(1,"Please select a sale ledger"),
+  saledgerid: z.number().min(1, "Please select a sale ledger"),
   saledgernm: z.string().optional(),
 
-  transporterid: z.number().min(1,"Please select a transporter"),
+  transporterid: z.number().min(1, "Please select a transporter"),
   transporternm: z.string().optional(),
 
   cashcrtype: z.string().optional(),
@@ -105,8 +105,9 @@ export const DirectSaleBaseSchema = z.object({
   igstval: z.number().optional(),
 
   billtime: z.string().optional(),
-
   qrcode: z.string().optional(),
+  cartoonno: z.string().optional(),
+  lotno: z.string().optional(),
 
   // Order based sale
   orderid: z.number().optional(),
