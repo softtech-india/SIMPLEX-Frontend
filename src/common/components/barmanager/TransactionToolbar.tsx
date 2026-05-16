@@ -44,13 +44,16 @@ interface TransactionToolbarProps {
   onView?: () => void;
   onPrint?: () => void;
   onExport?: (e?: any) => void;
-
+  isFlexButton?: boolean;
+  flexButtonCaption?: string;
+  onFlexButton?: () => void;
   onApprove?: () => void;
   onConfirmed?: () => void;
 
   // hasSelection?: boolean; 
   isRowConfirmed?: boolean;
   isRowApproved?: boolean;
+
 
   periodTitle?: string;
 
@@ -73,6 +76,9 @@ export function TransactionToolbar({
 
   onConfirmed,
   onApprove,
+  isFlexButton,
+  flexButtonCaption,
+  onFlexButton,
 
   // hasSelection = true,
   isRowConfirmed,
@@ -184,6 +190,20 @@ export function TransactionToolbar({
               `}
             >
               {isEditDisabled ? <Lock size={16} /> : <Edit2 size={16} />} Edit
+            </button>
+          )}
+          {isFlexButton && (
+            <button
+              onClick={onFlexButton}
+              className={`
+                secondary-btn flex items-center gap-1
+                transition-all duration-150
+                ${isEditDisabled
+                  ? "opacity-60 cursor-not-allowed bg-gray-200 text-gray-500 border-gray-300"
+                  : "hover:bg-blue-50 hover:text-blue-600"}
+              `}
+            >
+              {flexButtonCaption}
             </button>
           )}
 
