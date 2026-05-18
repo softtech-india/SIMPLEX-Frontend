@@ -25,10 +25,9 @@ export function useGstUnit() {
 
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
 
   });
 }
@@ -40,10 +39,9 @@ export function useProdUnits() {
 
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
 
   });
 }
@@ -56,10 +54,9 @@ export function useProdUnit(id: number) {
 
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
   });
 }
 

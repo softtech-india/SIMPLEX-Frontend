@@ -37,10 +37,9 @@ export function useSalesMan(id: number) {
 
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
 
     enabled: id !== 0,
   });

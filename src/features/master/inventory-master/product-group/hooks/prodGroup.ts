@@ -20,10 +20,9 @@ export function useProdGroups() {
 
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
 
   });
 }
@@ -36,10 +35,9 @@ export function useProdGroup(id: number) {
 
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
   });
 }
 

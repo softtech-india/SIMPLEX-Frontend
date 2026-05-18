@@ -46,9 +46,9 @@ export function useRequisitionList(params: GetRequisitionParams) {
     staleTime: 0,
     gcTime: 0,
 
-    refetchOnMount: "always",
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
   });
 }
 
@@ -69,10 +69,7 @@ export function useRequisitionById(params: UseRequisitionByIdParams) {
 
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnMount: true,
   });
 }
 

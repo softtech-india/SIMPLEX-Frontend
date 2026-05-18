@@ -25,10 +25,9 @@ export function useGsts() {
 
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
 
   });
 }
@@ -40,10 +39,9 @@ export function useHSNs() {
 
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
 
   });
 }
@@ -56,10 +54,9 @@ export function useHSN(id: number) {
 
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
   });
 }
 

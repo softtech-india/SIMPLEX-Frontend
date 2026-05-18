@@ -21,9 +21,9 @@ export function useFinyears() {
     staleTime: 0,
     gcTime: 0,
 
-    // refetchOnMount: 'always',
-    // refetchOnWindowFocus: true,
-   // refetchOnReconnect: true,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: false,
 
   });
 }
@@ -34,9 +34,11 @@ export function useFinyear(id: number) {
     queryKey: FINYEAR_KEYS.detail(id),
     queryFn: () => finyearService.getFinyearById(id),
 
+    enabled: !!id,
+
     staleTime: 0,
     gcTime: 0,
-    enabled: !!id,
+    refetchOnMount: true,
   });
 }
 
@@ -89,7 +91,7 @@ export function useDeleteFinyear() {
   return useMutation({
     mutationFn: (id: number) => finyearService.deleteFinyear(id),
 
-    onSuccess: (data : any ) => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: FINYEAR_KEYS.list() });
       toast.success(data.message);
     },

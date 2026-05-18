@@ -19,10 +19,9 @@ export function useLedgerList() {
 
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
   });
 }
 
@@ -35,10 +34,7 @@ export function useLedgerById(id: number) {
 
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true
+    refetchOnMount: true,
   });
 }
 

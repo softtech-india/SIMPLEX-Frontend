@@ -21,9 +21,9 @@ export function useUsers() {
     staleTime: 0,
     gcTime: 0,
 
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
 
   });
 }
@@ -34,12 +34,11 @@ export function useUser(id: number) {
     queryKey: BRANCH_KEYS.detail(id),
     queryFn: () => userService.getUserById(id),
 
+    enabled: !!id,
+
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnMount: true,
   });
 }
 
