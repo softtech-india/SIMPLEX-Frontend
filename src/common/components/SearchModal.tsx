@@ -3,6 +3,7 @@ import notify from "devextreme/ui/notify";
 import { useEffect, useRef, useState } from "react";
 import Popup, { Position } from "devextreme-react/popup";
 import useIsMobile from "@/common/hooks/useIsMobile";
+import { useRouter } from "next/router";
 
 interface Column {
   key: string;
@@ -12,6 +13,12 @@ interface Column {
 interface SearchField {
   value: string;
   label: string;
+}
+
+interface CreateNewConfig {
+  enabled?: boolean;
+  label?: string;
+  onCreateNew?: () => void;
 }
 
 interface SearchModalProps {
@@ -24,6 +31,7 @@ interface SearchModalProps {
   pageSize?: number;
 
   searchFields?: SearchField[];
+  createNewConfig?: CreateNewConfig;
 
   excludeIds?: number[];
   currentId?: number;
@@ -38,9 +46,12 @@ export default function SearchModal({
   onSelect,
   pageSize = 20,
   searchFields,
+  createNewConfig,
   excludeIds,
   currentId,
 }: SearchModalProps) {
+
+  const router = useRouter();
 
   const [list, setList] = useState<any[]>([]);
   const [search, setSearch] = useState("");
@@ -141,6 +152,19 @@ export default function SearchModal({
         {/* HEADER - Search */}
         <div className="sticky top-0 z-10 bg-white border-b px-3 py-3">
           <div className="flex gap-2 items-center">
+
+            {createNewConfig?.enabled && (
+              <button
+                className="primary-btn"
+                onClick={() => {
+                  onClose();
+                  createNewConfig?.onCreateNew?.();
+                }}
+              >
+                {createNewConfig.label || "Create New"}
+              </button>
+            )}
+
             {searchFields && searchFields.length > 0 && (
               <select
                 className="border border-gray-300 rounded-md px-2 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-400"
@@ -271,12 +295,14 @@ export default function SearchModal({
 
       </div>
       {/* LOADING */}
-      {loading && (
-        <div className="absolute bottom-2 left-0 right-0 text-center text-sm text-gray-500">
-          Loading...
-        </div>
-      )}
-    </Popup>
+      {
+        loading && (
+          <div className="absolute bottom-2 left-0 right-0 text-center text-sm text-gray-500">
+            Loading...
+          </div>
+        )
+      }
+    </Popup >
   );
 
 }

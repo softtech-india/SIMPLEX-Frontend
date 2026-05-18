@@ -21,6 +21,8 @@ import { toast } from "sonner";
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
 import { SHORTCUTS } from "@/common/constants/shortcuts";
+import { VendorForm } from "@/features/master/account-master/vendor/components/VendorForm";
+import { useMasterModal } from "@/hooks/useMasterModal";
 
 interface PurchaseOrderFormProps {
   visible: boolean;
@@ -40,10 +42,15 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
     finid,
   } = useUserStore();
 
+  const { open } = useMasterModal();
   const confirmDelete = useConfirm();
-
-  const [vendoeodalOpen, setVendoeodalOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const [vendorFormOpen, setVendorFormOpen] = useState(false);
+
+  const handleSortcutCreate = async () => {
+    await open("vendor");
+  };
+
 
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
@@ -109,9 +116,15 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
     return sum + qty * rate;
   }, 0) || 0;
 
+  const handleExit = () => {
+    reset(pruchaseOrderFormDefaults);
+    onClose();
+  };
+
   // Reset form 
   useEffect(() => {
     if (!visible) return;
+    if (!PurchaseOrder) return;
 
     setTimeout(() => {
       setFocus("orderdt");
@@ -223,7 +236,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
   const handleVendoeSelect = (row: any) => {
     setValue("vendorid", row.id);
     setValue("vendorName", row.name);
-    setVendoeodalOpen(false);
+    setVendorFormOpen(false);
   };
 
   const vendorName = watch("vendorName") || watch("vendornm");
@@ -363,95 +376,96 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
 
 
   return (
-    <Popup
-      visible={visible}
-      onHiding={onClose}
-      title={`${mode} Purchase Order`}
-      width="90vw"
-      height="90vh"
-      dragEnabled
-      showTitle
-      showCloseButton={false}
-    >
-      <form
-        ref={formRef}
-        onSubmit={handleSubmit(handleFormSubmit, onError)}
-        className="flex flex-col h-full"
+    <>
+      <Popup
+        visible={visible}
+        onHiding={onClose}
+        title={`${mode} Purchase Order`}
+        width="90vw"
+        height="90vh"
+        dragEnabled
+        showTitle
+        showCloseButton={false}
       >
-        <div className="flex-1 overflow-y-auto p-2 space-y-2">
+        <form
+          ref={formRef}
+          onSubmit={handleSubmit(handleFormSubmit, onError)}
+          className="flex flex-col h-full"
+        >
+          <div className="flex-1 overflow-y-auto p-2 space-y-2">
 
-          <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
+            <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
 
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50"> Purchase Order Information </h2>
+              <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50"> Purchase Order Information </h2>
 
-            <div className="flex flex-wrap gap-4 items-end">
+              <div className="flex flex-wrap gap-4 items-end">
 
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Series No.</label>
-                <FormSelect
-                  name="vnumid"
-                  control={control}
-                  options={seriesNoOptions}
-                />
-              </div>
+                <div className="w-48">
+                  <label className="block text-gray-700 font-medium mb-1">Series No.</label>
+                  <FormSelect
+                    name="vnumid"
+                    control={control}
+                    options={seriesNoOptions}
+                  />
+                </div>
 
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Num. Method</label>
-                <FormSelect
-                  name="vnummethod"
-                  control={control}
-                  options={numMethodOptions}
-                  isDisabled={selectedSeries?.manualallow === "N"}
-                />
-              </div>
+                <div className="w-48">
+                  <label className="block text-gray-700 font-medium mb-1">Num. Method</label>
+                  <FormSelect
+                    name="vnummethod"
+                    control={control}
+                    options={numMethodOptions}
+                    isDisabled={selectedSeries?.manualallow === "N"}
+                  />
+                </div>
 
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Order Date</label>
-                <input
-                  type="date"
-                  {...register("orderdt")}
-                  disabled={isReadOnly}
-                  className={`inputField ${errors.orderdt ? "text-red-500" : "border-gray-400"}`}
-                />
-              </div>
+                <div className="w-48">
+                  <label className="block text-gray-700 font-medium mb-1">Order Date</label>
+                  <input
+                    type="date"
+                    {...register("orderdt")}
+                    disabled={isReadOnly}
+                    className={`inputField ${errors.orderdt ? "text-red-500" : "border-gray-400"}`}
+                  />
+                </div>
 
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Order No</label>
-                <input
-                  type="text"
-                  {...register("orderno")}
-                  disabled={isReadOnly || selectedSeries?.manualallow === "N"}
-                  className={`
+                <div className="w-48">
+                  <label className="block text-gray-700 font-medium mb-1">Order No</label>
+                  <input
+                    type="text"
+                    {...register("orderno")}
+                    disabled={isReadOnly || selectedSeries?.manualallow === "N"}
+                    className={`
                     inputField 
                     ${errors.orderno ? "" : "border-gray-400"} 
                     ${selectedSeries?.manualallow === "N" ? "bg-gray-100 cursor-not-allowed" : ""}
                   `}
-                />
-                {/* {selectedSeries?.manualallow === "N" && (
+                  />
+                  {/* {selectedSeries?.manualallow === "N" && (
                   <p className="text-xs text-gray-400 ">
                     Order number is system generated 
                   </p>
                 )} */}
-              </div>
+                </div>
 
-              <div className="w-110">
-                <label className="block text-gray-700 font-medium mb-1">Vendor <strong className="text-red-500"> * </strong> </label>
-                <input
-                  type="text"
-                  value={vendorName || ''}
-                  disabled={isReadOnly}
-                  readOnly
-                  onClick={() => setVendoeodalOpen(true)}
-                  className={`inputField w-full border border-gray-300 
+                <div className="w-110">
+                  <label className="block text-gray-700 font-medium mb-1">Vendor <strong className="text-red-500"> * </strong> </label>
+                  <input
+                    type="text"
+                    value={vendorName || ''}
+                    disabled={isReadOnly}
+                    readOnly
+                    onClick={() => setVendorFormOpen(true)}
+                    className={`inputField w-full border border-gray-300 
                     ${errors.vendorid && !vendorName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
-                  }
-                  placeholder="Select Vendor"
-                />
-                {errors.vendorid && !vendorName && <p className="text-red-500 mt-1 text-sm">{errors.vendorid.message}</p>}
-              </div>
+                    }
+                    placeholder="Select Vendor"
+                  />
+                  {errors.vendorid && !vendorName && <p className="text-red-500 mt-1 text-sm">{errors.vendorid.message}</p>}
+                </div>
 
-              {/* <div className="w-48">
+                {/* <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Enquiry No</label>
                 <input
                   type="text"
@@ -462,7 +476,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                 />
               </div> */}
 
-              {/* <div className="w-48">
+                {/* <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Enquiry Date</label>
                 <input
                   type="date"
@@ -472,42 +486,42 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                 />
               </div> */}
 
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Proforma invoice no.</label>
-                <input
-                  type="text"
-                  {...register("quotno")}
-                  disabled={isReadOnly}
-                  placeholder="Enter Proforma invoice no."
-                  className={`inputField ${errors.quotno ? "" : "border-gray-400"}`}
-                />
+                <div className="w-48">
+                  <label className="block text-gray-700 font-medium mb-1">Proforma invoice no.</label>
+                  <input
+                    type="text"
+                    {...register("quotno")}
+                    disabled={isReadOnly}
+                    placeholder="Enter Proforma invoice no."
+                    className={`inputField ${errors.quotno ? "" : "border-gray-400"}`}
+                  />
+                </div>
+
+                <div className="w-48">
+                  <label className="block text-gray-700 font-medium mb-1">Proforma invoice date</label>
+                  <input
+                    type="date"
+                    {...register("quotdt")}
+                    disabled={isReadOnly}
+                    className={`inputField ${errors.quotdt ? "" : "border-gray-400"}`}
+                  />
+                </div>
+
+                <div className="w-48">
+                  <label className="block text-gray-700 font-medium mb-1">Branch </label>
+                  <input
+                    type="text"
+                    value={formSelectedBranch}
+                    readOnly
+                    className={`inputField border-gray-400 bg-gray-100 cursor-not-allowed `}
+                  />
+                </div>
+
               </div>
+            </section>
 
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Proforma invoice date</label>
-                <input
-                  type="date"
-                  {...register("quotdt")}
-                  disabled={isReadOnly}
-                  className={`inputField ${errors.quotdt ? "" : "border-gray-400"}`}
-                />
-              </div>
-
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Branch </label>
-                <input
-                  type="text"
-                  value={formSelectedBranch}
-                  readOnly
-                  className={`inputField border-gray-400 bg-gray-100 cursor-not-allowed `}
-                />
-              </div>
-
-            </div>
-          </section>
-
-          {/* Delivery & Payment */}
-          {/* <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
+            {/* Delivery & Payment */}
+            {/* <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
             <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
               Delivery & Payment Details
             </h2>
@@ -571,204 +585,210 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
             </div>
           </section> */}
 
-          {/* Item Details */}
-          <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
+            {/* Item Details */}
+            <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
 
-            <div className="flex justify-between items-center">
-              <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
-                Item Details
-              </h2>
-
-              {!isReadOnly && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    append({
-                      productid: 0,
-                      qty1: 0,
-                      rate: 0,
-                      value: 0,
-                      qty2: 0,
-                      tag: "I",
-                      dtlid: fields.length + 1,
-                      altunimethod: "A",
-                      altunitfactor: 1,
-                      alterunitfactortype: "M",
-                      rateon: 1,
-                    })
-                  }
-                  className="primary-btn text-xs px-3 py-1"
-                >
-                  + Add Item
-                </button>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              {fields.map((field, index) => (
-                <PurchaseOrderItems
-                  key={field.id}
-                  index={index}
-                  field={field}
-                  control={control}
-                  setValue={setValue}
-                  register={register}
-                  errors={errors}
-                  remove={remove}
-                  watchedItems={watchedItems}
-                  userId={userId}
-                  companyId={companyId}
-                  branchId={toolbarBranchId}
-                  visible={visible}
-                  isReadOnly={isReadOnly}
-                  fieldsLength={fields.length}
-
-                  excludeIds={selectedProductIds}
-                  currentId={watchedItems?.[index]?.productid}
-                />
-              ))}
-            </div>
-
-            <div className="flex flex-wrap gap-4 items-center border-t pt-3">
-
-              <div className="w-68" />
-
-              <div className="w-120" />
-
-              <div className="w-28 relative">
-                <span className="absolute -left-20 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-700 whitespace-nowrap">
-                  Total Qty
-                </span>
-                <input
-                  type="number"
-                  value={totalQty}
-                  readOnly
-                  className="inputField w-full bg-gray-100"
-                />
-              </div>
-
-              <div className="w-28" />
-
-              <div className="w-28 relative">
-                <span className="absolute -left-24 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-700 whitespace-nowrap">
-                  Total Value
-                </span>
-                <input
-                  type="number"
-                  value={Number(totalValue.toFixed(2))}
-                  readOnly
-                  className="inputField w-full bg-gray-100"
-                />
-              </div>
-
-              <div className="w-12" />
-
-            </div>
-
-          </section>
-
-          {/* Remarks */}
-          <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
-              Remarks
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Remark 1 </label>
-                <input
-                  {...register("rem1")}
-                  placeholder="Remark 1"
-                  disabled={isReadOnly}
-                  className={`inputField ${errors.rem1 ? "" : "border-gray-400"}`}
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Remark 2 </label>
-                <input
-                  {...register("rem2")}
-                  placeholder="Remark 2"
-                  disabled={isReadOnly}
-                  className={`inputField ${errors.rem2 ? "" : "border-gray-400"}`}
-                />
-              </div>
-            </div>
-          </section>
-
-
-          {isApproveMode && (
-            <>
-              <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
+              <div className="flex justify-between items-center">
                 <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
-                  Approvable
+                  Item Details
                 </h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  <div >
-                    <label className="block text-gray-700 font-medium mb-1">Approve Status <strong className="text-red-500"> * </strong> </label>
-                    <FormSelect
-                      name="aprvstatus"
-                      control={control}
-                      options={approveOptions}
-                    />
-                    {/* {errors.aprvstatus && <p className="text-red-500 mt-1 text-sm">{errors.aprvstatus.message}</p>} */}
-                  </div>
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-1">Approve Remark <strong className="text-red-500"> * </strong> </label>
-                    <input
-                      {...register("aprvremarks")}
-                      placeholder="Approve remark "
-                      disabled={isReadOnly}
-                      className={`inputField ${errors.aprvremarks ? "border-red-500" : "border-gray-400"}`}
-                    />
-                    {errors.aprvremarks && <p className="text-red-500 mt-1 text-sm">{errors.aprvremarks.message}</p>}
-                  </div>
+                {!isReadOnly && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      append({
+                        productid: 0,
+                        qty1: 0,
+                        rate: 0,
+                        value: 0,
+                        qty2: 0,
+                        tag: "I",
+                        dtlid: fields.length + 1,
+                        altunimethod: "A",
+                        altunitfactor: 1,
+                        alterunitfactortype: "M",
+                        rateon: 1,
+                      })
+                    }
+                    className="primary-btn text-xs px-3 py-1"
+                  >
+                    + Add Item
+                  </button>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                {fields.map((field, index) => (
+                  <PurchaseOrderItems
+                    key={field.id}
+                    index={index}
+                    field={field}
+                    control={control}
+                    setValue={setValue}
+                    register={register}
+                    errors={errors}
+                    remove={remove}
+                    watchedItems={watchedItems}
+                    userId={userId}
+                    companyId={companyId}
+                    branchId={toolbarBranchId}
+                    visible={visible}
+                    isReadOnly={isReadOnly}
+                    fieldsLength={fields.length}
+
+                    excludeIds={selectedProductIds}
+                    currentId={watchedItems?.[index]?.productid}
+                  />
+                ))}
+              </div>
+
+              <div className="flex flex-wrap gap-4 items-center border-t pt-3">
+
+                <div className="w-68" />
+
+                <div className="w-120" />
+
+                <div className="w-28 relative">
+                  <span className="absolute -left-20 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-700 whitespace-nowrap">
+                    Total Qty
+                  </span>
+                  <input
+                    type="number"
+                    value={totalQty}
+                    readOnly
+                    className="inputField w-full bg-gray-100"
+                  />
                 </div>
-              </section>
-            </>
-          )}
 
-        </div>
+                <div className="w-28" />
 
-        {/* Footer */}
-        <div className="border-t p-2 flex justify-end gap-4 bg-gray-50">
-          {(mode !== "View" && mode !== "Print") && (
+                <div className="w-28 relative">
+                  <span className="absolute -left-24 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-700 whitespace-nowrap">
+                    Total Value
+                  </span>
+                  <input
+                    type="number"
+                    value={Number(totalValue.toFixed(2))}
+                    readOnly
+                    className="inputField w-full bg-gray-100"
+                  />
+                </div>
+
+                <div className="w-12" />
+
+              </div>
+
+            </section>
+
+            {/* Remarks */}
+            <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
+              <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
+                Remarks
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-gray-700 font-medium mb-1">Remark 1 </label>
+                  <input
+                    {...register("rem1")}
+                    placeholder="Remark 1"
+                    disabled={isReadOnly}
+                    className={`inputField ${errors.rem1 ? "" : "border-gray-400"}`}
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 font-medium mb-1">Remark 2 </label>
+                  <input
+                    {...register("rem2")}
+                    placeholder="Remark 2"
+                    disabled={isReadOnly}
+                    className={`inputField ${errors.rem2 ? "" : "border-gray-400"}`}
+                  />
+                </div>
+              </div>
+            </section>
+
+
+            {isApproveMode && (
+              <>
+                <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
+                  <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
+                    Approvable
+                  </h2>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div >
+                      <label className="block text-gray-700 font-medium mb-1">Approve Status <strong className="text-red-500"> * </strong> </label>
+                      <FormSelect
+                        name="aprvstatus"
+                        control={control}
+                        options={approveOptions}
+                      />
+                      {/* {errors.aprvstatus && <p className="text-red-500 mt-1 text-sm">{errors.aprvstatus.message}</p>} */}
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-1">Approve Remark <strong className="text-red-500"> * </strong> </label>
+                      <input
+                        {...register("aprvremarks")}
+                        placeholder="Approve remark "
+                        disabled={isReadOnly}
+                        className={`inputField ${errors.aprvremarks ? "border-red-500" : "border-gray-400"}`}
+                      />
+                      {errors.aprvremarks && <p className="text-red-500 mt-1 text-sm">{errors.aprvremarks.message}</p>}
+                    </div>
+                  </div>
+                </section>
+              </>
+            )}
+
+          </div>
+
+          {/* Footer */}
+          <div className="border-t p-2 flex justify-end gap-4 bg-gray-50">
+            {(mode !== "View" && mode !== "Print") && (
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`${isDeleteMode ? 'delete-btn' : 'primary-btn'} disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                {getButtonLabel()}
+              </button>
+            )}
             <button
-              type="submit"
+              type="button"
+              onClick={handleExit}
               disabled={isSubmitting}
-              className={`${isDeleteMode ? 'delete-btn' : 'primary-btn'} disabled:opacity-50 disabled:cursor-not-allowed`}
+              className="secondary-btn disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {getButtonLabel()}
+              Exit
             </button>
-          )}
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isSubmitting}
-            className="secondary-btn disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Exit
-          </button>
-        </div>
+          </div>
 
-        <LoadPanel
-          shadingColor="rgba(0,0,0,0.4)"
-          visible={isSubmitting || isLoadingPurchaseOrder}
-          showIndicator
-        />
+          <LoadPanel
+            shadingColor="rgba(0,0,0,0.4)"
+            visible={isSubmitting || isLoadingPurchaseOrder}
+            showIndicator
+          />
 
-        <SearchModal
-          open={vendoeodalOpen}
-          onClose={() => setVendoeodalOpen(false)}
-          endpoint="vendor"
-          baseParams={baseVendoeParams}
-          columns={searchVendoeColumns}
-          searchFields={searchVendoeFields}
-          onSelect={handleVendoeSelect}
-        />
+          <SearchModal
+            open={vendorFormOpen}
+            onClose={() => setVendorFormOpen(false)}
+            endpoint="vendor"
+            baseParams={baseVendoeParams}
+            columns={searchVendoeColumns}
+            searchFields={searchVendoeFields}
+            onSelect={handleVendoeSelect}
+            createNewConfig={{
+              enabled: true,
+              label: "Create New Vendor",
+              onCreateNew: handleSortcutCreate,
+            }}
+          />
 
-      </form>
-    </Popup>
+        </form>
+      </Popup>
+    </>
   );
 
 

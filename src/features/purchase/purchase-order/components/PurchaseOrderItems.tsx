@@ -3,6 +3,7 @@ import { useState } from "react";
 import SearchModal from "@/common/components/SearchModal";
 import { toast } from "sonner";
 import { Controller } from "react-hook-form";
+import { useMasterModal } from "@/hooks/useMasterModal";
 
 
 type PurchaseOrderItemsProps = {
@@ -42,6 +43,13 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
   excludeIds,
   currentId
 }) => {
+
+  const { open } = useMasterModal();
+  const handleSortcutCreate = async () => {
+    await open("product");
+  };
+
+
   const item = watchedItems?.[index];
   const qty = Number(item?.qty1) || 0;
   const rate = Number(item?.rate) || 0;
@@ -248,6 +256,11 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
         onSelect={handleProductSelect}
         excludeIds={excludeIds}
         currentId={currentId}
+        createNewConfig={{
+          enabled: true,
+          label: "Create New Product",
+          onCreateNew: handleSortcutCreate,
+        }}
       />
     </div>
   );

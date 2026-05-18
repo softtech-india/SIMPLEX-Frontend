@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
 import { SHORTCUTS } from "@/common/constants/shortcuts";
+import { useMasterModal } from "@/hooks/useMasterModal";
 
 interface SaleOrderFormProps {
   visible: boolean;
@@ -29,9 +30,11 @@ interface SaleOrderFormProps {
   mode: OperationMode;
   formSelectedBranch: string;
   toolbarBranchId: number;
+  returnAfterSave?: boolean;
+  onSuccess?: (product: any) => void;
 }
 
-export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSelectedBranch, toolbarBranchId }: SaleOrderFormProps) {
+export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSelectedBranch, toolbarBranchId, returnAfterSave, onSuccess }: SaleOrderFormProps) {
 
   const {
     userId,
@@ -40,6 +43,10 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
     finid,
   } = useUserStore();
 
+  const { open } = useMasterModal();
+  const handleSortcutCreate = async () => {
+    await open("customer");
+  };
   const confirmDelete = useConfirm();
 
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
@@ -300,9 +307,14 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
       // console.log("FINAL SUBMIT PAYLOAD:", JSON.stringify(payload, null, 2));
 
       if (isAddMode) {
-        await createMutation.mutateAsync(payload);
+        const result = await createMutation.mutateAsync(payload);
         reset(pruchaseOrderFormDefaults);
-       // onClose();
+        // onClose();
+        if (returnAfterSave) {
+          onSuccess?.(result);
+          onClose();
+          return;
+        }
         return;
       }
 
@@ -676,6 +688,11 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
           columns={searchCustomerColumns}
           searchFields={searchCustomerFields}
           onSelect={handleCustomerSelect}
+          createNewConfig={{
+            enabled: true,
+            label: "Create New Customer",
+            onCreateNew: handleSortcutCreate,
+          }}
         />
 
       </form>

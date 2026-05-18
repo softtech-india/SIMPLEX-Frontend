@@ -23,9 +23,11 @@ interface VendorFormProps {
   onClose: () => void;
   formVendorId: number;
   mode: OperationMode;
+  returnAfterSave?: boolean;
+  onSuccess?: (vendor: any) => void;
 }
 
-export function VendorForm({ visible, onClose, formVendorId, mode }: VendorFormProps) {
+export function VendorForm({ visible, onClose, formVendorId, mode, returnAfterSave, onSuccess }: VendorFormProps) {
   const { userId, companyId } = useAppStorage();
 
   const isEditMode = mode === "Edit";
@@ -349,9 +351,14 @@ export function VendorForm({ visible, onClose, formVendorId, mode }: VendorFormP
       };
 
       if (isAddMode) {
-        await createMutation.mutateAsync(payload);
+        const result = await createMutation.mutateAsync(payload);
         reset(vendorFormDefaults);
-       // onClose();
+        // onClose();
+        if (returnAfterSave) {
+          onSuccess?.(result);
+          onClose();
+          return;
+        }
         return;
       }
 
@@ -382,8 +389,8 @@ export function VendorForm({ visible, onClose, formVendorId, mode }: VendorFormP
       visible={visible}
       onHiding={onClose}
       title={`${mode} Vendor`}
-      width="99vw"
-      height="98vh"
+      width="90vw"
+      height="90vh"
       dragEnabled
       showTitle
       showCloseButton={false}

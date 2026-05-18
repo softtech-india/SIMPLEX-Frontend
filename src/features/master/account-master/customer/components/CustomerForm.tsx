@@ -23,9 +23,11 @@ interface CustomerFormProps {
   onClose: () => void;
   formCustomerId: number;
   mode: OperationMode;
+  returnAfterSave?: boolean;
+  onSuccess?: (product: any) => void;
 }
 
-export function CustomerForm({ visible, onClose, formCustomerId, mode }: CustomerFormProps) {
+export function CustomerForm({ visible, onClose, formCustomerId, mode, returnAfterSave, onSuccess }: CustomerFormProps) {
   const { userId, companyId } = useAppStorage();
 
   const isEditMode = mode === "Edit";
@@ -139,8 +141,6 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode }: Custome
       })),
   });
 
-
-
   // Fetch sub ledger options - FIXED: renamed to subledgertypeOptions
   const { data: subledgertypeOptions = [] } = useQuery({
     queryKey: ["subledgertype", userId, companyId],
@@ -158,9 +158,7 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode }: Custome
       })),
   });
 
-
   const prevStateRef = useRef<number | undefined>(0);
-
   useEffect(() => {
     if (prevStateRef.current !== selectedStateId) {
       setValue("cityid", 1);
@@ -257,9 +255,14 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode }: Custome
       };
 
       if (isAddMode) {
-        await createMutation.mutateAsync(payload);
+        const result = await createMutation.mutateAsync(payload);
         reset(customerFormDefaults);
-       // onClose();
+        // onClose();
+        if (returnAfterSave) {
+          onSuccess?.(result);
+          onClose();
+          return;
+        }
         return;
       }
 
@@ -287,8 +290,8 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode }: Custome
       visible={visible}
       onHiding={onClose}
       title={`${mode} Customer`}
-      width="99vw"
-      height="98vh"
+      width="90vw"
+      height="90vh"
       dragEnabled
       showTitle
       showCloseButton={false}
@@ -305,7 +308,7 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode }: Custome
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               <div>
-                <label className="block text-gray-700 font-medium mb-1">Sub Ledger Type<span className="text-red-500">*</span></label>
+                <label className="block text-gray-700 font-medium mb-1">Sub Ledger Type <span className="text-red-500 font-bold"> * </span> </label>
                 <FormSelect<CustomerFormSchema>
                   name="subledgertypeid"
                   control={control}
@@ -315,9 +318,6 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode }: Custome
                   onChange={handlesubLedgerTypeChange}
                 />
               </div>
-
-
-
 
               <div>
                 <label className="block text-gray-700 font-medium mb-1">Ledger Group <span className="text-red-500">*</span></label>
@@ -517,10 +517,6 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode }: Custome
                 {errors.pan && <p className="text-red-500 mt-1 text-sm">{errors.pan.message}</p>}
               </div>
 
-
-
-
-
             </div>
           </section>
 
@@ -533,10 +529,7 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode }: Custome
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-
               <div className="flex gap-4">
-
-
 
                 <div className="w-1/2">
                   <label className="block text-gray-700 font-medium mb-1">Status</label>

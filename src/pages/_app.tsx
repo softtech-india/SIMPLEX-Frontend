@@ -10,6 +10,7 @@ import useIsMobile from "@/common/hooks/useIsMobile";
 import { Toaster } from "sonner";
 import Head from "next/head";
 import { ConfirmProvider } from "@/common/providers/ConfirmProvider";
+import { MasterModalHost } from "@/common/components/MasterModalHost";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -95,6 +96,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
             )}
 
+            <MasterModalHost />
             <Toaster
               position="top-right"
               richColors
