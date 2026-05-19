@@ -359,6 +359,31 @@ export const fetchCompanySelectionList = async (
   }
 }
 
+export const fetchCompanyList = async (
+  userId: string | number | null,
+) => {
+  try {
+    const response: any = await apiCall.get(
+      `${process.env.NEXT_PUBLIC_PROJECT_API_ENDPOINT}company`,
+      {
+        userid: userId,
+      }
+    );
+
+    if (response?.error) {
+      notify(response.error, "error", 3000);
+      return [];
+    }
+
+    return response?.data ?? [];
+
+  } catch (error) {
+    console.error("fetchCompanyList error:", error);
+    return [];
+  }
+}
+
+
 
 export const fetchUserGpList = async (
   userId: string | number | null,
@@ -463,34 +488,34 @@ export const fetchUserNameList = async (userid: string | number | null) => {
     return [];
   }
 };
-export const fetchCompanyList = async (userid: string | number | null) => {
-  try {
-    const response: any = await apiCall.get(
-      `${process.env.NEXT_PUBLIC_PROJECT_API_ENDPOINT}company`,
-      {
-        userid: userid,
-        // stateid: stateid,
-      }
-    );
+// export const fetchCompanyList = async (userid: string | number | null) => {
+//   try {
+//     const response: any = await apiCall.get(
+//       `${process.env.NEXT_PUBLIC_PROJECT_API_ENDPOINT}company`,
+//       {
+//         userid: userid,
+//         // stateid: stateid,
+//       }
+//     );
 
-    if (response?.error) {
-      notify(response.error, "error", 3000);
-      return [];
-    }
+//     if (response?.error) {
+//       notify(response.error, "error", 3000);
+//       return [];
+//     }
 
-    return response.data.map((item: any) => ({
-      id: item.id,
-      name: item.name,
-      //cityid: item.cityid,
+//     return response.data.map((item: any) => ({
+//       id: item.id,
+//       name: item.name,
+//       //cityid: item.cityid,
 
 
-    }));
-  } catch (e: any) {
-    console.error(e);
-    notify(String(e), "error", 3000);
-    return [];
-  }
-};
+//     }));
+//   } catch (e: any) {
+//     console.error(e);
+//     notify(String(e), "error", 3000);
+//     return [];
+//   }
+// };
 
 // export const fetchBranchList = async (userid: string | number | null) => {
 //   try {

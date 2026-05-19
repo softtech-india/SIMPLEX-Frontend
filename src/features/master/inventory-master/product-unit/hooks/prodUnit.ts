@@ -52,6 +52,8 @@ export function useProdUnit(id: number) {
     queryKey: PROD_UNIT_KEYS.detail(id),
     queryFn: () => prodUnitService.getProdUnitById(id),
 
+     enabled: !!id,
+
     staleTime: 0,
     gcTime: 0,
     refetchOnMount: true,

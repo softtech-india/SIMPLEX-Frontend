@@ -61,7 +61,7 @@ class TransporterService {
         { userid: this.getUserId(), compid: this.getCompanyId(), id }
       );
 
-      this.handleError(response);
+      //this.handleError(response);
 
       const hsn = response.data?.[0];
       if (!hsn) throw new Error("HSN not found");
@@ -70,7 +70,7 @@ class TransporterService {
 
     } catch (error: any) {
       const message = error instanceof Error ? error.message : String(error);
-      toast.error(`Error fetching HSN with id ${id}: ${message}`);
+      //toast.error(`Error fetching HSN with id ${id}: ${message}`);
       throw new Error(message);
     }
   }

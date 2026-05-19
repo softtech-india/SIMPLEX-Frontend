@@ -35,12 +35,12 @@ class ProdUnitService {
         { userid: this.getUserId(), compid: this.getCompanyId() }
       );
 
-      this.handleError(response);
+      //this.handleError(response);
       return response.data || [];
 
     } catch (error: any) {
       console.error("Error fetching companies:", error);
-      toast.error(error.message || "Failed to fetch companies");
+      //toast.error(error.message || "Failed to fetch companies");
       throw error;
     }
   }

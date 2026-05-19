@@ -92,7 +92,7 @@ export function ProdGroupForm({ visible, onClose, ProdGroupId, mode }: ProdGroup
 
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
-        reset({});
+        reset(prodGroupDefaultValues);
        // onClose();
         defaultFocusRef.current?.focus();
         return;

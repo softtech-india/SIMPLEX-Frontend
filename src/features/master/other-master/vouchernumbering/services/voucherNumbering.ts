@@ -39,12 +39,12 @@ class VoucherNumberingService {
         { userid: this.getUserId() }
       );
 
-      this.handleError(response);
+      //this.handleError(response);
       return response.data || [];
 
     } catch (error: any) {
       console.error("Error fetching All Voucher:", error);
-      toast.error(error.message || "Failed to fetch Voucher");
+      //toast.error(error.message || "Failed to fetch Voucher");
       throw error;
     }
   }

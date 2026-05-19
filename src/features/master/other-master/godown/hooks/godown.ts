@@ -34,6 +34,8 @@ export function useGodown(id: number) {
     queryKey: GODOWN_KEYS.detail(id),
     queryFn: () => godownService.getProdGodownById(id),
 
+    enabled: !!id,
+
     staleTime: 0,
     gcTime: 0,
     refetchOnMount: true,

@@ -36,12 +36,12 @@ class VendorService {
         { userid: this.getUserId(), compid: this.getCompanyId() }
       );
 
-      this.handleError(response);
+      //this.handleError(response);
       return response.data || [];
 
     } catch (error: any) {
       console.error("Error fetching vendors:", error);
-      toast.error(error.message || "Failed to fetch Vendors");
+      //toast.error(error.message || "Failed to fetch Vendors");
       throw error;
     }
   }

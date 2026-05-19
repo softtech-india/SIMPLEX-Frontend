@@ -32,8 +32,9 @@ export function useSalesMen(branchId: string | null) {
 export function useSalesMan(id: number) {
   return useQuery({
     queryKey: SALESMAN_KEYS.detail(id),
-
     queryFn: () => salesManService.getSalesManById(id),
+
+    enabled: !!id,
 
     staleTime: 0,
     gcTime: 0,
@@ -41,7 +42,6 @@ export function useSalesMan(id: number) {
     refetchOnWindowFocus: true,
     refetchOnReconnect: false,
 
-    enabled: id !== 0,
   });
 }
 

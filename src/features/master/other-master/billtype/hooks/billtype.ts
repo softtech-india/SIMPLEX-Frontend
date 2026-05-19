@@ -34,6 +34,8 @@ export function useBillType(id: number) {
     queryKey: BILLTYPE_KEYS.detail(id),
     queryFn: () => billTypeService.getProdBillTypeById(id),
 
+    enabled: !!id,
+
     staleTime: 0,
     gcTime: 0,
     refetchOnMount: true,

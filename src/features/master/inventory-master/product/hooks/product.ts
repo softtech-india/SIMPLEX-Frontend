@@ -168,6 +168,8 @@ export function useProduct(id: number) {
     queryKey: PRODUCT_KEYS.detail(id),
     queryFn: () => productService.getProductById(id),
 
+    enabled: !!id,
+
     staleTime: 0,
     gcTime: 0,
     refetchOnMount: true,

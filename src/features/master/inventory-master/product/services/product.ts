@@ -154,7 +154,7 @@ class ProductService {
         { userid: this.getUserId(), compid: this.getCompanyId(), id: id }
       );
 
-      this.handleError(response);
+      //this.handleError(response);
 
       const product = response.data?.[0];
       if (!product) throw new Error("Product not found");
@@ -163,7 +163,7 @@ class ProductService {
 
     } catch (error: any) {
       const message = error instanceof Error ? error.message : String(error);
-      toast.error(`Error fetching product with id ${id}: ${message}`);
+      //toast.error(`Error fetching product with id ${id}: ${message}`);
       throw new Error(message);
     }
   }

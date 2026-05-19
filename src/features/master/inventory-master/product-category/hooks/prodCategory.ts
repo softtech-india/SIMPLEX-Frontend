@@ -32,6 +32,8 @@ export function useProdCategory(id: number) {
   return useQuery({
     queryKey: PROD_CATEGORY_KEYS.detail(id),
     queryFn: () => prodCategoryService.getProdCategoryById(id),
+    
+    enabled: !!id,
 
     staleTime: 0,
     gcTime: 0,

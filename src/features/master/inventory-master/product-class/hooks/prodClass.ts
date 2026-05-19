@@ -33,6 +33,8 @@ export function useProdClass(id: number) {
     queryKey: PROD_CLASS_KEYS.detail(id),
     queryFn: () => prodClassService.getProdClassById(id),
 
+    enabled: !!id,
+
     staleTime: 0,
     gcTime: 0,
     refetchOnMount: true,
