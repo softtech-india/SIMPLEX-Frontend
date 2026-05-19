@@ -17,8 +17,8 @@ import { useWatch } from "react-hook-form";
 import { formatDateForInput } from "@/helpers/dateUtils";
 import SearchModal from "@/common/components/SearchModal";
 import { toast } from "sonner";
-import { requisitionService } from "../services/requisitionService";
 import { LoadPanel } from "devextreme-react";
+import { useConfirm } from "@/common/hooks/useConfirm";
 
 interface RequisitionFormProps {
   visible: boolean;
@@ -38,11 +38,11 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
     finid,
   } = useUserStore();
 
-  const [branchModalOpen, setBranchModalOpen] = useState(false);
+  const confirmDelete = useConfirm();
+
   const [toBranchModalOpen, setToBranchModalOpen] = useState(false);
   const [godownModalOpen, setGodownModalOpen] = useState(false);
   const [toGodownModalOpen, setToGodownModalOpen] = useState(false);
-  const [filteredBranchOptions, setFilteredBranchOptions] = useState<any[]>([]);
 
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
@@ -91,7 +91,6 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
   }, 0) || 0;
 
 
-
   // Reset form 
   useEffect(() => {
 
@@ -138,6 +137,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
           })) ?? [],
       });
     }
+
   }, [Requisition, isAddMode, reset, visible, setFocus]);
 
   const numMethodOptions = [
@@ -177,79 +177,8 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
   const selectedSeries = seriesNoOptions.find(
     (s: any) => s.value === watch("vnumid")
   );
+  // End Series No Options
 
-  const { data: BranchOptionsArray = [] } = useQuery({
-    queryKey: ["BranchOptions", userId, companyId],
-    queryFn: () => requisitionService.getAllBranches(),
-    staleTime: 0,
-    enabled: !!userId && !!companyId && !!visible,
-    retry: 1,
-    refetchOnWindowFocus: false,
-    select: (data) => {
-      const filtered = (data ?? [])
-        .map((s: any) => ({
-          value: s.id,
-          label: s.name,
-        }));
-      return filtered;
-    },
-  });
-
-  // Create a Map from the array for lookups (ID -> Name)
-  const BranchOptionsMap = new Map(
-    BranchOptionsArray.map(option => [Number(option.value), option.label])
-  );
-
-  // Godown Options - Fixed to use current branch ID from form or toolbar
-  const currentBranchIdForGodown = toolbarBranchId;
-
-  const { data: GodownOptionsArray = [], isLoading: isLoadingGodowns } = useQuery({
-    queryKey: ["GodownOptions", userId, companyId, currentBranchIdForGodown],
-    queryFn: () => requisitionService.getAllGodowns(currentBranchIdForGodown),
-    staleTime: 0,
-    enabled: !!userId && !!companyId && !!visible && !!currentBranchIdForGodown,
-    retry: 1,
-    refetchOnWindowFocus: false,
-    select: (data) =>
-      (data ?? []).map((s: any) => ({
-        value: s.id,
-        label: s.name,
-      })),
-  });
-
-  const GodownOptionsMap = new Map(
-    GodownOptionsArray.map(option => [Number(option.value), option.label])
-  );
-
-  const currentToBranchId = watch("tobranchid");
-  const { data: ToGodownOptionsArray = [], isLoading: isLoadingToGodowns } = useQuery({
-    queryKey: ["ToGodownOptions", userId, companyId, currentToBranchId],
-    queryFn: () => requisitionService.getAllGodowns(currentToBranchId),
-    staleTime: 0,
-    enabled: !!userId && !!companyId && !!visible && !!currentToBranchId && currentToBranchId !== 0,
-    retry: 1,
-    refetchOnWindowFocus: false,
-    select: (data) =>
-      (data ?? [])
-        .map((s: any) => ({
-          value: s.id,
-          label: s.name,
-        })),
-  });
-
-
-  const ToGodownOptionsMap = new Map(
-    ToGodownOptionsArray.map(option => [Number(option.value), option.label])
-  );
-
-  // Get current values from form state
-  const currentGodownId = watch("godownid");
-  const currentToBranchIdValue = watch("tobranchid");
-  const currentToGodownId = watch("togodownid");
-
-
-
-  const currentBranchName = formSelectedBranch || BranchOptionsMap.get(Number(toolbarBranchId)) || "";
 
   // Search Modal Handlers
   const baseSearchParams = {
@@ -265,37 +194,42 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
     { value: "name", label: "Name" },
   ];
 
-  // Branch Modal Handler
-  const handleBranchSelect = (row: any) => {
-    setValue("tobranchid", row.id);
-    setValue("toBranchName", row.name);
-    setBranchModalOpen(false);
-    setValue("togodownid", 0);
-  };
-
   // To Branch Modal Handler
   const handleToBranchSelect = (row: any) => {
-    setValue("tobranchid", row.id);
-    setValue("toBranchName", row.name); // This should already be there
+    setValue("tobranchid", (row.id));
+    setValue("toBranchName", (row.name));
     setToBranchModalOpen(false);
     setValue("togodownid", 0);
-    setValue("togodownName", ""); // Clear to godown name when branch changes
+    setValue("togodownName", "");
   };
+  if (!watch("tobranchid")) {
+    setValue("tobranchid", toolbarBranchId);
+  }
+  if (!watch("toBranchName")) {
+    setValue("toBranchName", formSelectedBranch);
+  }
+  const toBranchName = watch("toBranchName") || formSelectedBranch;
 
-  // Godown Modal Handler (From Godown)
-  const handleGodownSelect = (row: any) => {
+  // From Godown Modal Handler 
+  const handleFromGodownSelect = (row: any) => {
     setValue("godownid", row.id);
     setValue("godownName", row.name);
+
     setGodownModalOpen(false);
+
+    setValue("togodownid", 0);
+    setValue("togodownName", '');
   };
+  const fromGodownId = watch("godownid");
+  const fromGodownName = watch("godownName");
 
   // To Godown Modal Handler
   const handleToGodownSelect = (row: any) => {
-
     setValue("togodownid", row.id);
     setValue("togodownName", row.name);
     setToGodownModalOpen(false);
   };
+  const togodownName = watch("togodownName");
 
   const calculateTotals = (items: any[] = []) => {
     let totqty = 0;
@@ -317,8 +251,15 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
 
   const handleFormSubmit = async (data: RequisitionFormSchema) => {
     try {
+
       if (isDeleteMode) {
-        if (!window.confirm("Delete this Requisition?")) return;
+        const ok = await confirmDelete({
+          title: "Delete Requisition",
+          message: "Are you sure you want to delete this Requisition?",
+        });
+
+        if (!ok) return;
+
         await deleteMutation.mutateAsync(formRequisitionId);
         onClose();
         return;
@@ -338,7 +279,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(requisitionFormDefaults);
-       // onClose();
+        // onClose();
         return;
       }
 
@@ -351,17 +292,11 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
         return;
       }
 
-
-
-
-
     } catch (error) {
       console.error("Submit error:", error);
     }
   };
-  const godownName = watch("godownName");
-  const toBranchName = watch("toBranchName");
-  const togodownName = watch("togodownName");
+
 
   const getButtonLabel = () => {
     if (isSubmitting) {
@@ -376,9 +311,6 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
   const onError = (err: any) => {
     console.error("Validation errors:", err);
   };
-
-  // Loading state - Fixed variable name conflict
-  const isLoading = isLoadingRequisition || isLoadingGodowns || (currentToBranchId && currentToBranchId !== 0 && isLoadingToGodowns);
 
   return (
     <Popup
@@ -450,9 +382,9 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
                 <label className="block text-gray-700 font-medium mb-1">Branch</label>
                 <input
                   type="text"
-                  value={currentBranchName}
+                  value={formSelectedBranch}
                   readOnly
-                  className="inputField border-gray-400 bg-gray-100"
+                  className={`inputField border-gray-400 bg-gray-100 cursor-not-allowed `}
                 />
               </div>
             </div>
@@ -466,59 +398,49 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
 
             <div className="flex flex-wrap gap-4 items-end">
               <div className="w-98">
-                <label className="block text-gray-700 font-medium mb-1">
-                  From Godown <span className="text-red-500">*</span>
-                </label>
+                <label className="block text-gray-700 font-medium mb-1"> From Godown <span className="text-red-500"> * </span> </label>
                 <input
                   type="text"
-                  value={godownName || ''}
+                  value={fromGodownName || ''}
+                  disabled={isReadOnly}
                   readOnly
-                  onClick={() => {
-                    if (!isReadOnly) setGodownModalOpen(true);
-                  }}
-                  className={`inputField w-full cursor-pointer ${errors?.godownid
-                    ? "border-red-500"
-                    : "border-gray-400"
-                    } ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                  onClick={() => { setGodownModalOpen(true); }}
+                  className={`inputField w-full cursor-pointer 
+                    ${errors?.godownid ? "border-red-500" : "border-gray-400"} 
+                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}
+                  `}
                   placeholder="Select Godown"
                 />
-                {errors?.godownid && (
-                  <p className="text-xs text-red-500 mt-1">{errors.godownid.message}</p>
-                )}
+                {errors?.godownid && (<p className="text-xs text-red-500 mt-1">{errors.godownid.message}</p>)}
               </div>
 
               <div className="w-102">
-                <label className="block text-gray-700 font-medium mb-1">
-                  To Branch <span className="text-red-500">*</span>
-                </label>
+                <label className="block text-gray-700 font-medium mb-1">  To Branch <span className="text-red-500"> * </span> </label>
                 <input
                   type="text"
                   value={toBranchName || ''}
+                  // disabled={isReadOnly}
+                  disabled={true}
+                  onClick={() => { setToBranchModalOpen(true); }}
+                  tabIndex={-1}
                   readOnly
-                  onClick={() => {
-                    if (!isReadOnly) setToBranchModalOpen(true);
-                  }}
-                  className={`inputField w-full cursor-pointer ${errors?.tobranchid
-                    ? "border-red-500"
-                    : "border-gray-400"
-                    } ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                  className={`inputField w-full cursor-pointer
+                    ${errors?.tobranchid ? "border-red-500" : "border-gray-400"}
+                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "bg-gray-100 cursor-not-allowed"}
+                  `}
                   placeholder="Select Branch"
                 />
-                {errors?.tobranchid && (
-                  <p className="text-xs text-red-500 mt-1">{errors.tobranchid.message}</p>
-                )}
+                {errors?.tobranchid && (<p className="text-xs text-red-500 mt-1">{errors.tobranchid.message}</p>)}
               </div>
 
               <div className="w-102">
-                <label className="block text-gray-700 font-medium mb-1">
-                  To Godown <span className="text-red-500">*</span>
-                </label>
+                <label className="block text-gray-700 font-medium mb-1"> To Godown <span className="text-red-500"> * </span> </label>
                 <input
                   type="text"
                   value={togodownName}
+                  disabled={isReadOnly}
                   readOnly
                   onClick={() => {
-                    if (isReadOnly) return;
                     const toBranchIdValue = watch("tobranchid");
                     if (!toBranchIdValue || toBranchIdValue === 0) {
                       toast.error("Please select To Branch first");
@@ -526,15 +448,13 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
                     }
                     setToGodownModalOpen(true);
                   }}
-                  className={`inputField w-full cursor-pointer ${errors?.togodownid
-                    ? "border-red-500"
-                    : "border-gray-400"
-                    } ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                  className={`inputField w-full cursor-pointer 
+                    ${errors?.togodownid ? "border-red-500" : "border-gray-400"} 
+                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}
+                  `}
                   placeholder="Select To Godown"
                 />
-                {errors?.togodownid && (
-                  <p className="text-xs text-red-500 mt-1">{errors.togodownid.message}</p>
-                )}
+                {errors?.togodownid && (<p className="text-xs text-red-500 mt-1">{errors.togodownid.message}</p>)}
               </div>
             </div>
           </section>
@@ -655,19 +575,8 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
 
         <LoadPanel
           shadingColor="rgba(0,0,0,0.4)"
-          visible={!!(isSubmitting || isLoading)}
+          visible={isSubmitting || isLoadingRequisition}
           showIndicator
-        />
-
-        {/* Modals */}
-        <SearchModal
-          open={branchModalOpen}
-          onClose={() => setBranchModalOpen(false)}
-          endpoint="branch"
-          baseParams={baseSearchParams}
-          columns={searchColumns}
-          searchFields={searchFields}
-          onSelect={handleBranchSelect}
         />
 
         <SearchModal
@@ -678,7 +587,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
           columns={searchColumns}
           searchFields={searchFields}
           onSelect={handleToBranchSelect}
-          excludeIds={[Number(toolbarBranchId)]}
+        // excludeIds={[Number(toolbarBranchId)]}
         />
 
         <SearchModal
@@ -688,18 +597,20 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
           baseParams={{ ...baseSearchParams, branchid: toolbarBranchId }}
           columns={searchColumns}
           searchFields={searchFields}
-          onSelect={handleGodownSelect}
+          onSelect={handleFromGodownSelect}
         />
 
         <SearchModal
           open={toGodownModalOpen}
           onClose={() => setToGodownModalOpen(false)}
           endpoint="godown"
-          baseParams={{ ...baseSearchParams, branchid: watch("tobranchid") }}
+          baseParams={{ ...baseSearchParams, branchid: (watch("tobranchid") ?? toolbarBranchId) }}
           columns={searchColumns}
           searchFields={searchFields}
           onSelect={handleToGodownSelect}
+          excludeIds={[Number(fromGodownId)]}
         />
+
       </form>
     </Popup>
   );

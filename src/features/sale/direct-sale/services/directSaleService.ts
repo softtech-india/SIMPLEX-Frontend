@@ -2,6 +2,7 @@ import { apiCall } from "@/utils/apiClient";
 import { DirectSale, DirectSaleFormType, DirectSaleApiResponse } from '../types/directSale.types';
 import { toast } from "sonner";
 import { storageService } from "@/common/utility/storageService";
+import axios from "axios";
 
 export interface GetDirectSaleParams {
   userid: number;
@@ -172,6 +173,32 @@ class DirectSaleService {
     } catch (error: any) {
       console.error("Error creating Direct Sale:", error);
       toast.error(error.message || "Failed to create Direct Sale");
+      throw error;
+    }
+  }
+
+  async getSaleBillPrintById(id: number): Promise<Blob> {
+    const token = localStorage.getItem("accessToken") || "";
+    try {
+      const response = await axios.get(
+        `${this.baseUrl}sale/print/pdf`,
+        {
+          params: {
+            userid: this.getUserId(),
+            compid: this.getCompanyId(),
+            billid: id,
+          },
+          responseType: "blob",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+
+    } catch (error: any) {
+      console.error("Error fetching Sale bill print:", error);
       throw error;
     }
   }
