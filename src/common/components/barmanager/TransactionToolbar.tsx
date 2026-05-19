@@ -43,6 +43,7 @@ interface TransactionToolbarProps {
   onRefresh?: () => void;
   onView?: () => void;
   onPrint?: () => void;
+  isPrinting?: boolean;
   onExport?: (e?: any) => void;
   isFlexButton?: boolean;
   flexButtonCaption?: string;
@@ -73,6 +74,7 @@ export function TransactionToolbar({
   onView,
   onPrint,
   onExport,
+  isPrinting,
 
   onConfirmed,
   onApprove,
@@ -240,10 +242,12 @@ export function TransactionToolbar({
           {canPrint && onPrint && (
             <button
               onClick={onPrint}
-              // disabled={!hasSelection}
-              className="secondary-btn disabled:opacity-50"
+              disabled={isPrinting}
+              className="secondary-btn disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Printer size={16} /> Print
+              <Printer size={16} />
+
+              {isPrinting ? "Printing..." : "Print"}
             </button>
           )}
 

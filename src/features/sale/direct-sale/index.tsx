@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import LoadPanel from 'devextreme-react/load-panel';
 import { DirectSaleDataGrid } from './components/DirectSaleDataGrid';
 import { DirectSaleForm } from './components/DirectSaleForm';
-import { useDirectSaleList } from './hooks/useDirectSale';
+import { useDirectSaleList, usePrintSaleBill } from './hooks/useDirectSale';
 import { DirectSale, OperationMode } from './types/directSale.types';
 import useIsMobile from "@/common/hooks/useIsMobile";
 import { TransactionToolbar } from '@/common/components/barmanager/TransactionToolbar';
@@ -25,6 +25,7 @@ export default function DirectSaleModule() {
   const permissions = usePrivileges();
   const { userId, companyId, branchId, finid, branchnm } = useUserStore();
   const pathname = usePathname();
+  const { mutate: printSaleBill, isPending: isPrinting } = usePrintSaleBill();
 
   const isOrderBasedSale = pathname?.includes("saleagnstorder");
   const saleListType = `${isOrderBasedSale ? "O" : "D"}`;
@@ -110,7 +111,12 @@ export default function DirectSaleModule() {
   const handleEditClick = useCallback(() => openForm('Edit'), [openForm]);
   const handleDeleteClick = useCallback(() => openForm('Delete'), [openForm]);
   const handleViewClick = useCallback(() => openForm('View'), [openForm]);
-  const handlePrintClick = useCallback(() => openForm('Print'), [openForm]);
+
+  const handlePrintClick = useCallback(() => {
+    if (!selectedRow) return;
+
+    printSaleBill(selectedRow.id);
+  }, [printSaleBill, selectedRow]);
 
   const handleApproveClick = useCallback(() => {
     if (isRowApproved) return;
@@ -165,6 +171,7 @@ export default function DirectSaleModule() {
             onRefresh={handleRefresh}
             onView={handleViewClick}
             onPrint={handlePrintClick}
+            isPrinting={isPrinting}
 
             isRowApproved={isRowApproved}
 
