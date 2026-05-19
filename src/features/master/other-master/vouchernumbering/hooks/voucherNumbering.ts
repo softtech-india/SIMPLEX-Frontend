@@ -21,10 +21,9 @@ export function useVoucherNumberings() {
 
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
 
   });
 }
@@ -35,12 +34,13 @@ export function useVoucherNumbering(id: number) {
     queryKey: VoucherNumbering_KEYS.detail(id),
     queryFn: () => vouchernumberingService.getProdVoucherNumberingId(id),
 
+    enabled: !!id,
+
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
   });
 }
 

@@ -65,9 +65,9 @@ export function useGodownTransferList(
     staleTime: 0,
     gcTime: 0,
 
-    refetchOnMount: "always",
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
   });
 }
 
@@ -92,10 +92,7 @@ export function useGodownTransferById(
 
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnMount: true,
   });
 }
 

@@ -18,8 +18,9 @@ export function useCompanies() {
     staleTime: 0,
     gcTime: 0,
 
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
   });
 }
 
@@ -32,9 +33,7 @@ export function useCompFinyearMapping(companyId: number | null) {
 
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnMount: true,
   });
 }
 

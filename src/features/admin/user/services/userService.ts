@@ -34,7 +34,7 @@ class UserService {
         { userid: this.getUserId() }
       );
 
-      this.handleError(response);
+     // this.handleError(response);
       return response.data || [];
 
     } catch (error: any) {

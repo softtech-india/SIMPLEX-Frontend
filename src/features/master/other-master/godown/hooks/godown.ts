@@ -21,10 +21,9 @@ export function useGodowns() {
 
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
 
   });
 }
@@ -35,12 +34,13 @@ export function useGodown(id: number) {
     queryKey: GODOWN_KEYS.detail(id),
     queryFn: () => godownService.getProdGodownById(id),
 
+    enabled: !!id,
+
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
   });
 }
 

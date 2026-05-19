@@ -22,12 +22,14 @@ interface ProdFormProps {
   onClose: () => void;
   ProductId: number;
   mode: OperationMode;
+  returnAfterSave?: boolean;
+  onSuccess?: (product: any) => void;
 }
 
 type Option = { value: number | string; label: string };
 
 
-export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps) {
+export function ProductForm({ visible, onClose, ProductId, mode, returnAfterSave, onSuccess }: ProdFormProps) {
   const userId = getStorageItem("userId");
   const confirm = useConfirm();
   const defaultFocusRef = useRef<HTMLInputElement>(null);
@@ -246,9 +248,14 @@ export function ProductForm({ visible, onClose, ProductId, mode }: ProdFormProps
       };
 
       if (isAddMode) {
-        await createMutation.mutateAsync(payload);
+        const result = await createMutation.mutateAsync(payload);
         reset(ProductDefaultValues);
-       // onClose();
+        // onClose();
+        if (returnAfterSave) {
+          onSuccess?.(result);
+          onClose();
+          return;
+        }
         defaultFocusRef.current?.focus();
         return;
       }

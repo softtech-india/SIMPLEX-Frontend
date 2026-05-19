@@ -33,7 +33,7 @@ class FinyearService {
         { userid: this.getUserId(), compid: this.getCompanyId() }
       );
 
-      this.handleError(response);
+     // this.handleError(response);
       return response.data || [];
 
     } catch (error: any) {

@@ -58,7 +58,7 @@ class CompFinyearMapping {
         }
       );
 
-      this.handleError(response);
+     // this.handleError(response);
 
       return {
         mapped: response.mapped || [],

@@ -22,9 +22,9 @@ export function useBranches() {
     staleTime: 0,
     gcTime: 0,
 
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
 
   });
 }
@@ -35,12 +35,11 @@ export function useBranch(id: number) {
     queryKey: BRANCH_KEYS.detail(id),
     queryFn: () => branchService.getBranchById(id),
 
+    enabled: !!id, 
+
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnMount: true,
   });
 }
 

@@ -21,9 +21,9 @@ export function useUserBranchMappingList(mapuserid: number) {
     staleTime: 0,
     gcTime: 0,
 
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
 
   });
 }
@@ -34,12 +34,10 @@ export function useUserBranchMapping(mapuserid: number, brnchid: number, compid:
     queryKey: [...USER_BRANCH_KEYS.detail(mapuserid), brnchid],
     queryFn: () => userBranchMappingService.getUserBranchMappingById(mapuserid, brnchid, compid),
     enabled: !!mapuserid && !!brnchid,
+
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnMount: true,
   });
 }
 

@@ -10,7 +10,7 @@ import { useUserForm } from "../hooks/useUserBranchMappingForm";
 import { yesNoTags, Statustype, } from "@/common/utility/data"
 import { FormSelect } from "@/common/components/FormSelect";
 import { useQuery } from "@tanstack/react-query";
-import { fetchBranchList, fetchCompanySelectionList } from "@/api/master/ledger-api";
+import { fetchBranchList, fetchCompanyList } from "@/api/master/ledger-api";
 import { useAppStorage } from "@/hooks/useAuthStorage";
 
 
@@ -84,7 +84,7 @@ export function UserBranchMappingForm({ visible, onClose, formDataId, mode, sele
 
   const { data: companyList = [] } = useQuery({
     queryKey: ["companyList", userId],
-    queryFn: () => fetchCompanySelectionList(userId),
+    queryFn: () => fetchCompanyList(userId),
     staleTime: 0,
     retry: 1,
     enabled: !!visible,

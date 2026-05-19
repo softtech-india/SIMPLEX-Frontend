@@ -38,12 +38,12 @@ class UserBranchMappingService {
         { userid: this.getUserId(), mapuserid }
       );
 
-      this.handleError(response);
+      //this.handleError(response);
       return response.data || [];
 
     } catch (error: any) {
       console.error("Error fetching getAllUserBranchMappings:", error);
-      toast.error(error.message || "Failed to fetch user branch mappings");
+      //toast.error(error.message || "Failed to fetch user branch mappings");
       throw error;
     }
   }

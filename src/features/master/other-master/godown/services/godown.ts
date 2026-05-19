@@ -35,12 +35,12 @@ class GodownService {
         { userid: this.getUserId(), compid: this.getCompanyId() }
       );
 
-      this.handleError(response);
+      //this.handleError(response);
       return response.data || [];
 
     } catch (error: any) {
       console.error("Error fetching All Godown:", error);
-      toast.error(error.message || "Failed to fetch Godown");
+      //toast.error(error.message || "Failed to fetch Godown");
       throw error;
     }
   }

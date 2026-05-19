@@ -36,12 +36,12 @@ class CustomerService {
         { userid: this.getUserId(), compid: this.getCompanyId(), nature: "CU" }
       );
 
-     this.handleError(response);
+      //this.handleError(response);
       return response.data || [];
 
     } catch (error: any) {
       console.error("Error fetching customer:", error);
-      toast.error(error.message || "Failed to fetch customer");
+      //toast.error(error.message || "Failed to fetch customer");
       throw error;
     }
   }

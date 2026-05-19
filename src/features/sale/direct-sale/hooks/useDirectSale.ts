@@ -58,8 +58,7 @@ export function useDirectSaleById(params: UseDirectSaleByIdParams) {
         finid: params.finid,
       }),
 
-    enabled: !!params.id, // only run when id exists
-
+    enabled: !!params.id, 
     staleTime: 0,
     gcTime: 0,
 

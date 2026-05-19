@@ -46,9 +46,9 @@ export function usePurchaseOrderList(params: GetPurchaseOrderParams) {
     staleTime: 0,
     gcTime: 0,
 
-    refetchOnMount: "always",
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
   });
 }
 
@@ -65,14 +65,12 @@ export function usePurchaseOrderById(params: UsePurchaseOrderByIdParams) {
         finid: params.finid,
       }),
 
-    enabled: !!params.id, // only run when id exists
+    enabled: !!params.id, 
 
     staleTime: 0,
     gcTime: 0,
+    refetchOnMount: true,
 
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
   });
 }
 

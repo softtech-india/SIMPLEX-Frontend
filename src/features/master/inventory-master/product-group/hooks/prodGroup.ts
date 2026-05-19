@@ -20,10 +20,9 @@ export function useProdGroups() {
 
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
 
   });
 }
@@ -34,12 +33,13 @@ export function useProdGroup(id: number) {
     queryKey: PROD_GROUP_KEYS.detail(id),
     queryFn: () => prodGroupService.getProdGroupById(id),
 
+     enabled: !!id,
+
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
   });
 }
 

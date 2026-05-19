@@ -20,10 +20,9 @@ export function useProdCategories() {
 
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
 
   });
 }
@@ -33,13 +32,14 @@ export function useProdCategory(id: number) {
   return useQuery({
     queryKey: PROD_CATEGORY_KEYS.detail(id),
     queryFn: () => prodCategoryService.getProdCategoryById(id),
+    
+    enabled: !!id,
 
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
   });
 }
 

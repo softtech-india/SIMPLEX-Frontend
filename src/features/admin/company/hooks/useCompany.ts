@@ -20,9 +20,9 @@ export function useCompanies() {
     staleTime: 0,
     gcTime: 0,
 
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
   });
 }
 
@@ -35,10 +35,7 @@ export function useCompany(id: number) {
 
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true
+    refetchOnMount: true,
   });
 }
 

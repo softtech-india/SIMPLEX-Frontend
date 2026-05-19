@@ -45,11 +45,11 @@ class OpeningStockService {
         params
       );
 
-      this.handleError(response);
+      //this.handleError(response);
       return response.data || [];
     } catch (error: any) {
       console.error("Error fetching opening stock:", error);
-      toast.error(error.message || "Failed to fetch opening stock");
+      //toast.error(error.message || "Failed to fetch opening stock");
       throw error;
     }
   }

@@ -21,10 +21,9 @@ export function useBillTypes() {
 
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
 
   });
 }
@@ -35,12 +34,13 @@ export function useBillType(id: number) {
     queryKey: BILLTYPE_KEYS.detail(id),
     queryFn: () => billTypeService.getProdBillTypeById(id),
 
+    enabled: !!id,
+
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
   });
 }
 

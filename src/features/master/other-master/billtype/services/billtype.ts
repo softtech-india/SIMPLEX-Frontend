@@ -36,12 +36,12 @@ class BillTypeService {
         { userid: this.getUserId(), compid: this.getCompanyId() }
       );
 
-      this.handleError(response);
+      //this.handleError(response);
       return response.data || [];
 
     } catch (error: any) {
       console.error("Error fetching All Bill type:", error);
-      toast.error(error.message || "Failed to fetch Bill type");
+      //toast.error(error.message || "Failed to fetch Bill type");
       throw error;
     }
   }

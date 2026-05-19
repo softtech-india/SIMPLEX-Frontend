@@ -25,6 +25,7 @@ import { apiCall } from "@/utils/apiClient";
 import { useSaleQrScanner } from "@/hooks/useSaleQrScanner";
 import { usePathname } from "next/navigation";
 import { OrderbasedSaleItems } from "./OrderbasedSaleItems";
+import { useMasterModal } from "@/hooks/useMasterModal";
 
 interface DirectSaleFormProps {
   visible: boolean;
@@ -45,6 +46,11 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
     branchId,
     finid,
   } = useUserStore();
+
+  const { open } = useMasterModal();
+  const handleSortcutCreate = async () => {
+    await open("customer");
+  };
 
   const confirmDelete = useConfirm();
   const pathname = usePathname();
@@ -1188,6 +1194,11 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
           columns={searchCustomerColumns}
           searchFields={searchCustomerFields}
           onSelect={handleCustomerSelect}
+          createNewConfig={{
+            enabled: true,
+            label: "Create New Customer",
+            onCreateNew: handleSortcutCreate,
+          }}
         />
 
         <SearchModal

@@ -32,17 +32,16 @@ export function useTransporters(branchId: string | null) {
 export function useTransporter(id: number) {
   return useQuery({
     queryKey: TRANSPORTER_KEYS.detail(id),
-
     queryFn: () => transporterService.getTransporterById(id),
+    
+    enabled: !!id,
 
     staleTime: 0,
     gcTime: 0,
-
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
 
-    enabled: id !== 0,
   });
 }
 
