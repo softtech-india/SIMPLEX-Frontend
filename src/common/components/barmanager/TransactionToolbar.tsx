@@ -132,7 +132,7 @@ export function TransactionToolbar({
           <strong className="text-white truncate">{title}</strong>
 
           <div className="flex gap-1 relative" ref={shareRef}>
-            {canAdd && (
+            {canAdd && onAdd && (
               <button onClick={onAdd} className="p-1 border rounded main-color">
                 <Plus size={14} />
               </button>
@@ -171,13 +171,13 @@ export function TransactionToolbar({
 
         {/* ACTIONS */}
         <div className="flex gap-2 flex-wrap">
-          {canAdd && (
+          {canAdd && onAdd && (
             <button onClick={onAdd} className="secondary-btn">
               <Plus size={16} /> Add
             </button>
           )}
 
-          {canEdit && (
+          {canEdit && onEdit && (
             <button
               onClick={onEdit}
               disabled={isEditDisabled}
@@ -207,7 +207,7 @@ export function TransactionToolbar({
             </button>
           )}
 
-          {canDelete && (
+          {canDelete && onDelete && (
             <button
               onClick={onDelete}
               disabled={isDeleteDisabled}
@@ -221,7 +221,7 @@ export function TransactionToolbar({
             <RefreshCw size={16} /> Refresh
           </button>
 
-          {canView && (
+          {canView && onView && (
             <button
               onClick={onView}
               //  disabled={!hasSelection}
@@ -231,13 +231,13 @@ export function TransactionToolbar({
             </button>
           )}
 
-          {canExport && (
+          {canExport && onExport && (
             <button onClick={onExport} className="secondary-btn">
               <File size={16} /> Export
             </button>
           )}
 
-          {canPrint && (
+          {canPrint && onPrint && (
             <button
               onClick={onPrint}
               // disabled={!hasSelection}

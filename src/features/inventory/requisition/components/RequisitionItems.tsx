@@ -1,6 +1,6 @@
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
-import SearchModal from "../../../../common/components/SearchModal";
+import SearchModal from "@/common/components/SearchModal";
 
 type RequisitionItemsProps = {
   index: number;

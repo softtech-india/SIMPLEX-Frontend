@@ -91,12 +91,6 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
     return sum + (Number(item?.value) || 0);
   }, 0);
 
-  const handleExit = () => {
-    reset(godownTransferFormDefaults);
-    replace([]);
-    onClose();
-  };
-
   // Reset 
   useEffect(() => {
     if (!visible) return;
@@ -198,6 +192,38 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
   );
   // End Series No Options
 
+  // Search Modal Handlers
+  const baseSearchParams = {
+    userid: userId,
+    compid: companyId,
+  };
+
+  const searchColumns = [
+    { key: "name", label: "Name" },
+  ];
+
+  const searchFields = [
+    { value: "name", label: "Name" },
+  ];
+
+  const { data: BranchOptionsArray = [] } = useQuery({
+    queryKey: ["branchOptions"],
+    queryFn: () => godownTransferService.getAllBranches(),
+    enabled: !!visible,
+    select: (data) =>
+      (data ?? []).map((s: any) => ({
+        value: s.id,
+        label: s.name,
+      })),
+  });
+
+  const BranchOptionsMap = new Map(
+    BranchOptionsArray.map(option => [Number(option.value), option.label])
+  );
+  const currentBranchId = toolbarBranchId;
+  const currentBranchName = formSelectedBranch || BranchOptionsMap.get(Number(toolbarBranchId)) || "";
+
+
   const calculateTotals = (items: any[] = []) => {
     let totqty = 0;
     let totval = 0;
@@ -225,24 +251,20 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
       };
     });
 
-    return { totqty, totval, itemdtl, };
+    return {
+      totqty,
+      totval,
+      itemdtl,
+    };
   };
 
-  // Search Modal Handlers
-  const baseSearchParams = {
-    userid: userId,
-    compid: companyId,
+  const handleGodownSelect = (row: any) => {
+    setValue("godownid", row.id);
+    setValue("godownName", row.name);
+    setValue("godownnm", row.name);
+    setGodownModalOpen(false);
   };
 
-  const searchColumns = [
-    { key: "name", label: "Name" },
-  ];
-
-  const searchFields = [
-    { value: "name", label: "Name" },
-  ];
-
-  // To Branch Modal Handler 
   const handleToBranchSelect = (row: any) => {
     setValue("tobranchid", row.id);
     setValue("toBranchName", row.name);
@@ -274,21 +296,6 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
   }
   const toBranchName = watch("toBranchName") || formSelectedBranch;
 
-
-  // From Godown Modal Handler 
-  const handleFromGodownSelect = (row: any) => {
-    setValue("godownid", row.id);
-    setValue("godownName", row.name);
-    setValue("godownnm", row.name);
-    setGodownModalOpen(false);
-    setValue("togodownid", 0);
-    setValue("togodownName", '');
-    setValue("togodownnm", '');
-  };
-  const fromGodownId = watch("godownid");
-  const fromGodownName = watch("godownName");
-
-  // To Godown Modal Handler
   const handleToGodownSelect = (row: any) => {
     setValue("togodownid", row.id);
     setValue("togodownName", row.name);
@@ -296,9 +303,6 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
     setToGodownModalOpen(false);
   };
 
-  const togodownName = watch("togodownName");
-
-  // Open Pending Rquisition Modal Handler
   const handleOpenPendingReq = () => {
     if (isReadOnly) return;
 
@@ -355,7 +359,7 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
 
   const handleFormSubmit = async (data: any) => {
     try {
-      
+      // Handle DELETE mode first - only needs id and basic params
       if (isDeleteMode) {
         const ok = await confirmDelete({
           title: "Delete Godown Transfer",
@@ -417,6 +421,9 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
     }
   };
 
+  const godownName = watch("godownName");
+
+  const togodownName = watch("togodownName");
   const reqName = watch("reqName");
 
   const selectedProductIds = watchedItems
@@ -494,9 +501,9 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
                 <label className="block text-gray-700 font-medium mb-1">Branch</label>
                 <input
                   type="text"
-                  value={formSelectedBranch}
+                  value={currentBranchName}
                   readOnly
-                  className={`inputField border-gray-400 bg-gray-100 cursor-not-allowed `}
+                  className="inputField border-gray-400 bg-gray-100"
                 />
               </div>
             </div>
@@ -508,22 +515,26 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
             </h2>
 
             <div className="flex flex-wrap gap-4 items-end">
-
               <div className="w-80">
-                <label className="block text-gray-700 font-medium mb-1"> From Godown <span className="text-red-500"> * </span> </label>
+                <label className="block text-gray-700 font-medium mb-1">
+                  From Godown <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
-                  value={fromGodownName || ''}
-                  disabled={isReadOnly}
+                  value={godownName || ''}
                   readOnly
-                  onClick={() => { setGodownModalOpen(true); }}
-                  className={`inputField w-full cursor-pointer 
-                    ${errors?.godownid ? "border-red-500" : "border-gray-400"} 
-                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}
-                  `}
+                  onClick={() => {
+                    if (!isReadOnly) setGodownModalOpen(true);
+                  }}
+                  className={`inputField w-full cursor-pointer ${errors?.godownid
+                    ? "border-red-500"
+                    : "border-gray-400"
+                    } ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
                   placeholder="Select Godown"
                 />
-                {errors?.godownid && (<p className="text-xs text-red-500 mt-1">{errors.godownid.message}</p>)}
+                {errors?.godownid && (
+                  <p className="text-xs text-red-500 mt-1">{errors.godownid.message}</p>
+                )}
               </div>
 
               <div className="w-80">
@@ -531,13 +542,14 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
                 <input
                   type="text"
                   value={toBranchName || ''}
-                  disabled={isReadOnly}
+                  // disabled={isReadOnly}
+                  disabled={true}
                   onClick={() => { setToBranchModalOpen(true); }}
                   tabIndex={-1}
                   readOnly
                   className={`inputField w-full cursor-pointer
                     ${errors?.tobranchid ? "border-red-500" : "border-gray-400"}
-                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}
+                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "bg-gray-100 cursor-not-allowed"}
                   `}
                   placeholder="Select Branch"
                 />
@@ -545,13 +557,15 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
               </div>
 
               <div className="w-80">
-                <label className="block text-gray-700 font-medium mb-1"> To Godown <span className="text-red-500"> * </span> </label>
+                <label className="block text-gray-700 font-medium mb-1">
+                  To Godown <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   value={togodownName}
-                  disabled={isReadOnly}
                   readOnly
                   onClick={() => {
+                    if (isReadOnly) return;
                     const toBranchIdValue = watch("tobranchid");
                     if (!toBranchIdValue || toBranchIdValue === 0) {
                       toast.error("Please select To Branch first");
@@ -559,30 +573,35 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
                     }
                     setToGodownModalOpen(true);
                   }}
-                  className={`inputField w-full cursor-pointer 
-                    ${errors?.togodownid ? "border-red-500" : "border-gray-400"} 
-                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}
-                  `}
+                  className={`inputField w-full cursor-pointer ${errors?.togodownid
+                    ? "border-red-500"
+                    : "border-gray-400"
+                    } ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
                   placeholder="Select To Godown"
                 />
-                {errors?.togodownid && (<p className="text-xs text-red-500 mt-1">{errors.togodownid.message}</p>)}
+                {errors?.togodownid && (
+                  <p className="text-xs text-red-500 mt-1">{errors.togodownid.message}</p>
+                )}
               </div>
 
               <div className="w-76">
-                <label className="block text-gray-700 font-medium mb-1"> Pending Requisition <span className="text-red-500"> * </span></label>
+                <label className="block text-gray-700 font-medium mb-1">
+                  Pending Requisition
+                </label>
                 <input
                   type="text"
                   value={reqName || ''}
-                  disabled={isReadOnly}
                   readOnly
-                  onClick={() => { handleOpenPendingReq(); }}
-                  className={`inputField w-full cursor-pointer
-                     ${errors?.reqno ? "border-red-500" : "border-gray-400"} 
-                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}
-                  `}
+                  onClick={() => {
+                    if (isReadOnly) return;
+                    handleOpenPendingReq();
+                  }}
+                  className={`inputField w-full cursor-pointer ${errors?.reqno
+                    ? "border-red-500"
+                    : "border-gray-400"
+                    } ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
                   placeholder="Select Pending Requisition"
                 />
-                {errors?.reqno && (<p className="text-xs text-red-500 mt-1">{errors.reqno.message}</p>)}
               </div>
             </div>
           </section>
@@ -690,7 +709,7 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
           )}
           <button
             type="button"
-            onClick={handleExit}
+            onClick={onClose}
             disabled={isSubmitting}
             className="secondary-btn disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -728,7 +747,7 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
           baseParams={{ ...baseSearchParams, branchid: toolbarBranchId }}
           columns={searchColumns}
           searchFields={searchFields}
-          onSelect={handleFromGodownSelect}
+          onSelect={handleGodownSelect}
         />
 
         <SearchModal
@@ -739,7 +758,6 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
           columns={searchColumns}
           searchFields={searchFields}
           onSelect={handleToGodownSelect}
-          excludeIds={[Number(fromGodownId)]}
         />
 
         <SearchModal

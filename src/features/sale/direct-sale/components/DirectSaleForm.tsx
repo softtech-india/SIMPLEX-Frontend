@@ -924,8 +924,8 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
                   onClick={() => setTransporterModalOpen(true)}
                   className={`inputField w-full border border-gray-300 
                     ${errors.transporterid && !transporterName ? "border-red-500" : "border-gray-400"}
-                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
-                  }
+                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}
+                  `}
                   placeholder="Select transporter "
                 />
                 {errors.transporterid && !transporterName && <p className="text-red-500 text-xs">{errors.transporterid.message}</p>}
