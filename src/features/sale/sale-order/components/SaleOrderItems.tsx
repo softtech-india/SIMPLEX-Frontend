@@ -141,9 +141,9 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
           `}
           placeholder="Select Product"
         />
-        {errors?.itemdtl?.[index]?.productid && !item?.productid && (
+        {/* {errors?.itemdtl?.[index]?.productid && !item?.productid && (
           <p className="text-xs text-red-500 mt-1">  {errors.itemdtl[index].productid.message} </p>
-        )}
+        )} */}
       </div>
 
       <div className="w-28">
@@ -154,9 +154,9 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
           disabled={isReadOnly}
           className={`inputField ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-400"}`}
         />
-        {errors?.itemdtl?.[index]?.qty1 && (
+        {/* {errors?.itemdtl?.[index]?.qty1 && (
           <p className="text-xs text-red-500 mt-1"> {errors.itemdtl[index].qty1.message}</p>
-        )}
+        )} */}
       </div>
 
       <div className="w-28">
@@ -173,6 +173,7 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
         <label className="block text-gray-700 font-medium mb-1"> Value</label>
         <input
           type="number"
+          tabIndex={-1}
           value={value}
           readOnly
           className="inputField  bg-gray-100 border-gray-400"

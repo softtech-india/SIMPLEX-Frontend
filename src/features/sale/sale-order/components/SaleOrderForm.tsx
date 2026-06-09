@@ -9,7 +9,7 @@ import { SaleOrderFormType, OperationMode } from "../types/saleOrder.types";
 import { SaleOrderFormSchema } from "../schemas/saleOrder.schema";
 import { pruchaseOrderFormDefaults } from "../constants/saleOrderFormDefaults";
 import { useSaleOrderForm } from "../hooks/useSaleOrderForm";
-import { useFieldArray } from "react-hook-form";
+import { FieldErrors, useFieldArray } from "react-hook-form";
 import { fetchSeriesList } from "@/api/purchase/purchase-api";
 import useUserStore from "@/store/userStore";
 import { FormSelect } from "@/common/components/FormSelect";
@@ -22,6 +22,8 @@ import { useConfirm } from "@/common/hooks/useConfirm";
 import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
 import { SHORTCUTS } from "@/common/constants/shortcuts";
 import { useMasterModal } from "@/hooks/useMasterModal";
+import { getFormErrorMessage } from "@/helpers/formErrorMessage";
+
 
 interface SaleOrderFormProps {
   visible: boolean;
@@ -371,10 +373,12 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
   };
 
   // Debug validation issues 
-  const onError = (err: any) => {
-    console.error("Validation errors:", err);
-  };
+  const onError = (errors: FieldErrors) => {
+    console.error("Validation errors:", errors);
 
+    const message = getFormErrorMessage(errors) ?? "Please correct the highlighted fields.";
+    toast.error(message);
+  };
 
   return (
     <Popup
@@ -457,7 +461,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
                   }
                   placeholder="Select Customer"
                 />
-                {errors.customerid && !customerName && <p className="text-red-500 mt-1 text-sm">{errors.customerid.message}</p>}
+                {/* {errors.customerid && !customerName && <p className="text-red-500 mt-1 text-sm">{errors.customerid.message}</p>} */}
               </div>
 
               <div className="w-48">
@@ -564,6 +568,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
                 </span>
                 <input
                   type="number"
+                  tabIndex={-1}
                   value={totalQty}
                   readOnly
                   className="inputField w-full bg-gray-100"
@@ -578,6 +583,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
                 </span>
                 <input
                   type="number"
+                  tabIndex={-1}
                   value={totalValue}
                   readOnly
                   className="inputField w-full bg-gray-100"
