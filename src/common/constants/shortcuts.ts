@@ -10,5 +10,6 @@ export const SHORTCUTS = {
   CONFIRM: "ALT+C",
 
   SAVE: "ALT+S",
+  ADDITEM: "ALT+I",
   EXIT: "ALT+X",
 } as const;

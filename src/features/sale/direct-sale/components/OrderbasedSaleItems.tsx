@@ -153,185 +153,164 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
   };
 
   return (
-    <div className="flex flex-wrap gap-4 items-end">
+    <>
+      <tr className="border-b">
 
-      <div className="w-68">
-        <label className="block text-gray-700  font-medium mb-1">
-          Brand
-        </label>
+        <td className="border p-1  w-68">
+          <input
+            type="text"
+            value={item?.pcategorynm || ""}
+            readOnly
+            onClick={() => setCategoryModalOpen(true)}
+            className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"} `}
+            placeholder="Select Brand"
+          />
+        </td>
 
-        <input
-          type="text"
-          value={item?.pcategorynm || ""}
-          readOnly
-          onClick={() => setCategoryModalOpen(true)}
-          className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"} `}
-          placeholder="Select Brand"
-        />
-      </div>
-
-      <div className="w-80">
-        <label className="block text-gray-700  font-medium mb-1">
-          Product
-        </label>
-
-        <input
-          type="text"
-          value={item?.productnm || ""}
-          readOnly
-          className={`
+        <td className="border p-1  w-80">
+          <input
+            type="text"
+            value={item?.productnm || ""}
+            readOnly
+            disabled={isReadOnly || !item?.pcategoryid}
+            className={`
             inputField w-full 
-           
-            ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : " cursor-pointer "}
-          `}
-          placeholder="Select Product"
-        />
-        {/*
-         ${errors?.itemdtl?.[index]?.productid ? "border-red-500" : "border-gray-300"}
-        {errors?.itemdtl?.[index]?.productid && (
-          <p className="text-xs text-red-500 mt-1"> {errors.itemdtl[index].productid.message} </p>
-        )} */}
-      </div>
-
-
-      <div className="w-14">
-        <label className="block text-gray-700 font-medium mb-1">
-          Quantity
-        </label>
-
-        <input
-          type="number"
-          min={0}
-          {...register(`itemdtl.${index}.qty1`, {
-            valueAsNumber: true,
-            onChange: (e: any) => {
-              let value = Number(e.target.value);
-              if (value < 1) value = 1;
-
-              const balanceqty1 = Number(watchedItems?.[index]?.balanceqty1) || 0;
-              const clqty = Number(watchedItems?.[index]?.clqty) || 0;
-              const maxQty = Math.min(balanceqty1, clqty) || 0;
-              if (value > maxQty) {
-                toast.error(`Sale quantity cannot exceed available limit (${maxQty})`);
-                value = maxQty;
-              }
-
-              setValue(`itemdtl.${index}.qty1`, value);
-            },
-          })}
-          disabled={isReadOnly || Number(watchedItems?.[index]?.clqty) === 0}
-          className={`inputField 
-            ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-300"} 
-            ${isReadOnly || Number(watchedItems?.[index]?.clqty) === 0  ? "bg-gray-100 cursor-not-allowed" : "" }
-          `}
-          onKeyDown={(e) => { if (e.key === "-") e.preventDefault(); }}
-        />
-      </div>
-
-      <div className="w-14">
-        <label className="block text-gray-700  font-medium mb-1">
-          Unit
-        </label>
-        <input
-          {...register(`itemdtl.${index}.unit`)}
-          readOnly
-          className={`inputField border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
-        />
-      </div>
-
-      <div className="w-28">
-        <label className="block text-gray-700 font-medium mb-1">
-          Rate
-        </label>
-
-        <Controller
-          control={control}
-          name={`itemdtl.${index}.rate`}
-          render={({ field }) => (
-            <input
-              type="text"
-              inputMode="decimal"
-              placeholder="0.000000"
-              value={field.value ?? ""}
-
-              onChange={(e) => {
-                let value = e.target.value;
-                value = value.replace(/[^0-9.]/g, "");
-
-                const parts = value.split(".");
-                if (parts.length > 2) return;
-
-                const integerPart = parts[0] || "";
-                const decimalPart = parts[1] || "";
-
-                if (integerPart.length > 12) return;
-                if (decimalPart.length > 6) return;
-
-                field.onChange(value);
-              }}
-
-              onBlur={() => {
-                const numericValue = Number(field.value || 0);
-                field.onChange(numericValue);
-              }}
-
-              className={`inputField ${errors?.itemdtl?.[index]?.rate ? "border-red-500" : "border-gray-400"}`}
-            />
-          )}
-        />
-        {/* {errors?.itemdtl?.[index]?.rate && (<p className="text-xs text-red-500 mt-1">{errors.itemdtl[index].rate.message} </p>)} */}
-      </div>
-
-      <div className="w-24">
-        <label className="block text-gray-700  font-medium mb-1">
-          Value
-        </label>
-        <input
-          type="number"
-          min={0}
-          value={Number(value.toFixed(2))}
-          readOnly
-          className={`inputField  bg-gray-100 border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
-        />
-      </div>
-      <div className="w-16">
-        <label className="block text-gray-700  font-medium mb-1">
-          Order Qty.
-        </label>
-        <input
-          type="number"
-          min={0}
-          {...register(`itemdtl.${index}.balanceqty1`)}
-          readOnly
-          className={` inputField  bg-gray-100 cursor-not-allowed"`}
-        />
-      </div>
-
-      <div className="w-14">
-        <label className="block text-gray-700 font-medium mb-1"> Cl. Stock</label>
-        <input
-          type="number"
-          min={0}
-          {...register(`itemdtl.${index}.clqty`)}
-          readOnly
-          className="inputField  bg-gray-100 border-gray-400"
-        />
-      </div>
-
-      {!isReadOnly && (
-        <div className="w-12 flex justify-center">
-          <button
-            type="button"
-            onClick={() => remove(index)}
-            disabled={fieldsLength === 1}
-            className={`px-2 py-2 rounded flex items-center justify-center
-              ${fieldsLength === 1 ? "bg-gray-300 cursor-not-allowed" : "bg-red-300 hover:bg-red-600 text-white"}
+              ${errors?.itemdtl?.[index]?.productid ? "border-red-500" : "border-gray-300"}
+              ${isReadOnly || !item?.pcategoryid ? 'bg-gray-200 cursor-not-allowed border-gray-300' : ""}
             `}
-          >
-            <Trash2 size={16} />
-          </button>
-        </div>
-      )}
+            placeholder="Select Product"
+          />
+          {/* {errors?.itemdtl?.[index]?.productid && (
+            <p className="text-xs text-red-500 mt-1"> {errors.itemdtl[index].productid.message} </p>
+          )} */}
+        </td>
+
+        <td className="border p-1  w-14">
+          <input
+            type="number"
+            min={0}
+            {...register(`itemdtl.${index}.qty1`, {
+              valueAsNumber: true,
+              onChange: (e: any) => {
+                let value = Number(e.target.value);
+                if (value < 1) value = 1;
+
+                const balanceqty1 = Number(watchedItems?.[index]?.balanceqty1) || 0;
+                const clqty = Number(watchedItems?.[index]?.clqty) || 0;
+                const maxQty = Math.min(balanceqty1, clqty) || 0;
+                if (value > maxQty) {
+                  toast.error(`Sale quantity cannot exceed available limit (${maxQty})`);
+                  value = maxQty;
+                }
+
+                setValue(`itemdtl.${index}.qty1`, value);
+              },
+            })}
+            disabled={isReadOnly || Number(watchedItems?.[index]?.clqty) === 0}
+            className={`inputField 
+            ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-300"} 
+            ${isReadOnly || Number(watchedItems?.[index]?.clqty) === 0 ? "bg-gray-200 cursor-not-allowed" : ""}
+          `}
+            onKeyDown={(e) => { if (e.key === "-") e.preventDefault(); }}
+          />
+        </td>
+
+        <td className="border p-1 w-14">
+          <input
+            {...register(`itemdtl.${index}.unit`)}
+            readOnly
+            className={`inputField border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+          />
+        </td>
+
+        <td className="border p-1 w-28">
+          <Controller
+            control={control}
+            name={`itemdtl.${index}.rate`}
+            render={({ field }) => (
+              <input
+                type="text"
+                inputMode="decimal"
+                placeholder="0.000000"
+                value={field.value ?? ""}
+
+                onChange={(e) => {
+                  let value = e.target.value;
+                  value = value.replace(/[^0-9.]/g, "");
+
+                  const parts = value.split(".");
+                  if (parts.length > 2) return;
+
+                  const integerPart = parts[0] || "";
+                  const decimalPart = parts[1] || "";
+
+                  if (integerPart.length > 12) return;
+                  if (decimalPart.length > 6) return;
+
+                  field.onChange(value);
+                }}
+
+                onBlur={() => {
+                  const numericValue = Number(field.value || 0);
+                  field.onChange(numericValue);
+                }}
+
+                className={`inputField ${errors?.itemdtl?.[index]?.rate ? "border-red-500" : "border-gray-400"}`}
+              />
+            )}
+          />
+          {/* {errors?.itemdtl?.[index]?.rate && (<p className="text-xs text-red-500 mt-1">{errors.itemdtl[index].rate.message} </p>)} */}
+        </td>
+
+        <td className="border p-1 w-24">
+          <input
+            type="number"
+            min={0}
+            tabIndex={-1}
+            value={Number(value.toFixed(2))}
+            readOnly
+            className={`inputField bg-gray-100 border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+          />
+        </td>
+
+        <td className="border p-1 w-16">
+          <input
+            type="number"
+            min={0}
+            tabIndex={-1}
+            {...register(`itemdtl.${index}.balanceqty1`)}
+            readOnly
+            className={` inputField bg-gray-100 cursor-not-allowed"`}
+          />
+        </td>
+
+        <td className="border p-1 w-14">
+          <input
+            type="number"
+            tabIndex={-1}
+            min={0}
+            {...register(`itemdtl.${index}.clqty`)}
+            readOnly
+            className="inputField bg-gray-100 border-gray-400"
+          />
+        </td>
+
+        {!isReadOnly && (
+          <td className="w-12 text-center align-middle">
+            <button
+              type="button"
+              onClick={() => remove(index)}
+              disabled={fieldsLength === 1}
+              className={`inline-flex items-center justify-center p-2 rounded
+              ${fieldsLength === 1 ? "bg-gray-400 cursor-not-allowed" : "bg-red-500 hover:bg-red-600 text-white"} 
+            `}
+            >
+              <Trash2 size={16} />
+            </button>
+          </td>
+        )}
+
+      </tr>
 
       <SearchModal
         open={categoryModalOpen}
@@ -345,7 +324,7 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
         currentId={currentId}
       />
 
-    </div>
+    </>
 
   );
 

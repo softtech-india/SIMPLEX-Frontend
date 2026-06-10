@@ -237,16 +237,17 @@ export default function DirectSaleModule() {
         )}
 
 
-        <DirectSaleForm
-          visible={isFormOpen}
-          onClose={handleFormClose}
-          formDirectSaleId={formDirectSaleId}
-          formSelectedBranch={formSelectedBranch || branchnm}
-          toolbarBranchId={Number(toolbarBranchId) || Number(branchId)}
-          mode={formMode}
-        />
-
-
+        {isFormOpen && (
+          <DirectSaleForm
+            visible={isFormOpen}
+            onClose={handleFormClose}
+            formDirectSaleId={formDirectSaleId}
+            formSelectedBranch={formSelectedBranch || branchnm}
+            toolbarBranchId={Number(toolbarBranchId) || Number(branchId)}
+            mode={formMode}
+          />
+        )}
+        
         <LoadPanel
           shadingColor="rgba(0,0,0,0.4)"
           visible={isLoading}

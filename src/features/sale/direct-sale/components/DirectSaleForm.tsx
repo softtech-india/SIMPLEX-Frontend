@@ -9,7 +9,7 @@ import { DirectSaleFormType, OperationMode } from "../types/directSale.types";
 import { DirectSaleFormSchema } from "../schemas/directSale.schema";
 import { defaultItemDtl, directSaleFormDefaults } from "../constants/directSaleFormDefaults";
 import { useDirectSaleForm } from "../hooks/useDirectSaleForm";
-import { useFieldArray } from "react-hook-form";
+import { FieldErrors, useFieldArray } from "react-hook-form";
 import { fetchSeriesList } from "@/api/purchase/purchase-api";
 import useUserStore from "@/store/userStore";
 import { FormSelect } from "@/common/components/FormSelect";
@@ -26,6 +26,7 @@ import { useSaleQrScanner } from "@/hooks/useSaleQrScanner";
 import { usePathname } from "next/navigation";
 import { OrderbasedSaleItems } from "./OrderbasedSaleItems";
 import { useMasterModal } from "@/hooks/useMasterModal";
+import { getFormErrorMessage } from "@/helpers/formErrorMessage";
 
 interface DirectSaleFormProps {
   visible: boolean;
@@ -38,16 +39,14 @@ interface DirectSaleFormProps {
   onUpdated?: () => void;
 }
 
-export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formSelectedBranch, toolbarBranchId, onUpdated }: DirectSaleFormProps) {
+export function DirectSaleForm(
+  { visible, onClose, formDirectSaleId, mode, formSelectedBranch, toolbarBranchId, onUpdated }: DirectSaleFormProps
+) {
 
-  const {
-    userId,
-    companyId,
-    branchId,
-    finid,
-  } = useUserStore();
+  const { userId, companyId, branchId, finid } = useUserStore();
 
   const { open } = useMasterModal();
+
   const handleSortcutCreate = async () => {
     await open("customer");
   };
@@ -78,6 +77,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
     {
       [SHORTCUTS.SAVE]: () => { formRef.current?.requestSubmit(); },
       [SHORTCUTS.EXIT]: () => { onClose(); },
+      [SHORTCUTS.ADDITEM]: () => { handleAddItem(); },
     },
     visible
   );
@@ -98,7 +98,9 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
 
   const isSubmitting = createMutation.isPending || approveMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
-  const { control, register, handleSubmit, setFocus, reset, watch, setValue, getValues, trigger, formState: { errors }, } = useDirectSaleForm(isApproveMode);
+  const {
+    control, register, handleSubmit, setFocus, reset, watch, setValue, getValues, trigger, formState: { errors },
+  } = useDirectSaleForm(isApproveMode);
 
   const { fields, append, remove, replace } = useFieldArray({
     control,
@@ -110,7 +112,6 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
     control,
     name: "itemdtl",
   }) || [];
-
 
 
   const totalQty = (watchedItems || []).reduce((sum, item) => {
@@ -154,11 +155,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
     onClose();
   };
 
-  // useEffect(() => {
-  //   console.log('watchedItems :', watchedItems);
-  // }, [watchedItems])
 
-  // 
   const billdt = watch("billdt");
 
   // Reset form 
@@ -224,9 +221,7 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
         ...directSaleFormDefaults,
         ...DirectSale,
 
-        billdt: DirectSale.billdt
-          ? formatDateForInput(DirectSale.billdt)
-          : "",
+        billdt: DirectSale.billdt ? formatDateForInput(DirectSale.billdt) : "",
 
         compid: Number(DirectSale.compid ?? 0),
         branchid: Number(DirectSale.branchid ?? 0),
@@ -599,6 +594,23 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
     { value: "R", label: "Credit" },
   ];
 
+  const handleAddItem = async () => {
+
+    const lastIndex = fields.length - 1;
+    const isValid = await trigger([
+      `itemdtl.${lastIndex}.pcategorynm`,
+      `itemdtl.${lastIndex}.productid`,
+    ]);
+
+    if (!isValid) { return; }
+
+    append({
+      ...defaultItemDtl,
+      sl: fields.length + 1,
+      dtlid: fields.length + 1,
+    })
+  };
+
   const handleFormSubmit = async (data: DirectSaleFormSchema) => {
     try {
 
@@ -651,11 +663,9 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
         itemdtl,
       };
 
-      // console.log("FINAL SUBMIT PAYLOAD:", JSON.stringify(payload, null, 2));
 
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
-        console.log('save called')
         reset({
           ...directSaleFormDefaults,
           itemdtl: [],
@@ -710,561 +720,569 @@ export function DirectSaleForm({ visible, onClose, formDirectSaleId, mode, formS
   };
 
   // Debug validation issues 
-  const onError = (err: any) => {
-    console.error("Validation errors:", err);
+  const onError = (errors: FieldErrors) => {
+    console.error("Validation errors:", errors);
+
+    const message = getFormErrorMessage(errors) ?? "Please correct the highlighted fields.";
+    toast.error(message);
   };
 
   const ModelFormName = `${mode} ${isOrderBasedSale ? "Order Based Sale" : "Direct Sale"}`;
 
   return (
-    <Popup
-      visible={visible}
-      onHiding={onClose}
-      title={ModelFormName}
-      width="90vw"
-      height="90vh"
-      dragEnabled
-      showTitle
-      showCloseButton={false}
-    >
-      <form
-        ref={formRef}
-        onSubmit={handleSubmit(handleFormSubmit, onError)}
-        className="flex flex-col h-full"
+    <>
+      <Popup
+        visible={visible}
+        onHiding={onClose}
+        title={ModelFormName}
+        width="90vw"
+        height="90vh"
+        dragEnabled
+        showTitle
+        showCloseButton={false}
       >
-        <div className="flex-1 overflow-y-auto p-2 space-y-2">
+        <form
+          ref={formRef}
+          onSubmit={handleSubmit(handleFormSubmit, onError)}
+          className="flex flex-col h-full"
+        >
+          <div className="flex-1 overflow-y-auto p-2 space-y-2">
 
-          <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
+            <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
 
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50"> Sale Information </h2>
+              <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50"> Sale Information </h2>
 
-            <div className="flex flex-wrap gap-4 items-end">
+              <div className="flex flex-wrap gap-4 items-end">
 
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Series No.</label>
-                <FormSelect
-                  name="vnumid"
-                  control={control}
-                  options={seriesNoOptions}
-                />
-              </div>
+                <div className="w-48">
+                  <label className="block text-gray-700 font-medium mb-1">Series No.</label>
+                  <FormSelect
+                    name="vnumid"
+                    control={control}
+                    options={seriesNoOptions}
+                  />
+                </div>
 
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Num. Method</label>
-                <FormSelect
-                  name="vnummethod"
-                  control={control}
-                  options={numMethodOptions}
-                  isDisabled={selectedSeries?.manualallow === "N"}
-                />
-              </div>
+                <div className="w-48">
+                  <label className="block text-gray-700 font-medium mb-1">Num. Method</label>
+                  <FormSelect
+                    name="vnummethod"
+                    control={control}
+                    options={numMethodOptions}
+                    isDisabled={selectedSeries?.manualallow === "N"}
+                  />
+                </div>
 
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Bill Date</label>
-                <input
-                  type="date"
-                  {...register("billdt")}
-                  disabled={isReadOnly}
-                  className={`inputField ${errors.billdt ? "text-red-500" : "border-gray-400"}`}
-                />
-              </div>
+                <div className="w-48">
+                  <label className="block text-gray-700 font-medium mb-1">Bill Date</label>
+                  <input
+                    type="date"
+                    {...register("billdt")}
+                    disabled={isReadOnly}
+                    className={`inputField ${errors.billdt ? "text-red-500" : "border-gray-400"}`}
+                  />
+                </div>
 
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Bill No</label>
-                <input
-                  type="text"
-                  {...register("billno")}
-                  disabled={isReadOnly || selectedSeries?.manualallow === "N"}
-                  className={`
+                <div className="w-48">
+                  <label className="block text-gray-700 font-medium mb-1">Bill No</label>
+                  <input
+                    type="text"
+                    {...register("billno")}
+                    disabled={isReadOnly || selectedSeries?.manualallow === "N"}
+                    className={`
                     inputField 
                     ${errors.billno ? "" : "border-gray-400"} 
                     ${selectedSeries?.manualallow === "N" ? "bg-gray-100 cursor-not-allowed" : ""}
                   `}
-                />
-              </div>
+                  />
+                </div>
 
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Bill Type <strong className="text-red-500 text-sm"> * </strong></label>
-                <input
-                  type="text"
-                  value={BillTypeName || ''}
-                  disabled={isReadOnly}
-                  tabIndex={-1}
-                  readOnly
-                  onClick={() => setBillTypeModalOpen(true)}
-                  className={`inputField w-full border border-gray-300 
+                <div className="w-48">
+                  <label className="block text-gray-700 font-medium mb-1">Bill Type <strong className="text-red-500 text-sm"> * </strong></label>
+                  <input
+                    type="text"
+                    value={BillTypeName || ''}
+                    disabled={true}
+                    tabIndex={-1}
+                    readOnly
+                    onClick={() => setBillTypeModalOpen(true)}
+                    className={`inputField w-full border border-gray-300 bg-gray-100 cursor-not-allowed
                     ${errors.billtypeid && !BillTypeName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
-                  }
-                  placeholder="Select bill type"
-                />
-                {errors.billtypeid && !BillTypeName && <p className="text-red-500 text-xs">{errors.billtypeid.message}</p>}
-              </div>
+                    }
+                    placeholder="Select bill type"
+                  />
+                  {/* {errors.billtypeid && !BillTypeName && <p className="text-red-500 text-xs">{errors.billtypeid.message}</p>} */}
+                </div>
 
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Cash or Credit</label>
-                <FormSelect
-                  name="cashcrtype"
-                  control={control}
-                  options={cashcrTypeOptions}
-                />
-              </div>
+                <div className="w-48">
+                  <label className="block text-gray-700 font-medium mb-1">Cash or Credit</label>
+                  <FormSelect
+                    name="cashcrtype"
+                    control={control}
+                    options={cashcrTypeOptions}
+                  />
+                </div>
 
-              <div className="w-100">
-                <label className="block text-gray-700 font-medium mb-1"> Customer <strong className="text-red-500 text-sm"> * </strong> </label>
-                <input
-                  type="text"
-                  value={customerName || ''}
-                  disabled={isReadOnly}
-                  readOnly
-                  tabIndex={0}
-                  role="button"
-                  onClick={() => setCustomerModalOpen(true)}
-                  onKeyDown={(e) => handleKeyOpen(e, () => setCustomerModalOpen(true))}
-                  className={`inputField w-full border border-gray-300 
+                <div className="w-100">
+                  <label className="block text-gray-700 font-medium mb-1"> Customer <strong className="text-red-500 text-sm"> * </strong> </label>
+                  <input
+                    type="text"
+                    value={customerName || ''}
+                    disabled={isReadOnly}
+                    readOnly
+                    tabIndex={0}
+                    role="button"
+                    onClick={() => setCustomerModalOpen(true)}
+                    onKeyDown={(e) => handleKeyOpen(e, () => setCustomerModalOpen(true))}
+                    className={`inputField w-full border border-gray-300 
                     ${errors.customerid && !customerName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
-                  }
-                  placeholder="Select Customer"
-                />
-                {errors.customerid && !customerName && <p className="text-red-500 text-xs">{errors.customerid.message}</p>}
-              </div>
+                    }
+                    placeholder="Select Customer"
+                  />
+                  {/* {errors.customerid && !customerName && <p className="text-red-500 text-xs">{errors.customerid.message}</p>} */}
+                </div>
 
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Credit days</label>
-                <input
-                  type="number"
-                  {...register("crdays", { valueAsNumber: true })}
-                  disabled={isReadOnly}
-                  tabIndex={-1}
-                  className={`inputField ${errors.crdays ? "" : "border-gray-400"}`}
-                />
-              </div>
+                <div className="w-48">
+                  <label className="block text-gray-700 font-medium mb-1">Credit days</label>
+                  <input
+                    type="number"
+                    {...register("crdays", { valueAsNumber: true })}
+                    disabled={isReadOnly}
+                    tabIndex={-1}
+                    className={`inputField ${errors.crdays ? "" : "border-gray-400"}`}
+                  />
+                </div>
 
-              {isOrderBasedSale && (
-                <>
-                  <div className="w-68">
-                    <label className="block text-gray-700 font-medium mb-1">So No. & Date <span className="text-red-500 text-sm"> * </span> </label>
-                    <input
-                      type="text"
-                      value={orderno ? `${orderno} - ${formatDate(orderdt)}` : ""}
-                      disabled={isReadOnly}
-                      readOnly
-                      onClick={() => setSoPendingModalOpen(true)}
-                      className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
-                      placeholder="Select SO No. & Date"
-                    />
-                  </div>
-                </>
-              )}
+                {isOrderBasedSale && (
+                  <>
+                    <div className="w-68">
+                      <label className="block text-gray-700 font-medium mb-1">So No. & Date <span className="text-red-500 text-sm"> * </span> </label>
+                      <input
+                        type="text"
+                        value={orderno ? `${orderno} - ${formatDate(orderdt)}` : ""}
+                        disabled={isReadOnly}
+                        readOnly
+                        onClick={() => setSoPendingModalOpen(true)}
+                        className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
+                        placeholder="Select SO No. & Date"
+                      />
+                    </div>
+                  </>
+                )}
 
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Sale Ledger <strong className="text-red-500 text-sm"> * </strong> </label>
-                <input
-                  type="text"
-                  value={SaleLedgerName || ''}
-                  disabled={isReadOnly}
-                  readOnly
-                  tabIndex={-1}
-                  role="button"
-                  onClick={() => setSaleLedgerModalOpen(true)}
-                  onKeyDown={(e) => handleKeyOpen(e, () => setSaleLedgerModalOpen(true))}
-                  className={`inputField w-full border border-gray-300 
+                <div className="w-48">
+                  <label className="block text-gray-700 font-medium mb-1">Sale Ledger <strong className="text-red-500 text-sm"> * </strong> </label>
+                  <input
+                    type="text"
+                    value={SaleLedgerName || ''}
+                    disabled={isReadOnly}
+                    readOnly
+                    tabIndex={-1}
+                    role="button"
+                    onClick={() => setSaleLedgerModalOpen(true)}
+                    onKeyDown={(e) => handleKeyOpen(e, () => setSaleLedgerModalOpen(true))}
+                    className={`inputField w-full border border-gray-300 
                     ${errors.saledgerid && !SaleLedgerName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
-                  }
-                  placeholder="Select sale ledger"
-                />
-                {errors.saledgerid && !SaleLedgerName && <p className="text-red-500 text-xs">{errors.saledgerid.message}</p>}
-              </div>
+                    }
+                    placeholder="Select sale ledger"
+                  />
+                  {/* {errors.saledgerid && !SaleLedgerName && <p className="text-red-500 text-xs">{errors.saledgerid.message}</p>} */}
+                </div>
 
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Saleman <strong className="text-red-500 text-sm"> * </strong> </label>
-                <input
-                  type="text"
-                  value={SalemanName || ''}
-                  disabled={isReadOnly}
-                  readOnly
-                  role="button"
-                  onClick={() => setSalemanModalOpen(true)}
-                  onKeyDown={(e) => handleKeyOpen(e, () => setSalemanModalOpen(true))}
-                  className={`inputField w-full border border-gray-300 
+                <div className="w-48">
+                  <label className="block text-gray-700 font-medium mb-1">Saleman <strong className="text-red-500 text-sm"> * </strong> </label>
+                  <input
+                    type="text"
+                    value={SalemanName || ''}
+                    disabled={isReadOnly}
+                    readOnly
+                    role="button"
+                    onClick={() => setSalemanModalOpen(true)}
+                    onKeyDown={(e) => handleKeyOpen(e, () => setSalemanModalOpen(true))}
+                    className={`inputField w-full border border-gray-300 
                     ${errors.smid && !SalemanName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
-                  }
-                  placeholder="Select saleman"
-                />
-                {errors.smid && !SalemanName && <p className="text-red-500 text-xs">{errors.smid.message}</p>}
-              </div>
+                    }
+                    placeholder="Select saleman"
+                  />
+                  {/* {errors.smid && !SalemanName && <p className="text-red-500 text-xs">{errors.smid.message}</p>} */}
+                </div>
 
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Godown <strong className="text-red-500 text-sm"> * </strong></label>
-                <input
-                  type="text"
-                  value={GodownName || ''}
-                  disabled={isReadOnly}
-                  readOnly
-                  onClick={() => setGodownModalOpen(true)}
-                  className={`inputField w-full border border-gray-300 
+                <div className="w-48">
+                  <label className="block text-gray-700 font-medium mb-1">Godown <strong className="text-red-500 text-sm"> * </strong></label>
+                  <input
+                    type="text"
+                    value={GodownName || ''}
+                    disabled={isReadOnly}
+                    readOnly
+                    onClick={() => setGodownModalOpen(true)}
+                    className={`inputField w-full border border-gray-300 
                     ${errors.godownid && !GodownName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
-                  }
-                  placeholder="Select godown"
-                />
-                {errors.godownid && !GodownName && <p className="text-red-500 text-xs">{errors.godownid.message}</p>}
-              </div>
+                    }
+                    placeholder="Select godown"
+                  />
+                  {/* {errors.godownid && !GodownName && <p className="text-red-500 text-xs">{errors.godownid.message}</p>} */}
+                </div>
 
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Transporter <strong className="text-red-500 text-sm"> * </strong></label>
-                <input
-                  type="text"
-                  value={transporterName || ''}
-                  disabled={isReadOnly}
-                  readOnly
-                  onClick={() => setTransporterModalOpen(true)}
-                  className={`inputField w-full border border-gray-300 
+                <div className="w-48">
+                  <label className="block text-gray-700 font-medium mb-1">Transporter <strong className="text-red-500 text-sm"> * </strong></label>
+                  <input
+                    type="text"
+                    value={transporterName || ''}
+                    disabled={isReadOnly}
+                    readOnly
+                    onClick={() => setTransporterModalOpen(true)}
+                    className={`inputField w-full border border-gray-300 
                     ${errors.transporterid && !transporterName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}
                   `}
-                  placeholder="Select transporter "
-                />
-                {errors.transporterid && !transporterName && <p className="text-red-500 text-xs">{errors.transporterid.message}</p>}
+                    placeholder="Select transporter "
+                  />
+                  {/* {errors.transporterid && !transporterName && <p className="text-red-500 text-xs">{errors.transporterid.message}</p>} */}
+                </div>
+
+                <div className="w-48">
+                  <label className="block text-gray-700 font-medium mb-1">Time</label>
+                  <input
+                    type="time"
+                    {...register("billtime")}
+                    disabled={isReadOnly}
+                    className={`inputField ${errors.billtime ? "text-red-500" : "border-gray-400"}`}
+                  />
+                </div>
+
+                <div className="w-48">
+                  <label className="block text-gray-700 font-medium mb-1">No. of Cartoons</label>
+                  <input
+                    type="text"
+                    {...register("cartoonno")}
+                    disabled={isReadOnly}
+                    placeholder="Enter no. of cartoons"
+                    className={`inputField ${errors.cartoonno ? "text-red-500" : "border-gray-400"}`}
+                  />
+                </div>
+                <div className="w-48">
+                  <label className="block text-gray-700 font-medium mb-1">No. of Lots</label>
+                  <input
+                    type="text"
+                    {...register("lotno")}
+                    disabled={isReadOnly}
+                    placeholder="Enter no. of lots "
+                    className={`inputField ${errors.lotno ? "text-red-500" : "border-gray-400"}`}
+                  />
+                </div>
+
+                <div className="w-48">
+                  <label className="block text-gray-700 font-medium mb-1">Branch </label>
+                  <input
+                    type="text"
+                    value={formSelectedBranch}
+                    readOnly
+                    className={`inputField border-gray-400 bg-gray-100 cursor-not-allowed `}
+                  />
+                </div>
+
+                {!isOrderBasedSale && (
+                  <>
+                    <div className="w-48">
+                      <label className="block text-gray-700 font-medium mb-1"> Scan QR Code <span className="text-red-500"> *</span> </label>
+
+                      <input
+                        type="text"
+                        {...register("qrcode")}
+                        ref={(el) => {
+                          scanInputRef.current = el;
+                          register("qrcode").ref(el);
+                        }}
+                        className="inputField border-gray-300"
+                        onKeyDown={(e: any) => {
+                          if (e.key !== "Enter") return;
+                          e.preventDefault();
+                          handleScan(e.target.value);
+                        }}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            </section>
+
+            {/* Item Details */}
+            <section className="border rounded-md shadow-sm bg-white overflow-hidden">
+
+              <div className="flex justify-between items-center">
+                <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
+                  Item Details
+                </h2>
+
+                {!isReadOnly && (
+                  <button
+                    type="button"
+                    onClick={handleAddItem}
+                    className="primary-btn text-xs px-3 py-1"
+                  >
+                    + Add Item
+                  </button>
+                )}
               </div>
 
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Time</label>
-                <input
-                  type="time"
-                  {...register("billtime")}
-                  disabled={isReadOnly}
-                  className={`inputField ${errors.billtime ? "text-red-500" : "border-gray-400"}`}
-                />
+              <div className="space-y-1">
+                <div className="overflow-x-auto border rounded-md">
+                  <table className="min-w-full border-collapse">
+
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="border p-2 text-left">Brand <strong className="text-red-500"> * </strong> </th>
+                        <th className="border p-2 text-left">Product <strong className="text-red-500"> * </strong></th>
+                        <th className="border p-2 text-left">Qty</th>
+                        {isOrderBasedSale && (<th className="border p-2 text-left">Unit</th>)}
+                        <th className="border p-2 text-left">Rate</th>
+                        <th className="border p-2 text-left">Value</th>
+                        {isOrderBasedSale && (<th className="border p-2 text-left">Order Qty.</th>)}
+                        <th className="border p-2 text-left">Cl. Stock</th>
+                        {!isReadOnly && (<th className="border p-2 text-center">Action</th>)}
+                      </tr>
+                    </thead>
+
+                    <tbody>
+
+                      {!isOrderBasedSale && (
+                        <>
+                          {fields.map((field, index) => (
+                            <DirectSaleItems
+                              key={field.id}
+                              index={index}
+                              field={field}
+                              control={control}
+                              setValue={setValue}
+                              register={register}
+                              errors={errors}
+                              remove={remove}
+                              trigger={trigger}
+                              watchedItems={watchedItems}
+                              userId={userId}
+                              companyId={companyId}
+                              branchId={toolbarBranchId}
+                              billdt={billdt || ''}
+                              visible={visible}
+                              isReadOnly={isReadOnly}
+                              fieldsLength={fields.length}
+
+                              excludeIds={selectedProductIds}
+                              currentId={watchedItems?.[index]?.productid}
+                            />
+                          ))}
+                        </>
+                      )}
+
+                      {isOrderBasedSale && (
+                        <>
+                          {fields.map((field, index) => (
+                            <OrderbasedSaleItems
+                              key={field.id}
+                              index={index}
+                              field={field}
+                              control={control}
+                              setValue={setValue}
+                              register={register}
+                              errors={errors}
+                              remove={remove}
+                              trigger={trigger}
+                              mode={mode}
+                              watchedItems={watchedItems}
+                              userId={userId}
+                              companyId={companyId}
+                              branchId={toolbarBranchId}
+                              finid={finid}
+                              orderid={orderid || 0}
+                              billdt={billdt || ''}
+                              visible={visible}
+                              isReadOnly={isReadOnly}
+                              fieldsLength={fields.length}
+
+                              excludeIds={selectedProductIds}
+                              currentId={watchedItems?.[index]?.productid}
+                            />
+                          ))}
+                        </>
+                      )}
+
+                    </tbody>
+
+                    <tfoot>
+                      <tr className="bg-blue-50 border-t">
+                        <td colSpan={2} className="border p-2 text-right font-bold text-[#05045f]"> Totals  </td>
+                        <td className="border p-2">
+                          <input
+                            type="number"
+                            value={totalQty}
+                            readOnly
+                            tabIndex={-1}
+                            className="inputField w-full bg-white text-right font-bold text-[#05045f]"
+                          />
+                        </td>
+
+                        {isOrderBasedSale && (<td colSpan={1} className="">  </td>)}
+
+                        <td className="border p-2">
+                          <input
+                            type="number"
+                            value={totalValue.toFixed(2)}
+                            readOnly
+                            tabIndex={-1}
+                            className="inputField w-full bg-white text-right font-bold text-[#05045f]"
+                          />
+                        </td>
+                        <td colSpan={1} className="">  </td>
+                        {isOrderBasedSale && (<td colSpan={1} className="">  </td>)}
+                        <td colSpan={1} className="">  </td>
+                        {!isReadOnly && <td className="border p-2 bg-blue-50" />}
+                      </tr>
+                    </tfoot>
+
+                  </table>
+                </div>
               </div>
 
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">No. of Cartoons</label>
-                <input
-                  type="text"
-                  {...register("cartoonno")}
-                  disabled={isReadOnly}
-                  placeholder="Enter no. of cartoons"
-                  className={`inputField ${errors.cartoonno ? "text-red-500" : "border-gray-400"}`}
-                />
-              </div>
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">No. of Lots</label>
-                <input
-                  type="text"
-                  {...register("lotno")}
-                  disabled={isReadOnly}
-                  placeholder="Enter no. of lots "
-                  className={`inputField ${errors.lotno ? "text-red-500" : "border-gray-400"}`}
-                />
-              </div>
+            </section>
 
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Branch </label>
-                <input
-                  type="text"
-                  value={formSelectedBranch}
-                  readOnly
-                  className={`inputField border-gray-400 bg-gray-100 cursor-not-allowed `}
-                />
-              </div>
-
-
-
-              {!isOrderBasedSale && (
-                <>
-                  <div className="w-48">
-                    <label className="block text-gray-700 font-medium mb-1"> Scan QR Code <span className="text-red-500"> *</span> </label>
-
-                    <input
-                      type="text"
-                      {...register("qrcode")}
-                      ref={(el) => {
-                        scanInputRef.current = el;
-                        register("qrcode").ref(el);
-                      }}
-                      className="inputField border-gray-300"
-                      onKeyDown={(e: any) => {
-                        if (e.key !== "Enter") return;
-                        e.preventDefault();
-                        handleScan(e.target.value);
-                      }}
-                    />
-                  </div>
-                </>
-              )}
-
-
-            </div>
-          </section>
-
-          {/* Item Details */}
-          <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
-
-            <div className="flex justify-between items-center">
+            {/* Remarks */}
+            <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
               <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
-                Item Details
+                Remarks
               </h2>
 
-              {!isReadOnly && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    append({
-                      ...defaultItemDtl,
-                      sl: fields.length + 1,
-                      dtlid: fields.length + 1,
-                    })
-                  }
-                  className="primary-btn text-xs px-3 py-1"
-                >
-                  + Add Item
-                </button>
-              )}
-            </div>
-
-            {!isOrderBasedSale && (
-              <>
-                <div className="space-y-2">
-                  {fields.map((field, index) => (
-                    <DirectSaleItems
-                      key={field.id}
-                      index={index}
-                      field={field}
-                      control={control}
-                      setValue={setValue}
-                      register={register}
-                      errors={errors}
-                      remove={remove}
-                      trigger={trigger}
-                      watchedItems={watchedItems}
-                      userId={userId}
-                      companyId={companyId}
-                      branchId={toolbarBranchId}
-                      billdt={billdt || ''}
-                      visible={visible}
-                      isReadOnly={isReadOnly}
-                      fieldsLength={fields.length}
-
-                      excludeIds={selectedProductIds}
-                      currentId={watchedItems?.[index]?.productid}
-                    />
-                  ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div>
+                  <input
+                    {...register("narration")}
+                    placeholder="write narration here..."
+                    disabled={isReadOnly}
+                    className={`inputField ${errors.narration ? "" : "border-gray-400"}`}
+                  />
                 </div>
-              </>
+              </div>
+            </section>
+
+
+          </div>
+
+          {/* Footer */}
+          <div className="border-t p-2 flex justify-end gap-4 bg-gray-50">
+            {(mode !== "View" && mode !== "Print") && (
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`${isDeleteMode ? 'delete-btn' : 'primary-btn'} disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                {getButtonLabel()}
+              </button>
             )}
-
-            {isOrderBasedSale && (
-              <>
-                <div className="space-y-2">
-                  {fields.map((field, index) => (
-                    <OrderbasedSaleItems
-                      key={field.id}
-                      index={index}
-                      field={field}
-                      control={control}
-                      setValue={setValue}
-                      register={register}
-                      errors={errors}
-                      remove={remove}
-                      trigger={trigger}
-                      mode={mode}
-                      watchedItems={watchedItems}
-                      userId={userId}
-                      companyId={companyId}
-                      branchId={toolbarBranchId}
-                      finid={finid}
-                      orderid={orderid || 0}
-                      billdt={billdt || ''}
-                      visible={visible}
-                      isReadOnly={isReadOnly}
-                      fieldsLength={fields.length}
-
-                      excludeIds={selectedProductIds}
-                      currentId={watchedItems?.[index]?.productid}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
-
-            <div className="flex flex-wrap gap-4 items-center border-t pt-3">
-
-              <div className="w-68" />
-
-              <div className="w-80" />
-
-              <div className="w-14 relative">
-                <span className="absolute -left-20 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-700 whitespace-nowrap">
-                  Total Qty
-                </span>
-                <input
-                  type="number"
-                  value={totalQty}
-                  readOnly
-                  tabIndex={-1}
-                  className="inputField w-full bg-gray-100"
-                />
-              </div>
-
-              {isOrderBasedSale && (
-                <>
-                  <div className="w-14"></div>
-                </>
-              )}
-
-              <div className="w-28" />
-
-              <div className="w-28 relative">
-                <span className="absolute -left-24 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-700 whitespace-nowrap">
-                  Total Value
-                </span>
-                <input
-                  type="number"
-                  value={Number(totalValue.toFixed(2))}
-                  tabIndex={-1}
-                  readOnly
-                  className="inputField w-full bg-gray-100"
-                />
-              </div>
-
-              <div className="w-12" />
-
-            </div>
-
-          </section>
-
-          {/* Remarks */}
-          <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
-              Remarks
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Narration</label>
-                <input
-                  {...register("narration")}
-                  placeholder="write narration here..."
-                  disabled={isReadOnly}
-                  className={`inputField ${errors.narration ? "" : "border-gray-400"}`}
-                />
-              </div>
-            </div>
-          </section>
-
-
-        </div>
-
-        {/* Footer */}
-        <div className="border-t p-2 flex justify-end gap-4 bg-gray-50">
-          {(mode !== "View" && mode !== "Print") && (
             <button
-              type="submit"
+              type="button"
+              onClick={handleExit}
               disabled={isSubmitting}
-              className={`${isDeleteMode ? 'delete-btn' : 'primary-btn'} disabled:opacity-50 disabled:cursor-not-allowed`}
+              className="secondary-btn disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {getButtonLabel()}
+              Exit
             </button>
-          )}
-          <button
-            type="button"
-            onClick={handleExit}
-            disabled={isSubmitting}
-            className="secondary-btn disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Exit
-          </button>
-        </div>
+          </div>
 
-        <LoadPanel
-          shadingColor="rgba(0,0,0,0.4)"
-          visible={isSubmitting || isLoadingDirectSale}
-          showIndicator
-        />
+          <LoadPanel
+            shadingColor="rgba(0,0,0,0.4)"
+            visible={isSubmitting || isLoadingDirectSale}
+            showIndicator
+          />
 
-        <SearchModal
-          open={customerModalOpen}
-          onClose={() => setCustomerModalOpen(false)}
-          endpoint="customer"
-          baseParams={baseCustomerParams}
-          columns={searchCustomerColumns}
-          searchFields={searchCustomerFields}
-          onSelect={handleCustomerSelect}
-          createNewConfig={{
-            enabled: true,
-            label: "Create New Customer",
-            onCreateNew: handleSortcutCreate,
-          }}
-        />
+        </form >
 
-        <SearchModal
-          open={billTypeModalOpen}
-          onClose={() => setBillTypeModalOpen(false)}
-          endpoint="billtype"
-          baseParams={baseBillTypeParams}
-          columns={searchBillTypeColumns}
-          searchFields={searchBillTypeFields}
-          onSelect={handleBillTypeSelect}
-        />
 
-        <SearchModal
-          open={salemanModalOpen}
-          onClose={() => setSalemanModalOpen(false)}
-          endpoint="salesman"
-          baseParams={baseSalemanParams}
-          columns={searchSalemanColumns}
-          searchFields={searchSalemanFields}
-          onSelect={handleSalemanSelect}
-        />
 
-        <SearchModal
-          open={godownModalOpen}
-          onClose={() => setGodownModalOpen(false)}
-          endpoint="godown"
-          baseParams={baseGodownParams}
-          columns={searchGodownColumns}
-          searchFields={searchGodownFields}
-          onSelect={handleGodownSelect}
-        />
+      </Popup >
 
-        <SearchModal
-          open={saleLedgerModalOpen}
-          onClose={() => setSaleLedgerModalOpen(false)}
-          endpoint="ledger"
-          baseParams={baseSaleLedgerParams}
-          columns={searchSaleLedgerColumns}
-          searchFields={searchSaleLedgerFields}
-          onSelect={handleSaleLedgerSelect}
-        />
+      <SearchModal
+        open={customerModalOpen}
+        onClose={() => setCustomerModalOpen(false)}
+        endpoint="customer"
+        baseParams={baseCustomerParams}
+        columns={searchCustomerColumns}
+        searchFields={searchCustomerFields}
+        onSelect={handleCustomerSelect}
+        createNewConfig={{
+          enabled: true,
+          label: "Create New Customer",
+          onCreateNew: handleSortcutCreate,
+        }}
+      />
 
-        <SearchModal
-          open={transporterModalOpen}
-          onClose={() => setTransporterModalOpen(false)}
-          endpoint="transporter"
-          baseParams={baseTransporterParams}
-          columns={searchTransporterColumns}
-          searchFields={searchTransporterFields}
-          onSelect={handleTransporterSelect}
-        />
+      <SearchModal
+        open={billTypeModalOpen}
+        onClose={() => setBillTypeModalOpen(false)}
+        endpoint="billtype"
+        baseParams={baseBillTypeParams}
+        columns={searchBillTypeColumns}
+        searchFields={searchBillTypeFields}
+        onSelect={handleBillTypeSelect}
+      />
 
-        {/* Order Base Sale */}
-        <SearchModal
-          open={soPendingModalOpen}
-          onClose={() => setSoPendingModalOpen(false)}
-          endpoint="so/pendinglist"
-          baseParams={baseSoPendingParams}
-          columns={searchSoPendingColumns}
-          searchFields={searchSoPendingFields}
-          onSelect={handleSoPendingSelect}
-          excludeIds={selectedProductIds}
-        />
+      <SearchModal
+        open={salemanModalOpen}
+        onClose={() => setSalemanModalOpen(false)}
+        endpoint="salesman"
+        baseParams={baseSalemanParams}
+        columns={searchSalemanColumns}
+        searchFields={searchSalemanFields}
+        onSelect={handleSalemanSelect}
+      />
 
-      </form >
-    </Popup >
+      <SearchModal
+        open={godownModalOpen}
+        onClose={() => setGodownModalOpen(false)}
+        endpoint="godown"
+        baseParams={baseGodownParams}
+        columns={searchGodownColumns}
+        searchFields={searchGodownFields}
+        onSelect={handleGodownSelect}
+      />
+
+      <SearchModal
+        open={saleLedgerModalOpen}
+        onClose={() => setSaleLedgerModalOpen(false)}
+        endpoint="ledger"
+        baseParams={baseSaleLedgerParams}
+        columns={searchSaleLedgerColumns}
+        searchFields={searchSaleLedgerFields}
+        onSelect={handleSaleLedgerSelect}
+      />
+
+      <SearchModal
+        open={transporterModalOpen}
+        onClose={() => setTransporterModalOpen(false)}
+        endpoint="transporter"
+        baseParams={baseTransporterParams}
+        columns={searchTransporterColumns}
+        searchFields={searchTransporterFields}
+        onSelect={handleTransporterSelect}
+      />
+
+      {/* Order Base Sale */}
+      <SearchModal
+        open={soPendingModalOpen}
+        onClose={() => setSoPendingModalOpen(false)}
+        endpoint="so/pendinglist"
+        baseParams={baseSoPendingParams}
+        columns={searchSoPendingColumns}
+        searchFields={searchSoPendingFields}
+        onSelect={handleSoPendingSelect}
+        excludeIds={selectedProductIds}
+      />
+
+
+    </>
   );
 
 

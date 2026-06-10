@@ -83,7 +83,6 @@ export default function ProductModule() {
     }
   }
 
-
   const handlePrintClick = useCallback(async () => {
     const row = selectedRow;
     if (!row) return;
@@ -91,23 +90,46 @@ export default function ProductModule() {
     const blob = await getQR(row.id);
     if (!blob) return;
 
-    // Convert blob → base64
     const base64 = await new Promise<string>((resolve) => {
       const reader = new FileReader();
       reader.onloadend = () => resolve(reader.result as string);
       reader.readAsDataURL(blob);
     });
 
-    // Create PDF
     const pdf = new jsPDF({
-      orientation: "portrait",
-      unit: "px",
-      format: [300, 300],
+      orientation: "landscape",
+      unit: "in",
+      format: [4, 3],
     });
 
-    pdf.addImage(base64, "PNG", 10, 10, 280, 280);
+    pdf.setDrawColor(0);
+    pdf.setLineWidth(0.02);
+    pdf.rect(0.05, 0.05, 3.9, 2.9);
 
-    // Open PDF in new tab
+    pdf.setFontSize(11);
+
+    const labelX = 0.2;
+    const valueX = 1.4;
+
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Product Name :", labelX, 0.45);
+    pdf.text("Product Code :", labelX, 0.80);
+   // pdf.text("Brand Name :", labelX, 1.15);
+
+    pdf.setFont("helvetica", "normal");
+    pdf.text(row.productname ?? "-", valueX, 0.45);
+    pdf.text(row.productcode ?? "-", valueX, 0.80);
+   // pdf.text(row.categorynm ?? "-", valueX, 1.15);
+
+    pdf.addImage(
+      base64,
+      "PNG",
+      2.275, // x
+      1.175, // y
+      1.60,  // width
+      1.60   // height
+    );
+
     const pdfBlob = pdf.output("blob");
     const url = URL.createObjectURL(pdfBlob);
 
