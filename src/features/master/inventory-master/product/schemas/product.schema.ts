@@ -4,6 +4,7 @@ export const ProductSchema = z.object({
   productcode: z.string().optional(),
   productname: z.string().min(1, "Product name is required"),
   aliasname: z.string().min(1, "Print name is required"),
+  categorynm: z.string().optional(),
 
   productcategoryid: z.number().min(1, "Category is required"),
   productclassid: z.number().min(1, "Class is required"),

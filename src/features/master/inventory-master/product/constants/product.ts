@@ -4,7 +4,8 @@ export const ProductDefaultValues: ProductFormSchema = {
   productcode: "",
   productname: "",
   aliasname: "",
-
+  categorynm: "",
+  
   productcategoryid: 0,
   productclassid: 0,
   productsubclassid: 0,

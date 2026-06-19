@@ -2,6 +2,7 @@ export interface Product {
   id: number;
   productcode?: string;
   productname: string;
+  categorynm?: string;
   aliasname: string;
   productcategoryid: number;
   productclassid: number;

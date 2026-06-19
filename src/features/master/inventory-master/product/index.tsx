@@ -30,6 +30,7 @@ export default function ProductModule() {
 
   const gridRef = useRef<any>(null);
   const { mutateAsync: getQR } = useProductQR();
+
   // handler
   const handleSelectionChanged = useCallback((e: any) => {
     if (e.selectedRowsData && e.selectedRowsData.length > 0) {
@@ -98,36 +99,41 @@ export default function ProductModule() {
 
     const pdf = new jsPDF({
       orientation: "landscape",
-      unit: "in",
-      format: [4, 3],
+      unit: "mm",
+      format: [75, 100], // Height = 75mm, Width = 100mm
     });
 
+    // Border
     pdf.setDrawColor(0);
-    pdf.setLineWidth(0.02);
-    pdf.rect(0.05, 0.05, 3.9, 2.9);
+    pdf.setLineWidth(0.5);
+    pdf.rect(6, 6, 90, 68);
 
-    pdf.setFontSize(11);
+    // Font
+    pdf.setFontSize(10);
 
-    const labelX = 0.2;
-    const valueX = 1.4;
+    const labelX = 10;
+    const valueX = 25;
 
+    // Labels
     pdf.setFont("helvetica", "bold");
-    pdf.text("Product Name :", labelX, 0.45);
-    pdf.text("Product Code :", labelX, 0.80);
-   // pdf.text("Brand Name :", labelX, 1.15);
+    pdf.text("Name :", labelX, 12);
+    pdf.text("Brand :", labelX, 18);
+    pdf.text("Code :", labelX, 24);
 
+    // Values categorynm
     pdf.setFont("helvetica", "normal");
-    pdf.text(row.productname ?? "-", valueX, 0.45);
-    pdf.text(row.productcode ?? "-", valueX, 0.80);
-   // pdf.text(row.categorynm ?? "-", valueX, 1.15);
+    pdf.text(row.productname || "-", valueX, 12);
+    pdf.text(row.categorynm || "-", valueX, 18);
+    pdf.text(row.productcode || "-", valueX, 24);
 
+    // QR Code (centered)
     pdf.addImage(
       base64,
       "PNG",
-      2.275, // x
-      1.175, // y
-      1.60,  // width
-      1.60   // height
+      50, // x
+      28, // y
+      42, // width
+      42  // height
     );
 
     const pdfBlob = pdf.output("blob");
