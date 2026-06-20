@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import Popup, { Position } from "devextreme-react/popup";
 import useIsMobile from "@/common/hooks/useIsMobile";
 import { useRouter } from "next/router";
+import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
+import { SHORTCUTS } from "../constants/shortcuts";
 
 interface Column {
   key: string;
@@ -22,6 +24,7 @@ interface CreateNewConfig {
 }
 
 interface SearchModalProps {
+  title?: string;
   open: boolean;
   onClose: () => void;
   endpoint: string;
@@ -38,13 +41,14 @@ interface SearchModalProps {
 }
 
 export default function SearchModal({
+  title,
   open,
   onClose,
   endpoint,
   baseParams,
   columns,
   onSelect,
-  pageSize = 20,
+  pageSize = 50,
   searchFields,
   createNewConfig,
   excludeIds,
@@ -52,6 +56,7 @@ export default function SearchModal({
 }: SearchModalProps) {
 
   const router = useRouter();
+  const isMobile = useIsMobile();
 
   const [list, setList] = useState<any[]>([]);
   const [search, setSearch] = useState("");
@@ -60,7 +65,48 @@ export default function SearchModal({
   const inputRef = useRef<HTMLInputElement>(null);
   const [searchBy, setSearchBy] = useState<string>("");
 
-  const isMobile = useIsMobile();
+  const tableRef = useRef<HTMLDivElement>(null);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
+
+  useEffect(() => {
+    rowRefs.current[selectedIndex]?.scrollIntoView({
+      block: "nearest",
+      behavior: "smooth",
+    });
+  }, [selectedIndex]);
+
+  // Auto format ISO date strings
+  const formatDatesInObject = (obj: any) => {
+    const formatted: any = {};
+
+    Object.keys(obj).forEach((key) => {
+      const value = obj[key];
+
+      // Detect ISO date strings like 2026-05-21T00:00:00
+      if (
+        typeof value === "string" &&
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value)
+      ) {
+        formatted[key] = value.split("T")[0];
+      } else {
+        formatted[key] = value;
+      }
+    });
+
+    return formatted;
+  };
+
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [list]);
+
+  // useEffect(() => {
+  //   rowRefs.current[selectedIndex]?.scrollIntoView({
+  //     block: "nearest",
+  //   });
+  // }, [selectedIndex]);
 
   useEffect(() => {
     if (open) {
@@ -75,9 +121,6 @@ export default function SearchModal({
     }
   }, [open]);
 
-  useEffect(() => {
-    if (open) fetchData(skip);
-  }, [skip]);
 
   useEffect(() => {
     if (!open) return;
@@ -85,7 +128,7 @@ export default function SearchModal({
     const delayDebounce = setTimeout(() => {
       setSkip(0);
       fetchData(0);
-    }, 500); // 500ms delay after typing stops
+    }, 500);
 
     return () => clearTimeout(delayDebounce);
   }, [search]);
@@ -95,9 +138,9 @@ export default function SearchModal({
 
     apiCall
       .get(process.env.NEXT_PUBLIC_PROJECT_API_ENDPOINT + endpoint, {
-        ...baseParams,
-        skip: skipVal,
         take: pageSize,
+        skip: skipVal,
+        ...baseParams,
         Searchtext: search,
         ...(searchBy && { searchBy })
       })
@@ -107,18 +150,19 @@ export default function SearchModal({
           setLoading(false);
           return;
         }
-        //setList(response.data || []);
 
-        const rawData = response.data || [];
+        // Format all ISO date fields automatically
+        const rawData = (response.data || []).map((row: any) =>
+          formatDatesInObject(row)
+        );
+
         const filteredData = rawData.filter((row: any) => {
           const rowId = row.id ?? row.productid;
 
-          // If this row has an ID that's in excludeIds, filter it out
           if (excludeIds?.includes(rowId)) {
             return false;
           }
 
-          // Keep the row if it doesn't match excludeIds
           return true;
         });
 
@@ -133,31 +177,89 @@ export default function SearchModal({
       });
   };
 
+  const titleName = `Search ${title || ''}`
+
   return (
     <Popup
       visible={open}
       onHiding={onClose}
       showTitle
       showCloseButton
-      title="Search"
+      title={titleName}
       width={isMobile ? "100%" : 900}
       height={isMobile ? "100%" : 550}
       dragEnabled={!isMobile}
       className="rounded-xl overflow-hidden"
-      onShown={() => setTimeout(() => inputRef.current?.focus(), 0)}
+      // onShown={() => {
+      //   setTimeout(() => {
+      //     containerRef.current?.focus();
+      //   }, 0);
+      // }}
+      onShown={() => setTimeout(() => tableRef.current?.focus(), 50)}
     >
       <Position at="center" my="center" of={window} />
 
-      <div className="h-full flex flex-col bg-white">
-        {/* HEADER - Search */}
-        <div className="sticky top-0 z-10 bg-white border-b px-3 py-3">
+      {/* KEYBOARD WRAPPER  */}
+      <div
+        ref={tableRef}
+        tabIndex={0}
+        className="h-full flex flex-col bg-white outline-none overflow-hidden"
+        onKeyDown={(e) => {
+          if (!list.length) return;
+
+          switch (e.key) {
+            case "ArrowDown":
+              e.preventDefault();
+              setSelectedIndex((prev) =>
+                Math.min(prev + 1, list.length - 1)
+              );
+              break;
+
+            case "ArrowUp":
+              e.preventDefault();
+              setSelectedIndex((prev) =>
+                Math.max(prev - 1, 0)
+              );
+              break;
+
+            case "PageDown":
+              e.preventDefault();
+              if (list.length === pageSize) {
+                setSkip((prev) => prev + pageSize);
+              }
+              break;
+
+            case "PageUp":
+              e.preventDefault();
+              if (skip > 0) {
+                setSkip((prev) => Math.max(0, prev - pageSize));
+              }
+              break;
+
+            case "Enter":
+              e.preventDefault();
+              const row = list[selectedIndex];
+              if (row) {
+                onSelect(row);
+                onClose();
+              }
+              break;
+
+            case "Escape":
+              onClose();
+              break;
+          }
+        }}
+      >
+        {/* HEADER */}
+        <div className="shrink-0 border-b px-3 py-3 bg-white">
           <div className="flex gap-2 items-center">
 
             {createNewConfig?.enabled && (
               <button
                 className="primary-btn"
                 onClick={() => {
-                  onClose();
+                  // onClose();
                   createNewConfig?.onCreateNew?.();
                 }}
               >
@@ -182,7 +284,7 @@ export default function SearchModal({
             <input
               ref={inputRef}
               className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm
-                     focus:outline-none focus:ring-2 focus:ring-blue-400"
+                       focus:outline-none focus:ring-2 focus:ring-blue-400"
               placeholder="Search records..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -200,12 +302,12 @@ export default function SearchModal({
             </button>
           </div>
         </div>
-        {/* BODY - Results */}
-        <div className="flex-1 overflow-auto bg-gray-50">
+
+        {/* BODY */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {!isMobile ? (
-            /* DESKTOP TABLE */
             <table className="w-full text-sm border-separate border-spacing-0">
-              <thead className="sticky top-0 bg-gray-100 z-10">
+              <thead className="sticky top-0 z-10 bg-gray-100">
                 <tr>
                   {columns.map((c) => (
                     <th
@@ -221,12 +323,18 @@ export default function SearchModal({
               <tbody>
                 {list.map((row, i) => (
                   <tr
+                    ref={(el) => {
+                      rowRefs.current[i] = el;
+                    }}
                     key={i}
+                    onClick={() => setSelectedIndex(i)}
                     onDoubleClick={() => {
                       onSelect(row);
                       onClose();
                     }}
-                    className="bg-white hover:bg-blue-50 cursor-pointer transition border-b"
+                    className={
+                      i === selectedIndex ? "bg-blue-100 cursor-pointer border-b" : "bg-white hover:bg-blue-50 cursor-pointer border-b"
+                    }
                   >
                     {columns.map((c) => (
                       <td key={c.key} className="px-3 py-2 text-gray-700">
@@ -238,24 +346,26 @@ export default function SearchModal({
               </tbody>
             </table>
           ) : (
-            /* MOBILE CARDS */
             <div className="p-1 space-y-1">
               {list.map((row, i) => (
                 <div
                   key={i}
                   onClick={() => {
+                    setSelectedIndex(i);
                     onSelect(row);
                     onClose();
                   }}
-                  className="bg-white border border-gray-500 rounded shadow-sm p-1 transition"
+                  className={`
+                    border rounded shadow-sm p-1 cursor-pointer transition
+                    ${i === selectedIndex ? "bg-blue-100 border-blue-400" : "bg-white border-gray-500 hover:bg-blue-50"}
+                  `}
                 >
                   {columns.map((c, idx) => (
                     <div
                       key={c.key}
-                      className={`flex justify-between text-[12px] py-1 ${idx !== columns.length - 1
-                        ? "border-b border-gray-100"
-                        : ""
-                        }`}
+                      className={`flex justify-between text-[12px] py-1 
+                        ${idx !== columns.length - 1 ? "border-b border-gray-100" : ""}
+                      `}
                     >
                       <span className="text-gray-500">{c.label}</span>
                       <span className="text-color max-w-[60%] text-right">
@@ -268,12 +378,13 @@ export default function SearchModal({
             </div>
           )}
         </div>
-        {/* FOOTER - Pagination */}
+
+        {/* FOOTER */}
         <div className="shrink-0 flex items-center justify-between px-4 py-3 border-t bg-white text-sm">
           <button
             disabled={skip === 0}
             onClick={() => setSkip(skip - pageSize)}
-            className="px-3 py-1 rounded-md border bg-gray-50 hover:bg-gray-100 disabled:opacity-40"
+            className="px-3 py-1 rounded-md border bg-gray-200 hover:bg-gray-300 disabled:opacity-40"
           >
             ◀ Prev
           </button>
@@ -287,22 +398,21 @@ export default function SearchModal({
           <button
             disabled={list.length < pageSize}
             onClick={() => setSkip(skip + pageSize)}
-            className="px-3 py-1 rounded-md border bg-gray-50 hover:bg-gray-100 disabled:opacity-40"
+            className="px-3 py-1 rounded-md border bg-gray-200 hover:bg-gray-300 disabled:opacity-40"
           >
             Next ▶
           </button>
         </div>
-
       </div>
+
       {/* LOADING */}
-      {
-        loading && (
-          <div className="absolute bottom-2 left-0 right-0 text-center text-sm text-gray-500">
-            Loading...
-          </div>
-        )
-      }
-    </Popup >
+      {loading && (
+        <div className="absolute bottom-2 left-0 right-0 text-center text-sm text-gray-500">
+          Loading...
+        </div>
+      )}
+    </Popup>
   );
+
 
 }

@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useSaleOrderById, useCreateSaleOrder, useUpdateSaleOrder, useDeleteSaleOrder, useApproveSaleOrder } from "../hooks/useSaleOrder";
 import { SaleOrderFormType, OperationMode } from "../types/saleOrder.types";
 import { SaleOrderFormSchema } from "../schemas/saleOrder.schema";
-import { pruchaseOrderFormDefaults } from "../constants/saleOrderFormDefaults";
+import { defaultItemDtl, pruchaseOrderFormDefaults } from "../constants/saleOrderFormDefaults";
 import { useSaleOrderForm } from "../hooks/useSaleOrderForm";
 import { FieldErrors, useFieldArray } from "react-hook-form";
 import { fetchSeriesList } from "@/api/purchase/purchase-api";
@@ -23,6 +23,9 @@ import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
 import { SHORTCUTS } from "@/common/constants/shortcuts";
 import { useMasterModal } from "@/hooks/useMasterModal";
 import { getFormErrorMessage } from "@/helpers/formErrorMessage";
+import { useLookupShortcuts } from "@/common/hooks/useLookupShortcuts";
+import { LOOKUP_KEYS } from "@/common/constants/lookupKeys";
+import { useSaleQrScanner } from "@/hooks/useSaleQrScanner";
 
 
 interface SaleOrderFormProps {
@@ -65,6 +68,8 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
     {
       [SHORTCUTS.SAVE]: () => { formRef.current?.requestSubmit(); },
       [SHORTCUTS.EXIT]: () => { onClose(); },
+      [SHORTCUTS.ADDITEM]: () => { handleAddItem(); },
+
     },
     visible
   );
@@ -93,12 +98,26 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
     reset,
     watch,
     setValue,
+    getValues,
+    trigger,
+
     formState: { errors },
   } = useSaleOrderForm(isApproveMode);
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control,
     name: "itemdtl",
+  });
+
+  const { scanInputRef, handleScan } = useSaleQrScanner({
+    setValue,
+    onUpdateItems: (updater) => {
+      const currentItems = getValues("itemdtl") || [];
+      const updatedItems = updater(currentItems);
+
+      replace(updatedItems);
+      trigger("itemdtl");
+    },
   });
 
   // Calculate Total Quantity and Vlaue
@@ -180,6 +199,13 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
     { label: "Auto", value: "A" },
     { label: "Manual", value: "M" }
   ];
+
+  const handleKeyOpen = (e: React.KeyboardEvent, openFn: () => void) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openFn();
+    }
+  };
 
   // Series No Options
   const voucherType = "SO";
@@ -270,6 +296,28 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
     { value: "A", label: "Approve" },
     { value: "R", label: "Rejected" },
   ];
+
+  // On Space button Open Search Model
+  const lookupMap = {
+    customer: () => setCustomerModalOpen(true)
+  };
+
+  const bindLookup = useLookupShortcuts(isReadOnly, lookupMap);
+
+  const handleAddItem = async () => {
+
+    const lastIndex = fields.length - 1;
+    const isValid = await trigger([
+      `itemdtl.${lastIndex}.productid`,
+    ]);
+
+    if (!isValid) { return; }
+
+    append({
+      ...defaultItemDtl,
+      dtlid: fields.length + 1,
+    })
+  };
 
   const handleFormSubmit = async (data: SaleOrderFormSchema) => {
     try {
@@ -438,6 +486,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
                 <input
                   type="text"
                   {...register("orderno")}
+                  tabIndex={-1}
                   disabled={isReadOnly || selectedSeries?.manualallow === "N"}
                   className={`
                     inputField 
@@ -454,7 +503,9 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
                   value={customerName || ''}
                   disabled={isReadOnly}
                   readOnly
+                  {...bindLookup(LOOKUP_KEYS.customer)}
                   onClick={() => setCustomerModalOpen(true)}
+                  onKeyDown={(e) => handleKeyOpen(e, () => setCustomerModalOpen(true))}
                   className={`inputField w-full border border-gray-300 
                     ${errors.customerid && !customerName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
@@ -464,7 +515,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
                 {/* {errors.customerid && !customerName && <p className="text-red-500 mt-1 text-sm">{errors.customerid.message}</p>} */}
               </div>
 
-              <div className="w-48">
+              {/* <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Party order no.</label>
                 <input
                   type="text"
@@ -473,9 +524,9 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
                   placeholder="Enter Party order no."
                   className={`inputField ${errors.partyordno ? "" : "border-gray-400"}`}
                 />
-              </div>
+              </div> */}
 
-              <div className="w-48">
+              {/* <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Party order date</label>
                 <input
                   type="date"
@@ -483,7 +534,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
                   disabled={isReadOnly}
                   className={`inputField ${errors.partyorddt ? "" : "border-gray-400"}`}
                 />
-              </div>
+              </div> */}
 
               <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Branch </label>
@@ -509,21 +560,8 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
               {!isReadOnly && (
                 <button
                   type="button"
-                  onClick={() =>
-                    append({
-                      productid: 0,
-                      qty1: 0,
-                      rate: 0,
-                      value: 0,
-                      qty2: 0,
-                      tag: "I",
-                      dtlid: fields.length + 1,
-                      altunimethod: "A",
-                      altunitfactor: 1,
-                      alterunitfactortype: "M",
-                      rateon: 1,
-                    })
-                  }
+
+                  onClick={handleAddItem}
                   className="primary-btn text-xs px-3 py-1"
                 >
                   + Add Item

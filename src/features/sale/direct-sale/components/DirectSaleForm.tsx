@@ -27,6 +27,8 @@ import { usePathname } from "next/navigation";
 import { OrderbasedSaleItems } from "./OrderbasedSaleItems";
 import { useMasterModal } from "@/hooks/useMasterModal";
 import { getFormErrorMessage } from "@/helpers/formErrorMessage";
+import { useLookupShortcuts } from "@/common/hooks/useLookupShortcuts";
+import { LOOKUP_KEYS } from "@/common/constants/lookupKeys";
 
 interface DirectSaleFormProps {
   visible: boolean;
@@ -62,6 +64,10 @@ export function DirectSaleForm(
   const [saleLedgerModalOpen, setSaleLedgerModalOpen] = useState(false);
   const [transporterModalOpen, setTransporterModalOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const godownRef = useRef<HTMLInputElement>(null);
+  const salesmanRef = useRef<HTMLInputElement>(null);
+  const transportRef = useRef<HTMLInputElement>(null);
+
 
   // Order Based Sale
   const [soPendingModalOpen, setSoPendingModalOpen] = useState(false);
@@ -318,6 +324,9 @@ export function DirectSaleForm(
     setValue("customerid", row.id);
     setValue("customernm", row.name);
     setCustomerModalOpen(false);
+    requestAnimationFrame(() => {
+      setFocus("crdays");
+    });
   };
 
   const customerName = watch("customernm")
@@ -393,6 +402,10 @@ export function DirectSaleForm(
     setValue("smid", row.id);
     setValue("smnm", row.name);
     setSalemanModalOpen(false);
+    setGodownModalOpen(false);
+    setTimeout(() => {
+      godownRef.current?.focus();
+    }, 100);
   };
 
   const SalemanName = watch("smnm")
@@ -415,7 +428,9 @@ export function DirectSaleForm(
   const handleGodownSelect = (row: any) => {
     setValue("godownid", row.id);
     setValue("godownnm", row.name);
-    setGodownModalOpen(false);
+    setTimeout(() => {
+      transportRef.current?.focus();
+    }, 100);
   };
 
   const GodownName = watch("godownnm")
@@ -461,6 +476,9 @@ export function DirectSaleForm(
     setValue("transporterid", row.id);
     setValue("transporternm", row.name);
     setTransporterModalOpen(false);
+    requestAnimationFrame(() => {
+      setFocus("billtime");
+    });
   };
 
   const transporterName = watch("transporternm")
@@ -493,6 +511,9 @@ export function DirectSaleForm(
     setValue(`orderno`, row.orderno);
     setValue(`orderdt`, row.orderdt);
     setSoPendingModalOpen(false);
+    setTimeout(() => {
+      salesmanRef.current?.focus();
+    }, 100);
   };
 
   const calculateTotals = (items: any[] = []) => {
@@ -610,6 +631,18 @@ export function DirectSaleForm(
       dtlid: fields.length + 1,
     })
   };
+
+  // On Space button Open Search Model
+  const lookupMap = {
+    customer: () => setCustomerModalOpen(true),
+    orderno: () => setSoPendingModalOpen(true),
+    salesman: () => setSalemanModalOpen(true),
+    godownid: () => setGodownModalOpen(true),
+    transporter: () => setTransporterModalOpen(true),
+
+  };
+
+  const bindLookup = useLookupShortcuts(isReadOnly, lookupMap);
 
   const handleFormSubmit = async (data: DirectSaleFormSchema) => {
     try {
@@ -831,7 +864,8 @@ export function DirectSaleForm(
                     value={customerName || ''}
                     disabled={isReadOnly}
                     readOnly
-                    tabIndex={0}
+                    {...bindLookup(LOOKUP_KEYS.customer)}
+                    // tabIndex={0}
                     role="button"
                     onClick={() => setCustomerModalOpen(true)}
                     onKeyDown={(e) => handleKeyOpen(e, () => setCustomerModalOpen(true))}
@@ -844,7 +878,7 @@ export function DirectSaleForm(
                   {/* {errors.customerid && !customerName && <p className="text-red-500 text-xs">{errors.customerid.message}</p>} */}
                 </div>
 
-                <div className="w-48">
+                {/* <div className="w-48">
                   <label className="block text-gray-700 font-medium mb-1">Credit days</label>
                   <input
                     type="number"
@@ -853,7 +887,7 @@ export function DirectSaleForm(
                     tabIndex={-1}
                     className={`inputField ${errors.crdays ? "" : "border-gray-400"}`}
                   />
-                </div>
+                </div> */}
 
                 {isOrderBasedSale && (
                   <>
@@ -864,8 +898,9 @@ export function DirectSaleForm(
                         value={orderno ? `${orderno} - ${formatDate(orderdt)}` : ""}
                         disabled={isReadOnly}
                         readOnly
+                        {...bindLookup(LOOKUP_KEYS.orderno)}
                         onClick={() => setSoPendingModalOpen(true)}
-                        className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
+                        className={`inputField w-full border border-gray-400 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
                         placeholder="Select SO No. & Date"
                       />
                     </div>
@@ -898,7 +933,14 @@ export function DirectSaleForm(
                     type="text"
                     value={SalemanName || ''}
                     disabled={isReadOnly}
+
+                    ref={(e) => {
+                      register("smid").ref(e);
+                      salesmanRef.current = e;
+                    }}
                     readOnly
+                    {...bindLookup(LOOKUP_KEYS.salesman)}
+
                     role="button"
                     onClick={() => setSalemanModalOpen(true)}
                     onKeyDown={(e) => handleKeyOpen(e, () => setSalemanModalOpen(true))}
@@ -918,6 +960,12 @@ export function DirectSaleForm(
                     value={GodownName || ''}
                     disabled={isReadOnly}
                     readOnly
+
+                    ref={(e) => {
+                      register("godownid").ref(e);
+                      godownRef.current = e;
+                    }}
+                    {...bindLookup(LOOKUP_KEYS.godownid)}
                     onClick={() => setGodownModalOpen(true)}
                     className={`inputField w-full border border-gray-300 
                     ${errors.godownid && !GodownName ? "border-red-500" : "border-gray-400"}
@@ -927,7 +975,7 @@ export function DirectSaleForm(
                   />
                   {/* {errors.godownid && !GodownName && <p className="text-red-500 text-xs">{errors.godownid.message}</p>} */}
                 </div>
-
+                {/* 
                 <div className="w-48">
                   <label className="block text-gray-700 font-medium mb-1">Transporter <strong className="text-red-500 text-sm"> * </strong></label>
                   <input
@@ -935,6 +983,11 @@ export function DirectSaleForm(
                     value={transporterName || ''}
                     disabled={isReadOnly}
                     readOnly
+                    ref={(e) => {
+                      register("transporterid").ref(e);
+                      transportRef.current = e;
+                    }}
+                    {...bindLookup(LOOKUP_KEYS.transporter)}
                     onClick={() => setTransporterModalOpen(true)}
                     className={`inputField w-full border border-gray-300 
                     ${errors.transporterid && !transporterName ? "border-red-500" : "border-gray-400"}
@@ -942,8 +995,7 @@ export function DirectSaleForm(
                   `}
                     placeholder="Select transporter "
                   />
-                  {/* {errors.transporterid && !transporterName && <p className="text-red-500 text-xs">{errors.transporterid.message}</p>} */}
-                </div>
+                </div> */}
 
                 <div className="w-48">
                   <label className="block text-gray-700 font-medium mb-1">Time</label>
@@ -955,7 +1007,7 @@ export function DirectSaleForm(
                   />
                 </div>
 
-                <div className="w-48">
+                {/* <div className="w-48">
                   <label className="block text-gray-700 font-medium mb-1">No. of Cartoons</label>
                   <input
                     type="text"
@@ -964,8 +1016,8 @@ export function DirectSaleForm(
                     placeholder="Enter no. of cartoons"
                     className={`inputField ${errors.cartoonno ? "text-red-500" : "border-gray-400"}`}
                   />
-                </div>
-                <div className="w-48">
+                </div> */}
+                {/* <div className="w-48">
                   <label className="block text-gray-700 font-medium mb-1">No. of Lots</label>
                   <input
                     type="text"
@@ -974,13 +1026,14 @@ export function DirectSaleForm(
                     placeholder="Enter no. of lots "
                     className={`inputField ${errors.lotno ? "text-red-500" : "border-gray-400"}`}
                   />
-                </div>
+                </div> */}
 
                 <div className="w-48">
                   <label className="block text-gray-700 font-medium mb-1">Branch </label>
                   <input
                     type="text"
                     value={formSelectedBranch}
+                    tabIndex={-1}
                     readOnly
                     className={`inputField border-gray-400 bg-gray-100 cursor-not-allowed `}
                   />
