@@ -81,7 +81,7 @@ export function DirectSaleForm(
   // handle Sortcuts 
   useKeyboardShortcuts(
     {
-      [SHORTCUTS.SAVE]: () => { formRef.current?.requestSubmit(); },
+      [SHORTCUTS.SAVE]: () => { formRef.current?.requestSubmithandleAddItem(); },
       [SHORTCUTS.EXIT]: () => { onClose(); },
       [SHORTCUTS.ADDITEM]: () => { handleAddItem(); },
     },
