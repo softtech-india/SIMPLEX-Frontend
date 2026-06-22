@@ -186,6 +186,7 @@ export const DirectSaleItems: React.FC<DirectSaleItemsProps> = ({
       openFn();
     }
   };
+
   return (
     <>
       <tr className="border-b">

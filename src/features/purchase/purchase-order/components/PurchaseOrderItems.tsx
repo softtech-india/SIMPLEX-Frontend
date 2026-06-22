@@ -1,9 +1,11 @@
 import { Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import SearchModal from "@/common/components/SearchModal";
 import { toast } from "sonner";
 import { Controller } from "react-hook-form";
 import { useMasterModal } from "@/hooks/useMasterModal";
+import { useLookupShortcuts } from "@/common/hooks/useLookupShortcuts";
+import { LOOKUP_KEYS } from "@/common/constants/lookupKeys";
 
 
 type PurchaseOrderItemsProps = {
@@ -13,6 +15,7 @@ type PurchaseOrderItemsProps = {
   register: any;
   errors: any;
   setValue: any;
+  setFocus: any;
   remove: (index: number) => void;
   watchedItems: any;
   userId: number | string;
@@ -23,6 +26,7 @@ type PurchaseOrderItemsProps = {
   fieldsLength: number;
   excludeIds?: number[];
   currentId?: number;
+  brandInputRef?: (el: HTMLInputElement | null) => void;
 };
 
 export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
@@ -32,6 +36,7 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
   register,
   errors,
   setValue,
+  setFocus,
   remove,
   watchedItems,
   userId,
@@ -41,7 +46,8 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
   isReadOnly,
   fieldsLength,
   excludeIds,
-  currentId
+  currentId,
+  brandInputRef
 }) => {
 
   const { open } = useMasterModal();
@@ -57,6 +63,8 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
 
   const [brandModalOpen, setBrandModalOpen] = useState(false);
   const [productModalOpen, setProductModalOpen] = useState(false);
+  const productRef = useRef<HTMLInputElement>(null);
+
 
   // Model Search Brand Modal Handlers
   const baseBrandParams = {
@@ -78,6 +86,9 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
     setValue(`itemdtl.${index}.productid`, null);
     setValue(`itemdtl.${index}.productnm`, "");
     setBrandModalOpen(false);
+    setTimeout(() => {
+      productRef.current?.focus();
+    }, 100);
   };
 
   // Model Search product Modal Handlers
@@ -115,6 +126,22 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
     setValue(`itemdtl.${index}.productid`, row.id);
     setValue(`itemdtl.${index}.productnm`, row.productname);
     setProductModalOpen(false);
+    requestAnimationFrame(() => {
+      setFocus(`itemdtl.${index}.qty1`);
+    });
+  };
+
+  const lookupMap = {
+    product: () => setProductModalOpen(true),
+  };
+
+  const bindLookup = useLookupShortcuts(isReadOnly, lookupMap);
+
+  const handleKeyOpen = (e: React.KeyboardEvent, openFn: () => void) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openFn();
+    }
   };
 
 
@@ -127,6 +154,9 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
           type="text"
           value={item?.pcategorynm || ""}
           readOnly
+          ref={brandInputRef}
+          onKeyDown={(e) => handleKeyOpen(e, () => setBrandModalOpen(true))}
+
           onClick={() => setBrandModalOpen(true)}
           className="inputField w-full cursor-pointer border border-gray-400"
           placeholder="Select Brand"
@@ -139,6 +169,13 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
           type="text"
           value={item?.productnm || ""}
           readOnly
+          {...bindLookup(LOOKUP_KEYS.product)}
+          ref={(e) => {
+            register(`itemdtl.${index}.pcategoryid`).ref(e);
+            productRef.current = e;
+          }}
+          onKeyDown={(e) => handleKeyOpen(e, () => setProductModalOpen(true))}
+
           onClick={() => {
             if (!item?.pcategoryid) return;
             setProductModalOpen(true);
@@ -212,6 +249,7 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
         <label className="block text-gray-700 font-medium mb-1"> Value</label>
         <input
           type="number"
+          tabIndex={-1}
           value={Number(value.toFixed(2))}
           readOnly
           className="inputField  bg-gray-100 border-gray-400"

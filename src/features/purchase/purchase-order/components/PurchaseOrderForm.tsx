@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { usePurchaseOrderById, useCreatePurchaseOrder, useUpdatePurchaseOrder, useDeletePurchaseOrder, useApprovePurchaseOrder } from "../hooks/usePurchaseOrder";
 import { PurchaseOrderFormType, OperationMode } from "../types/purchaseOrder.types";
 import { PurchaseOrderFormSchema } from "../schemas/purchaseOrder.schema";
-import { pruchaseOrderFormDefaults } from "../constants/pruchaseOrderFormDefaults";
+import { defaultItemDtl, pruchaseOrderFormDefaults } from "../constants/pruchaseOrderFormDefaults";
 import { usePurchaseOrderForm } from "../hooks/usePurchaseOrderForm";
 import { useFieldArray } from "react-hook-form";
 import { fetchSeriesList } from "@/api/purchase/purchase-api";
@@ -23,6 +23,8 @@ import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
 import { SHORTCUTS } from "@/common/constants/shortcuts";
 import { VendorForm } from "@/features/master/account-master/vendor/components/VendorForm";
 import { useMasterModal } from "@/hooks/useMasterModal";
+import { useLookupShortcuts } from "@/common/hooks/useLookupShortcuts";
+import { LOOKUP_KEYS } from "@/common/constants/lookupKeys";
 
 interface PurchaseOrderFormProps {
   visible: boolean;
@@ -46,6 +48,9 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
   const confirmDelete = useConfirm();
   const formRef = useRef<HTMLFormElement>(null);
   const [vendorFormOpen, setVendorFormOpen] = useState(false);
+  const proFormaRef = useRef<HTMLInputElement>(null);
+  const brandInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
 
   const handleSortcutCreate = async () => {
     await open("vendor");
@@ -63,6 +68,8 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
     {
       [SHORTCUTS.SAVE]: () => { formRef.current?.requestSubmit(); },
       [SHORTCUTS.EXIT]: () => { onClose(); },
+      [SHORTCUTS.ADDITEM]: () => { handleAddItem(); },
+
     },
     visible
   );
@@ -91,6 +98,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
     reset,
     watch,
     setValue,
+    trigger,
     formState: { errors },
   } = usePurchaseOrderForm(isApproveMode);
 
@@ -226,7 +234,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
   };
 
   const searchVendoeColumns = [
-    { key: "name", label: "name." },
+    { key: "name", label: "Name" },
   ];
 
   const searchVendoeFields = [
@@ -237,6 +245,10 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
     setValue("vendorid", row.id);
     setValue("vendorName", row.name);
     setVendorFormOpen(false);
+    requestAnimationFrame(() => {
+      proFormaRef.current?.focus();
+
+    });
   };
 
   const vendorName = watch("vendorName") || watch("vendornm");
@@ -275,6 +287,22 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
     { value: "A", label: "Approve" },
     { value: "R", label: "Rejected" },
   ];
+
+  const selectedProductIds = watchedItems
+    ?.map((item: any) => item?.productid)
+    ?.filter(Boolean);
+
+  const getButtonLabel = () => {
+    if (isSubmitting) {
+      if (isDeleteMode) return "Deleting...";
+      if (isApproveMode) return "Approving...";
+      return "Saving...";
+    }
+
+    if (isDeleteMode) return "Delete";
+    if (isApproveMode) return "Approve";
+    return "Save";
+  };
 
   const handleFormSubmit = async (data: PurchaseOrderFormSchema) => {
     try {
@@ -352,22 +380,38 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
       console.error("Submit error:", error);
     }
   };
+  const handleAddItem = async () => {
+    const lastIndex = fields.length - 1;
+    const isValid = await trigger([
 
-  const selectedProductIds = watchedItems
-    ?.map((item: any) => item?.productid)
-    ?.filter(Boolean);
+    ]);
 
-  const getButtonLabel = () => {
-    if (isSubmitting) {
-      if (isDeleteMode) return "Deleting...";
-      if (isApproveMode) return "Approving...";
-      return "Saving...";
-    }
+    if (!isValid) { return; }
 
-    if (isDeleteMode) return "Delete";
-    if (isApproveMode) return "Approve";
-    return "Save";
+    append({
+      ...defaultItemDtl
+    });
+
+    const newIndex = fields.length;
+    setTimeout(() => {
+      brandInputRefs.current[newIndex]?.focus();
+    }, 100);
   };
+
+
+  const lookupMap = {
+    vendor: () => setVendorFormOpen(true),
+  };
+
+  const bindLookup = useLookupShortcuts(isReadOnly, lookupMap);
+
+  const handleKeyOpen = (e: React.KeyboardEvent, openFn: () => void) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openFn();
+    }
+  };
+
 
   // Debug validation issues 
   const onError = (err: any) => {
@@ -455,6 +499,8 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                     value={vendorName || ''}
                     disabled={isReadOnly}
                     readOnly
+                    {...bindLookup(LOOKUP_KEYS.vendor)}
+                    onKeyDown={(e) => handleKeyOpen(e, () => setVendorFormOpen(true))}
                     onClick={() => setVendorFormOpen(true)}
                     className={`inputField w-full border border-gray-300 
                     ${errors.vendorid && !vendorName ? "border-red-500" : "border-gray-400"}
@@ -491,6 +537,10 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                   <input
                     type="text"
                     {...register("quotno")}
+                    ref={(e) => {
+                      register("orderno").ref(e);
+                      proFormaRef.current = e;
+                    }}
                     disabled={isReadOnly}
                     placeholder="Enter Proforma invoice no."
                     className={`inputField ${errors.quotno ? "" : "border-gray-400"}`}
@@ -626,6 +676,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                     field={field}
                     control={control}
                     setValue={setValue}
+                    setFocus={setFocus}
                     register={register}
                     errors={errors}
                     remove={remove}
@@ -636,9 +687,11 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                     visible={visible}
                     isReadOnly={isReadOnly}
                     fieldsLength={fields.length}
-
                     excludeIds={selectedProductIds}
                     currentId={watchedItems?.[index]?.productid}
+                    brandInputRef={(el) => {
+                      brandInputRefs.current[index] = el;
+                    }}
                   />
                 ))}
               </div>
@@ -656,6 +709,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                   <input
                     type="number"
                     value={totalQty}
+                    tabIndex={-1}
                     readOnly
                     className="inputField w-full bg-gray-100"
                   />
@@ -671,6 +725,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                     type="number"
                     value={Number(totalValue.toFixed(2))}
                     readOnly
+                    tabIndex={-1}
                     className="inputField w-full bg-gray-100"
                   />
                 </div>

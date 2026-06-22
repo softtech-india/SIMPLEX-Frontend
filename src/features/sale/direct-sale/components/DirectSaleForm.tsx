@@ -875,7 +875,6 @@ export function DirectSaleForm(
                     disabled={isReadOnly}
                     readOnly
                     {...bindLookup(LOOKUP_KEYS.customer)}
-                    // tabIndex={0}
                     role="button"
                     onClick={() => setCustomerModalOpen(true)}
                     onKeyDown={(e) => handleKeyOpen(e, () => setCustomerModalOpen(true))}
