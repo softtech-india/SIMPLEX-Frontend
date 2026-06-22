@@ -67,6 +67,7 @@ export function DirectSaleForm(
   const godownRef = useRef<HTMLInputElement>(null);
   const salesmanRef = useRef<HTMLInputElement>(null);
   const transportRef = useRef<HTMLInputElement>(null);
+  const orderRef = useRef<HTMLInputElement>(null);
 
 
   // Order Based Sale
@@ -325,7 +326,11 @@ export function DirectSaleForm(
     setValue("customernm", row.name);
     setCustomerModalOpen(false);
     requestAnimationFrame(() => {
-      setFocus("crdays");
+      if (isOrderBasedSale) {
+        orderRef.current?.focus();
+      } else {
+        salesmanRef.current?.focus();
+      }
     });
   };
 
@@ -428,9 +433,9 @@ export function DirectSaleForm(
   const handleGodownSelect = (row: any) => {
     setValue("godownid", row.id);
     setValue("godownnm", row.name);
-    setTimeout(() => {
-      transportRef.current?.focus();
-    }, 100);
+    requestAnimationFrame(() => {
+      setFocus("billtime");
+    });
   };
 
   const GodownName = watch("godownnm")
@@ -899,6 +904,12 @@ export function DirectSaleForm(
                         disabled={isReadOnly}
                         readOnly
                         {...bindLookup(LOOKUP_KEYS.orderno)}
+                        ref={(e) => {
+                          register("orderno").ref(e);
+                          orderRef.current = e;
+                        }}
+                        onKeyDown={(e) => handleKeyOpen(e, () => setSoPendingModalOpen(true))}
+
                         onClick={() => setSoPendingModalOpen(true)}
                         className={`inputField w-full border border-gray-400 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
                         placeholder="Select SO No. & Date"
@@ -960,7 +971,6 @@ export function DirectSaleForm(
                     value={GodownName || ''}
                     disabled={isReadOnly}
                     readOnly
-
                     ref={(e) => {
                       register("godownid").ref(e);
                       godownRef.current = e;

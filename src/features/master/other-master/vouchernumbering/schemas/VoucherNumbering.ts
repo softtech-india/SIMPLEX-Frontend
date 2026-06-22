@@ -1,21 +1,21 @@
 import { z } from "zod";
 
 export const VoucherNumberingSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().min(1, " "),
   prefix: z.string().optional(),
   suffix: z.string().optional(),
   maxlength: z
     .number()
-    .min(1, "Max length must be at least 1"),
+    .min(1, " "),
   lastno: z.number().min(0),
 
-  manualallow: z.string().min(1, "Required"),
+  manualallow: z.string().min(1, " "),
 
-  futuredateallow: z.string().min(1, "Required"),
+  futuredateallow: z.string().min(1, " "),
 
-  status: z.string().min(1, "Required"),
+  status: z.string().min(1, " "),
 
-  voucherid: z.number().min(1, "Voucher is required"),
+  voucherid: z.number().min(1, " "),
 
 });
 

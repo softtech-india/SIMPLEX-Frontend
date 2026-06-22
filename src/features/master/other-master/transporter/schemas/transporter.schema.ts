@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const TransporterSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().min(1, ""),
   addr1: z.string().optional(),
   addr2: z.string().optional(),
   addr3: z.string().optional(),

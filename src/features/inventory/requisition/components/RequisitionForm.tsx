@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Popup } from "devextreme-react/popup";
 import { useQuery } from "@tanstack/react-query";
 import { useRequisitionById, useCreateRequisition, useUpdateRequisition, useDeleteRequisition } from "../hooks/useRequisition";
@@ -19,6 +19,8 @@ import SearchModal from "@/common/components/SearchModal";
 import { toast } from "sonner";
 import { LoadPanel } from "devextreme-react";
 import { useConfirm } from "@/common/hooks/useConfirm";
+import { LOOKUP_KEYS } from "@/common/constants/lookupKeys";
+import { useLookupShortcuts } from "@/common/hooks/useLookupShortcuts";
 
 interface RequisitionFormProps {
   visible: boolean;
@@ -43,6 +45,8 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
   const [toBranchModalOpen, setToBranchModalOpen] = useState(false);
   const [godownModalOpen, setGodownModalOpen] = useState(false);
   const [toGodownModalOpen, setToGodownModalOpen] = useState(false);
+  const toGodownRef = useRef<HTMLInputElement>(null);
+
 
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
@@ -214,11 +218,14 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
   const handleFromGodownSelect = (row: any) => {
     setValue("godownid", row.id);
     setValue("godownName", row.name);
-
     setGodownModalOpen(false);
-
     setValue("togodownid", 0);
     setValue("togodownName", '');
+    requestAnimationFrame(() => {
+
+      toGodownRef.current?.focus();
+
+    });
   };
   const fromGodownId = watch("godownid");
   const fromGodownName = watch("godownName");
@@ -248,6 +255,13 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
 
     return { totqty, itemdtl };
   };
+
+
+  const lookupMap = {
+    godownid: () => setGodownModalOpen(true),
+  };
+
+  const bindLookup = useLookupShortcuts(isReadOnly, lookupMap);
 
   const handleFormSubmit = async (data: RequisitionFormSchema) => {
     try {
@@ -310,6 +324,13 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
 
   const onError = (err: any) => {
     console.error("Validation errors:", err);
+  };
+
+  const handleKeyOpen = (e: React.KeyboardEvent, openFn: () => void) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openFn();
+    }
   };
 
   return (
@@ -404,6 +425,9 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
                   value={fromGodownName || ''}
                   disabled={isReadOnly}
                   readOnly
+                  {...bindLookup(LOOKUP_KEYS.customer)}
+                  onKeyDown={(e) => handleKeyOpen(e, () => setGodownModalOpen(true))}
+
                   onClick={() => { setGodownModalOpen(true); }}
                   className={`inputField w-full cursor-pointer 
                     ${errors?.godownid ? "border-red-500" : "border-gray-400"} 
@@ -440,6 +464,12 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
                   value={togodownName}
                   disabled={isReadOnly}
                   readOnly
+
+                  ref={(e) => {
+                    register("tobranchid").ref(e);
+                    toGodownRef.current = e;
+                  }}
+                  onKeyDown={(e) => handleKeyOpen(e, () => setToGodownModalOpen(true))}
                   onClick={() => {
                     const toBranchIdValue = watch("tobranchid");
                     if (!toBranchIdValue || toBranchIdValue === 0) {
