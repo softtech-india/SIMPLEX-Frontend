@@ -68,6 +68,7 @@ export function DirectSaleForm(
   const salesmanRef = useRef<HTMLInputElement>(null);
   const transportRef = useRef<HTMLInputElement>(null);
   const orderRef = useRef<HTMLInputElement>(null);
+  const brandInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
 
   // Order Based Sale
@@ -240,7 +241,7 @@ export function DirectSaleForm(
         saledgerid: Number(DirectSale.saledgerid ?? 0),
         godownid: Number(DirectSale.godownid ?? 0),
         smid: Number(DirectSale.smid ?? 0),
-        transporterid: Number(DirectSale.transporterid || 0),
+        // transporterid: Number(DirectSale.transporterid || 0),
 
         crdays: Number(DirectSale.crdays ?? 0),
 
@@ -478,15 +479,15 @@ export function DirectSaleForm(
   ];
 
   const handleTransporterSelect = (row: any) => {
-    setValue("transporterid", row.id);
-    setValue("transporternm", row.name);
+    // setValue("transporterid", row.id);
+    // setValue("transporternm", row.name);
     setTransporterModalOpen(false);
     requestAnimationFrame(() => {
       setFocus("billtime");
     });
   };
 
-  const transporterName = watch("transporternm")
+  // const transporterName = watch("transporternm")
 
   // Model Search SoPending Modal Handlers
   const orderid = watch("orderid");
@@ -621,7 +622,6 @@ export function DirectSaleForm(
   ];
 
   const handleAddItem = async () => {
-
     const lastIndex = fields.length - 1;
     const isValid = await trigger([
       `itemdtl.${lastIndex}.pcategorynm`,
@@ -634,7 +634,12 @@ export function DirectSaleForm(
       ...defaultItemDtl,
       sl: fields.length + 1,
       dtlid: fields.length + 1,
-    })
+    });
+
+    const newIndex = fields.length;
+    setTimeout(() => {
+      brandInputRefs.current[newIndex]?.focus();
+    }, 100);
   };
 
   // On Space button Open Search Model
@@ -1122,6 +1127,7 @@ export function DirectSaleForm(
                               field={field}
                               control={control}
                               setValue={setValue}
+                              setFocus={setFocus}
                               register={register}
                               errors={errors}
                               remove={remove}
@@ -1137,6 +1143,9 @@ export function DirectSaleForm(
 
                               excludeIds={selectedProductIds}
                               currentId={watchedItems?.[index]?.productid}
+                              brandInputRef={(el) => {
+                                brandInputRefs.current[index] = el;
+                              }}
                             />
                           ))}
                         </>
@@ -1151,6 +1160,7 @@ export function DirectSaleForm(
                               field={field}
                               control={control}
                               setValue={setValue}
+                              setFocus={setFocus}
                               register={register}
                               errors={errors}
                               remove={remove}
@@ -1166,9 +1176,11 @@ export function DirectSaleForm(
                               visible={visible}
                               isReadOnly={isReadOnly}
                               fieldsLength={fields.length}
-
                               excludeIds={selectedProductIds}
                               currentId={watchedItems?.[index]?.productid}
+                              brandInputRef={(el) => {
+                                brandInputRefs.current[index] = el;
+                              }}
                             />
                           ))}
                         </>

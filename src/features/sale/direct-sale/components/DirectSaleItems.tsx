@@ -1,10 +1,12 @@
 import { Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import SearchModal from "@/common/components/SearchModal";
 import { toast } from "sonner";
 import { fetchProductStock } from "@/api/master/product-api";
 import { useQuery } from "@tanstack/react-query";
 import { Controller } from "react-hook-form";
+import { LOOKUP_KEYS } from "@/common/constants/lookupKeys";
+import { useLookupShortcuts } from "@/common/hooks/useLookupShortcuts";
 
 
 type DirectSaleItemsProps = {
@@ -14,6 +16,7 @@ type DirectSaleItemsProps = {
   register: any;
   errors: any;
   setValue: any;
+  setFocus?: any;
   remove: (index: number) => void;
   trigger: any;
   watchedItems: any;
@@ -26,6 +29,7 @@ type DirectSaleItemsProps = {
   fieldsLength: number;
   excludeIds?: number[];
   currentId?: number;
+  brandInputRef?: (el: HTMLInputElement | null) => void;
 };
 
 export const DirectSaleItems: React.FC<DirectSaleItemsProps> = ({
@@ -35,6 +39,7 @@ export const DirectSaleItems: React.FC<DirectSaleItemsProps> = ({
   register,
   errors,
   setValue,
+  setFocus,
   remove,
   trigger,
   watchedItems,
@@ -45,9 +50,9 @@ export const DirectSaleItems: React.FC<DirectSaleItemsProps> = ({
   visible,
   isReadOnly,
   fieldsLength,
-
   excludeIds,
-  currentId
+  currentId,
+  brandInputRef
 
 }) => {
   const item = watchedItems?.[index];
@@ -57,6 +62,8 @@ export const DirectSaleItems: React.FC<DirectSaleItemsProps> = ({
 
   const [brandModalOpen, setBrandModalOpen] = useState(false);
   const [productModalOpen, setProductModalOpen] = useState(false);
+  const productRef = useRef<HTMLInputElement>(null);
+
 
   const selectedProductId = item?.productid;
 
@@ -121,8 +128,10 @@ export const DirectSaleItems: React.FC<DirectSaleItemsProps> = ({
 
     setValue(`itemdtl.${index}.rate`, 0);
     setValue(`itemdtl.${index}.clqty`, 0);
-
     setBrandModalOpen(false);
+    setTimeout(() => {
+      productRef.current?.focus();
+    }, 100);
   };
 
   // Model Search product Modal Handlers
@@ -160,9 +169,23 @@ export const DirectSaleItems: React.FC<DirectSaleItemsProps> = ({
     setValue(`itemdtl.${index}.productnm`, row.productname);
     // setValue(`itemdtl.${index}.qty1`, 0);
     setProductModalOpen(false);
+    requestAnimationFrame(() => {
+      setFocus(`itemdtl.${index}.qty1`);
+    });
   };
 
+  const lookupMap = {
+    product: () => setProductModalOpen(true),
+  };
 
+  const bindLookup = useLookupShortcuts(isReadOnly, lookupMap);
+
+  const handleKeyOpen = (e: React.KeyboardEvent, openFn: () => void) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openFn();
+    }
+  };
   return (
     <>
       <tr className="border-b">
@@ -172,6 +195,8 @@ export const DirectSaleItems: React.FC<DirectSaleItemsProps> = ({
             type="text"
             value={item?.pcategorynm || ""}
             readOnly
+            ref={brandInputRef}
+            onKeyDown={(e) => handleKeyOpen(e, () => setBrandModalOpen(true))}
             onClick={() => setBrandModalOpen(true)}
             className="inputField w-full cursor-pointer border border-gray-400"
             placeholder="Select Brand"
@@ -183,15 +208,22 @@ export const DirectSaleItems: React.FC<DirectSaleItemsProps> = ({
             type="text"
             value={item?.productnm || ""}
             readOnly
+
+            {...bindLookup(LOOKUP_KEYS.product)}
+            ref={(e) => {
+              register(`itemdtl.${index}.pcategoryid`).ref(e);
+              productRef.current = e;
+            }}
+            onKeyDown={(e) => handleKeyOpen(e, () => setProductModalOpen(true))}
             onClick={() => {
               if (!item?.pcategoryid) return;
               setProductModalOpen(true);
             }}
             disabled={isReadOnly || !item?.pcategoryid}
             className={`
-            inputField w-full cursor-pointer 
-            ${isReadOnly || !item?.pcategoryid ? 'bg-gray-200 cursor-not-allowed border-gray-300' : ""}
-          `}
+              inputField w-full cursor-pointer 
+              ${isReadOnly || !item?.pcategoryid ? 'bg-gray-200 cursor-not-allowed border-gray-300' : ""}
+            `}
             placeholder="Select Product"
           />
           {errors?.itemdtl?.[index]?.productid && (
@@ -220,9 +252,9 @@ export const DirectSaleItems: React.FC<DirectSaleItemsProps> = ({
             })}
             disabled={isReadOnly || !item?.pcategoryid}
             className={`inputField 
-            ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-400"}
-            ${isReadOnly || !item?.pcategoryid ? 'bg-gray-200 cursor-not-allowed border-gray-300' : ""}
-          `}
+              ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-400"}
+              ${isReadOnly || !item?.pcategoryid ? 'bg-gray-200 cursor-not-allowed border-gray-300' : ""}
+            `}
             onKeyDown={(e) => {
               if (e.key === "-") e.preventDefault();
             }}
@@ -297,8 +329,8 @@ export const DirectSaleItems: React.FC<DirectSaleItemsProps> = ({
               onClick={() => remove(index)}
               disabled={fieldsLength === 1}
               className={`inline-flex items-center justify-center p-2 rounded
-              ${fieldsLength === 1 ? "bg-gray-400 cursor-not-allowed" : "bg-red-500 hover:bg-red-600 text-white"} 
-            `}
+                ${fieldsLength === 1 ? "bg-gray-400 cursor-not-allowed" : "bg-red-500 hover:bg-red-600 text-white"} 
+              `}
             >
               <Trash2 size={16} />
             </button>

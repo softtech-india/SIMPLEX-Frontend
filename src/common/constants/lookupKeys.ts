@@ -7,4 +7,5 @@ export const LOOKUP_KEYS = {
     salesman: "smid",
     godownid: "godownid",
     transporter: "transporter",
+    product: "productnm"
 };

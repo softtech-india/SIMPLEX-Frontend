@@ -1,7 +1,8 @@
 import { Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import SearchModal from "@/common/components/SearchModal";
 import { toast } from "sonner";
+import { useLookupShortcuts } from "@/common/hooks/useLookupShortcuts";
 
 
 type SaleOrderItemsProps = {
@@ -11,6 +12,7 @@ type SaleOrderItemsProps = {
   register: any;
   errors: any;
   setValue: any;
+  setFocus: any;
   remove: (index: number) => void;
   watchedItems: any;
   userId: number | string;
@@ -21,6 +23,8 @@ type SaleOrderItemsProps = {
   fieldsLength: number;
   excludeIds?: number[];
   currentId?: number;
+  brandInputRef?: (el: HTMLInputElement | null) => void;
+
 };
 
 export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
@@ -30,6 +34,7 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
   register,
   errors,
   setValue,
+  setFocus,
   remove,
   watchedItems,
   userId,
@@ -38,9 +43,9 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
   visible,
   isReadOnly,
   fieldsLength,
-
   excludeIds,
-  currentId
+  currentId,
+  brandInputRef
 
 }) => {
   const item = watchedItems?.[index];
@@ -50,6 +55,8 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
 
   const [brandModalOpen, setBrandModalOpen] = useState(false);
   const [productModalOpen, setProductModalOpen] = useState(false);
+  const productRef = useRef<HTMLInputElement>(null);
+
 
   // Model Search Brand Modal Handlers
   const baseBrandParams = {
@@ -71,6 +78,9 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
     setValue(`itemdtl.${index}.productid`, null);
     setValue(`itemdtl.${index}.productnm`, "");
     setBrandModalOpen(false);
+    setTimeout(() => {
+      productRef.current?.focus();
+    }, 100);
   };
 
   // Model Search product Modal Handlers
@@ -107,8 +117,23 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
     setValue(`itemdtl.${index}.productid`, row.id);
     setValue(`itemdtl.${index}.productnm`, row.productname);
     setProductModalOpen(false);
+    requestAnimationFrame(() => {
+      setFocus(`itemdtl.${index}.qty1`);
+    });
   };
 
+  const lookupMap = {
+    product: () => setProductModalOpen(true),
+  };
+
+  const bindLookup = useLookupShortcuts(isReadOnly, lookupMap);
+
+  const handleKeyOpen = (e: React.KeyboardEvent, openFn: () => void) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openFn();
+    }
+  };
 
   return (
     <div className="flex flex-wrap gap-4 items-end">
@@ -119,6 +144,8 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
           type="text"
           value={item?.pcategorynm || ""}
           readOnly
+          ref={brandInputRef}
+          onKeyDown={(e) => handleKeyOpen(e, () => setBrandModalOpen(true))}
           onClick={() => setBrandModalOpen(true)}
           className="inputField w-full cursor-pointer border border-gray-400"
           placeholder="Select Brand"
@@ -131,6 +158,11 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
           type="text"
           value={item?.productnm || ""}
           readOnly
+          ref={(e) => {
+            register(`itemdtl.${index}.pcategoryid`).ref(e);
+            productRef.current = e;
+          }}
+          onKeyDown={(e) => handleKeyOpen(e, () => setProductModalOpen(true))}
           onClick={() => {
             if (!item?.pcategoryid) return;
             setProductModalOpen(true);

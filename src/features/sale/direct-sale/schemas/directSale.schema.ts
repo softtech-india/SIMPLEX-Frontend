@@ -8,10 +8,10 @@ export const DirectSaleItemSchema = z.object({
   pcategoryid: z.number().optional(),
   pcategorynm: z.string().optional(),
 
-  productid: z.number().min(1, "Please select a product"),
+  productid: z.number().min(1, " "),
   productnm: z.string().optional(),
 
-  qty1: z.number().min(1, "Quantity should be greater than 0"),
+  qty1: z.number().min(1, " "),
   clqty: z.number().optional(),
   rate: z.number().optional(),
   value: z.number().optional(),
@@ -59,29 +59,29 @@ export const DirectSaleBaseSchema = z.object({
 
   finid: z.number().optional(),
 
-  vnumid: z.number().min(1, "This field is required"),
-  vnummethod: z.string().min(1, "This field is required"),
+  vnumid: z.number().min(1, " "),
+  vnummethod: z.string().min(1, " "),
 
   billdt: z.string().optional(),
   billno: z.string().optional(),
 
-  billtypeid: z.number().min(1, "Please select a bill type"),
+  billtypeid: z.number().min(1, " "),
   billtypenm: z.string().optional(),
 
-  customerid: z.number().min(1, "Please select a customer"),
+  customerid: z.number().min(1, " "),
   customernm: z.string().optional(),
 
-  smid: z.number().min(1, "Please select a saleman"),
+  smid: z.number().min(1, " "),
   smnm: z.string().optional(),
 
-  godownid: z.number().min(1, "Please select a godown"),
+  godownid: z.number().min(1, " "),
   godownnm: z.string().optional(),
 
-  saledgerid: z.number().min(1, "Please select a sale ledger"),
+  saledgerid: z.number().min(1, " "),
   saledgernm: z.string().optional(),
 
-  transporterid: z.number().min(1, "Please select a transporter"),
-  transporternm: z.string().optional(),
+  // transporterid: z.number().min(1, "Please select a transporter"),
+  // transporternm: z.string().optional(),
 
   cashcrtype: z.string().optional(),
   crdays: z.number().optional(),
@@ -114,7 +114,7 @@ export const DirectSaleBaseSchema = z.object({
   orderno: z.string().optional(),
   orderdt: z.string().optional(),
 
-  itemdtl: z.array(DirectSaleItemSchema).min(1, "At least one item is required"),
+  itemdtl: z.array(DirectSaleItemSchema).min(1, " "),
 
 });
 

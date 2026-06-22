@@ -97,7 +97,7 @@ export const directSaleFormDefaults: DirectSaleFormSchema = {
   smid: 0,
   godownid: 0,
   saledgerid: 0,
-  transporterid: 0,
+  // transporterid: 0,
 
   billtime: currentTime,
 

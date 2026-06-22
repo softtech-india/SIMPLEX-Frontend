@@ -56,6 +56,9 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
 
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const brandInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+
 
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
@@ -258,6 +261,9 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
     setValue("customerid", row.id);
     setValue("customernm", row.name);
     setCustomerModalOpen(false);
+    setTimeout(() => {
+      brandInputRefs.current[0]?.focus();
+    }, 100);
   };
 
   const customerName = watch("customernm")
@@ -317,6 +323,11 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
       ...defaultItemDtl,
       dtlid: fields.length + 1,
     })
+
+    const newIndex = fields.length;
+    setTimeout(() => {
+      brandInputRefs.current[newIndex]?.focus();
+    }, 100);
   };
 
   const handleFormSubmit = async (data: SaleOrderFormSchema) => {
@@ -504,6 +515,10 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
                   disabled={isReadOnly}
                   readOnly
                   {...bindLookup(LOOKUP_KEYS.customer)}
+                  // ref={(e) => {
+                  //   register("customerid").ref(e);
+                  //   customerRef.current = e;
+                  // }}
                   onClick={() => setCustomerModalOpen(true)}
                   onKeyDown={(e) => handleKeyOpen(e, () => setCustomerModalOpen(true))}
                   className={`inputField w-full border border-gray-300 
@@ -577,6 +592,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
                   field={field}
                   control={control}
                   setValue={setValue}
+                  setFocus={setFocus}
                   register={register}
                   errors={errors}
                   remove={remove}
@@ -587,9 +603,11 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
                   visible={visible}
                   isReadOnly={isReadOnly}
                   fieldsLength={fields.length}
-
                   excludeIds={selectedProductIds}
                   currentId={watchedItems?.[index]?.productid}
+                  brandInputRef={(el) => {
+                    brandInputRefs.current[index] = el;
+                  }}
                 />
               ))}
             </div>
