@@ -3,24 +3,24 @@ import { z } from "zod";
 
 export const CustomerSchema = z.object({
   id: z.number().optional(),
-  name: z.string().min(1, "Customer name is required"),
+  name: z.string().min(1, " "),
   subledgertypeid: z.number(),
-  ledgergroupid: z.number().min(1, "Ledger group is required"),
-  cityid: z.number("City is required").min(1, "City is required"),
-  stateid: z.number().min(1, "State is required"),
-  addr1: z.string().min(1, "Address is required"),
+  ledgergroupid: z.number().min(1, " "),
+  cityid: z.number(" ").min(1, " "),
+  stateid: z.number().min(1, " "),
+  addr1: z.string().min(1, " "),
   addr2: z.string().optional(),
   addr3: z.string().optional(),
   nl: z.string().optional(),
   pin: z
     .string()
-    .regex(/^\d+$/, "PIN must contain only numbers")
+    .regex(/^\d+$/, " ")
     .or(z.literal(""))
     .optional(),
   phone: z.string().optional(),
   mobile: z
     .string()
-    .regex(/^\d+$/, "Mobile must contain only numbers")
+    .regex(/^\d+$/, " ")
     .or(z.literal(""))
     .optional(),
   email: z.string().optional(),

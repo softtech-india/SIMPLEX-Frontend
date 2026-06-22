@@ -8,7 +8,7 @@ import { useGoodReceivedNoteById, useCreateGoodReceivedNote, useUpdateGoodReceiv
 import { fetchGodownList, fetchVendorList } from "@/api/master/ledger-api";
 import { ConfirmGrn, ConfirmGrnType, ConfirmItems, GoodReceivedNoteFormType, OperationMode } from "../types/goodReceivedNote.types";
 import { GoodReceivedNoteFormSchema, ConfirmGoodReceivedNoteFormSchema } from "../schemas/goodReceivedNote.schema";
-import { goodReceivedNoteFormDefaults } from "../constants/goodReceivedNoteFormDefaults";
+import { defaultItemDtl, goodReceivedNoteFormDefaults } from "../constants/goodReceivedNoteFormDefaults";
 import { useGoodReceivedNoteForm } from "../hooks/useGoodReceivedNoteForm";
 import { useFieldArray } from "react-hook-form";
 import { fetchSeriesList } from "@/api/purchase/purchase-api";
@@ -23,6 +23,8 @@ import { useQrScanner } from "@/hooks/useQrScanner";
 import { toast } from "sonner";
 import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
 import { SHORTCUTS } from "@/common/constants/shortcuts";
+import { useLookupShortcuts } from "@/common/hooks/useLookupShortcuts";
+import { LOOKUP_KEYS } from "@/common/constants/lookupKeys";
 
 
 interface GoodReceivedNoteProps {
@@ -66,6 +68,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
     {
       [SHORTCUTS.SAVE]: () => { formRef.current?.requestSubmit(); },
       [SHORTCUTS.EXIT]: () => { onClose(); },
+      [SHORTCUTS.ADDITEM]: () => { handleAddItem(); },
     },
     visible
   );
@@ -73,6 +76,8 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
   const [grnPendingModalOpen, setGrnPendingModalOpen] = useState(false);
   const [vendorModalOpen, setVendorModalOpen] = useState(false);
   const [godownModalOpen, setGodownModalOpen] = useState(false);
+  const orderRef = useRef<HTMLInputElement>(null);
+
 
   const { data: GoodReceivedNote, isLoading: isLoadingGoodReceivedNote } =
     useGoodReceivedNoteById({
@@ -99,6 +104,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
     reset,
     watch,
     setValue,
+    trigger,
     formState: { errors },
   } = useGoodReceivedNoteForm();
 
@@ -267,17 +273,21 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
   };
 
   const searchVendorColumns = [
-    { key: "name", label: "name." },
+    { key: "name", label: "Name" },
   ];
 
   const searchVendorFields = [
     { value: "name", label: "Name" },
+    { value: "code", label: "Code" },
   ];
 
   const handleVendorSelect = (row: any) => {
     setValue("vendorid", row.id);
     setValue("vendorName", row.name);
     setVendorModalOpen(false);
+    setTimeout(() => {
+      orderRef.current?.focus();
+    }, 100);
   };
 
   const vendorName = watch("vendorName") || watch("vendornm");
@@ -323,11 +333,29 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
     { value: "name", label: "Name" },
   ];
 
+  const handleAddItem = async () => {
+
+    const lastIndex = fields.length - 1;
+    const isValid = await trigger([
+      `itemdtl.${lastIndex}.productid`,
+    ]);
+
+    if (!isValid) { return; }
+
+    append({
+      ...defaultItemDtl,
+      dtlid: fields.length + 1,
+    })
+  };
+
   const handleGrnPendingSelect = (row: GrnPendingRow) => {
     setValue("orderid", row.id);
     setValue(`orderno`, row.orderno);
     setValue(`orderdt`, row.orderdt);
     setGrnPendingModalOpen(false);
+    requestAnimationFrame(() => {
+      setFocus("partyrefno");
+    });
   };
 
 
@@ -456,6 +484,14 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
     }
   };
 
+  const lookupMap = {
+    vendor: () => setVendorModalOpen(true),
+    orderno: () => setGrnPendingModalOpen(true),
+    godownid: () => setGodownModalOpen(true),
+  };
+
+  const bindLookup = useLookupShortcuts(isReadOnly, lookupMap);
+
   const handleFormSubmit = async (data: GoodReceivedNoteFormSchema) => {
     try {
 
@@ -531,6 +567,13 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
     if (isDeleteMode) return "Delete";
     if (isConfiemMode) return "Confirm";
     return "Save";
+  };
+
+  const handleKeyOpen = (e: React.KeyboardEvent, openFn: () => void) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openFn();
+    }
   };
 
   // Debug validation issues 
@@ -617,6 +660,9 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   value={vendorName || ''}
                   disabled={isReadOnly}
                   readOnly
+                  {...bindLookup(LOOKUP_KEYS.customer)}
+                  onKeyDown={(e) => handleKeyOpen(e, () => setVendorModalOpen(true))}
+
                   onClick={() => setVendorModalOpen(true)}
                   className={`inputField w-full border 
                     ${errors.vendorid && !vendorName ? "border-red-500" : "border-gray-400"}
@@ -634,6 +680,12 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   value={orderno ? `${orderno} - ${formatDate(orderdt)}` : ""}
                   disabled={isReadOnly}
                   readOnly
+                  ref={(e) => {
+                    register("orderno").ref(e);
+                    orderRef.current = e;
+                  }}
+                  {...bindLookup(LOOKUP_KEYS.orderno)}
+                  onKeyDown={(e) => handleKeyOpen(e, () => setGrnPendingModalOpen(true))}
                   onClick={() => setGrnPendingModalOpen(true)}
                   className={`inputField w-full border
                     ${errors.orderno ? "border-red-500" : "border-gray-400"}
@@ -671,6 +723,8 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   value={godownName || ''}
                   disabled={isReadOnly}
                   readOnly
+                  {...bindLookup(LOOKUP_KEYS.godownid)}
+                  onKeyDown={(e) => handleKeyOpen(e, () => setGodownModalOpen(true))}
                   onClick={() => setGodownModalOpen(true)}
                   className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
                   placeholder="Select Godown"

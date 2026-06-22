@@ -9,6 +9,7 @@ type OpeningStockItemsProps = {
   register: any;
   errors: any;
   setValue: any;
+  setFocus: any;
   remove: (index: number) => void;
   watchedItems: any;
   userId: number | string;
@@ -26,6 +27,7 @@ export const OpeningStockItems: React.FC<OpeningStockItemsProps> = ({
   register,
   errors,
   setValue,
+  setFocus,
   remove,
   watchedItems,
   userId,
@@ -62,6 +64,9 @@ export const OpeningStockItems: React.FC<OpeningStockItemsProps> = ({
     setValue(`itemdtl.${index}.godownid`, row.id);
     setValue(`itemdtl.${index}.godownnm`, row.name);
     setGodownModalOpen(false);
+    requestAnimationFrame(() => {
+      setFocus(`itemdtl.${index}.qty1`);
+    });
   };
 
   return (
@@ -123,6 +128,7 @@ export const OpeningStockItems: React.FC<OpeningStockItemsProps> = ({
           type="number"
           value={value}
           readOnly
+          tabIndex={-1}
           className="inputField  bg-gray-100 border-gray-400"
         />
       </div>

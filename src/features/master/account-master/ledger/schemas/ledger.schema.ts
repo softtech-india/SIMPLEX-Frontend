@@ -2,9 +2,9 @@ import { z } from "zod";
 
 export const LedgerSchema = z.object({
   ledgercode: z.string().optional(),
-  ledgername: z.string().min(1, "Ledger Name is required"),
-  ledgergroupid: z.number().positive("Ledger Group ID must be a positive number"),
-  // ledgergroupnm: z.string().min(1, "Ledger Group Name is required"),
+  ledgername: z.string().min(1, " "),
+  ledgergroupid: z.number().positive(" "),
+  // ledgergroupnm: z.string().min(1, " "),
   ledgeraddr1: z.string().optional(),
   ledgeraddr2: z.string().optional(),
   ledgeraddr3: z.string().optional(),

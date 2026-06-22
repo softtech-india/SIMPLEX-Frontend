@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Popup } from "devextreme-react/popup";
 import LoadPanel from "devextreme-react/load-panel";
 import { useFieldArray } from "react-hook-form";
@@ -11,9 +11,11 @@ import { useCreateOpeningStock, useDeleteOpeningStock, useOpeningStockById, useU
 import { useOpeningStockForm } from "../hooks/useOpeningStockForm";
 import { OpeningStockItems } from "./OpeningStockItems";
 import { OpeningStockFormSchema } from "../schemas/openingStock.schema";
-import { openingStockFormDefaults } from "../constants/openingStockFormFormDefaults";
+import { defaultItemDtl, openingStockFormDefaults } from "../constants/openingStockFormFormDefaults";
 import SearchModal from "@/common/components/SearchModal";
 import { useConfirm } from "@/common/hooks/useConfirm";
+import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
+import { SHORTCUTS } from "@/common/constants/shortcuts";
 
 interface OpeningStockFormProps {
   visible: boolean;
@@ -40,6 +42,13 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
   const isDeleteMode = mode === "Delete";
   const isReadOnly = mode === "View" || mode === "Print";
 
+  useKeyboardShortcuts(
+    {
+      [SHORTCUTS.ADDITEM]: () => { handleAddItem(); },
+    },
+    visible
+  );
+
   const { data: OpeningStock, isLoading: isLoadingOpeningStock } =
     useOpeningStockById({
       id: formOpeningStockId,
@@ -56,6 +65,8 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
   const isSubmitting = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   const [productModalOpen, setProductModalOpen] = useState(false);
+  const productRef = useRef<HTMLInputElement>(null);
+
 
   const {
     control,
@@ -65,6 +76,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
     reset,
     watch,
     setValue,
+    trigger,
     formState: { errors },
   } = useOpeningStockForm();
 
@@ -106,6 +118,9 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
     }, 1000);
 
     if (isAddMode) {
+      setTimeout(() => {
+        productRef.current?.focus();
+      }, 100);
       reset(openingStockFormDefaults);
       return;
     }
@@ -204,6 +219,30 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
     return { qty1, totprodval, avgRate, itemdtl };
   };
 
+  const getButtonLabel = () => {
+    if (isSubmitting) {
+      if (isDeleteMode) return "Deleting...";
+      return "Saving...";
+    }
+
+    if (isDeleteMode) return "Delete";
+    return "Save";
+  };
+
+
+  const handleAddItem = async () => {
+
+    const lastIndex = fields.length - 1;
+    const isValid = await trigger([
+    ]);
+
+    if (!isValid) { return; }
+
+    append({
+      ...defaultItemDtl
+    })
+  };
+
   // Submit handler
   const handleFormSubmit = async (data: OpeningStockFormSchema) => {
     try {
@@ -261,15 +300,6 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
     }
   };
 
-  const getButtonLabel = () => {
-    if (isSubmitting) {
-      if (isDeleteMode) return "Deleting...";
-      return "Saving...";
-    }
-
-    if (isDeleteMode) return "Delete";
-    return "Save";
-  };
 
   // Debug validation issues 
   const onError = (err: any) => {
@@ -312,6 +342,11 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
                   type="text"
                   value={productname || ""}
                   readOnly
+
+                  ref={(e) => {
+                    register("productid").ref(e);
+                    productRef.current = e;
+                  }}
                   onClick={() => {
                     setProductModalOpen(true);
                   }}
@@ -331,6 +366,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
                   type="text"
                   value={categorynm || ""}
                   readOnly
+                  tabIndex={-1}
                   className="inputField border-gray-400 bg-gray-100"
                 />
               </div>
@@ -343,6 +379,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
                   type="text"
                   value={classnm || ""}
                   readOnly
+                  tabIndex={-1}
                   className="inputField border-gray-400 bg-gray-100"
                 />
               </div>
@@ -355,6 +392,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
                   type="text"
                   value={unit || ""}
                   readOnly
+                  tabIndex={-1}
                   className="inputField border-gray-400 bg-gray-100"
                 />
               </div>
@@ -365,6 +403,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
                   type="text"
                   value={formSelectedBranch}
                   readOnly
+                  tabIndex={-1}
                   className={`inputField border-gray-400 bg-gray-100`}
                 />
               </div>
@@ -411,6 +450,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
                   field={field}
                   control={control}
                   setValue={setValue}
+                  setFocus={setFocus}
                   register={register}
                   errors={errors}
                   remove={remove}
