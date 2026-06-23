@@ -1,10 +1,13 @@
 export interface SaleOrderItem {
   tag?: string;
   dtlid?: number;
+
   pcategoryid?: number;
   pcategorynm?: string;
+
   productid?: number;
   productnm?: string;
+  
   qty1?: number;
   qty2?: number;
   rate?: number;
@@ -29,6 +32,10 @@ export interface SaleOrder {
 
   customerid?: number;
   customernm?: string;
+
+  godownid: number;
+  godownName?: string;
+  godownnm?: string;
 
   partyordno?: string;
   partyorddt?: string;

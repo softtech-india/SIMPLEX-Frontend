@@ -33,6 +33,10 @@ export const SaleOrderBaseSchema = z.object({
   customerid: z.number().min(1, "Please select a customer"),
   customernm: z.string().optional(),
 
+  godownid: z.number().min(1, "Please select a godown"),
+  godownName: z.string().optional(),
+  godownnm: z.string().optional(),
+
   partyordno: z.string().optional(),
   partyorddt: z.string().optional(),
 

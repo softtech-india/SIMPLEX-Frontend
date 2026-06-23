@@ -57,6 +57,8 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
     control,
     name: `itemdtl.${index}`,
   });
+
+
   const qty = Number(item?.qty1) || 0;
   const rate = Number(item?.rate) || 0;
   const value = qty * rate;
@@ -81,11 +83,14 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
   ];
 
   const handleBrandSelect = (row: any) => {
+
     setValue(`itemdtl.${index}.pcategoryid`, row.id);
     setValue(`itemdtl.${index}.pcategorynm`, row.name);
     setValue(`itemdtl.${index}.productid`, null);
     setValue(`itemdtl.${index}.productnm`, "");
+
     setBrandModalOpen(false);
+
     setTimeout(() => {
       productRef.current?.focus();
     }, 100);
@@ -125,6 +130,7 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
     setValue(`itemdtl.${index}.productid`, row.id);
     setValue(`itemdtl.${index}.productnm`, row.productname);
     setProductModalOpen(false);
+
     requestAnimationFrame(() => {
       setFocus(`itemdtl.${index}.qty1`);
     });
@@ -144,94 +150,90 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
   };
 
   return (
-    <div className="flex flex-wrap gap-4 items-end">
+    <>
+      <div className="flex flex-wrap gap-4 items-end">
 
-      <div className="w-68">
-        <label className="block text-gray-700 font-medium mb-1"> Brand <strong className="text-red-500"> * </strong> </label>
-        <input
-          type="text"
-          value={item?.pcategorynm || ""}
-          readOnly
-          ref={brandInputRef}
-          onKeyDown={(e) => handleKeyOpen(e, () => setBrandModalOpen(true))}
-          onClick={() => setBrandModalOpen(true)}
-          className="inputField w-full cursor-pointer border border-gray-400"
-          placeholder="Select Brand"
-        />
-      </div>
+        <div className="w-68">
+          <label className="block text-gray-700 font-medium mb-1"> Brand <strong className="text-red-500"> * </strong> </label>
+          <input
+            type="text"
+            value={item?.pcategorynm || ""}
+            readOnly
+            ref={brandInputRef}
+            onKeyDown={(e) => handleKeyOpen(e, () => setBrandModalOpen(true))}
+            onClick={() => setBrandModalOpen(true)}
+            className="inputField w-full cursor-pointer border border-gray-400"
+            placeholder="Select Brand"
+          />
+        </div>
 
-      <div className="w-120">
-        <label className="block text-gray-700 font-medium mb-1"> Product <strong className="text-red-500"> * </strong> </label>
-        <input
-          type="text"
-          value={item?.productnm || ""}
-          readOnly
-          ref={(e) => {
-            register(`itemdtl.${index}.pcategoryid`).ref(e);
-            productRef.current = e;
-          }}
-          onKeyDown={(e) => handleKeyOpen(e, () => setProductModalOpen(true))}
-          onClick={() => {
-            if (!item?.pcategoryid) return;
-            setProductModalOpen(true);
-          }}
-          className={`
-            inputField w-full cursor-pointer 
+        <div className="w-120">
+          <label className="block text-gray-700 font-medium mb-1"> Product <strong className="text-red-500"> * </strong> </label>
+          <input
+            type="text"
+            value={item?.productnm || ""}
+            readOnly
+            ref={(e) => {
+             // register(`itemdtl.${index}.productid`).ref(e);
+              productRef.current = e;
+            }}
+            onKeyDown={(e) => handleKeyOpen(e, () => setProductModalOpen(true))}
+            onClick={() => {
+              if (!item?.pcategoryid) return;
+              setProductModalOpen(true);
+            }}
+            className={` inputField w-full cursor-pointer 
             ${rowErrors?.productid && !item?.productid ? "border-red-500" : "border-gray-400"}
           `}
-          placeholder="Select Product"
-        />
-        {/* {errors?.itemdtl?.[index]?.productid && !item?.productid && (
-          <p className="text-xs text-red-500 mt-1">  {errors.itemdtl[index].productid.message} </p>
-        )} */}
-      </div>
-
-      <div className="w-28">
-        <label className="block text-gray-700 font-medium mb-1"> Quantity <strong className="text-red-500"> * </strong> </label>
-        <input
-          type="number"
-          {...register(`itemdtl.${index}.qty1`, { valueAsNumber: true })}
-          disabled={isReadOnly}
-          className={`inputField ${rowErrors?.qty1 ? "border-red-500" : "border-gray-400"}`}
-        />
-        {/* {errors?.itemdtl?.[index]?.qty1 && (
-          <p className="text-xs text-red-500 mt-1"> {errors.itemdtl[index].qty1.message}</p>
-        )} */}
-      </div>
-
-      <div className="w-28">
-        <label className="block text-gray-700 font-medium mb-1"> Rate</label>
-        <input
-          type="number"
-          {...register(`itemdtl.${index}.rate`, { valueAsNumber: true })}
-          disabled={isReadOnly}
-          className="inputField border-gray-400 "
-        />
-      </div>
-
-      <div className="w-28">
-        <label className="block text-gray-700 font-medium mb-1"> Value</label>
-        <input
-          type="number"
-          tabIndex={-1}
-          value={value}
-          readOnly
-          className="inputField  bg-gray-100 border-gray-400"
-        />
-      </div>
-
-      {!isReadOnly && (
-        <div className="w-12 flex justify-center">
-          <button
-            type="button"
-            onClick={() => remove(index)}
-            // disabled={fieldsLength === 1}
-            className={`px-2 py-2 rounded flex items-center justify-center bg-red-400 hover:bg-red-600 text-white`}
-          >
-            <Trash2 size={16} />
-          </button>
+            placeholder="Select Product"
+          />
         </div>
-      )}
+
+        <div className="w-28">
+          <label className="block text-gray-700 font-medium mb-1"> Quantity <strong className="text-red-500"> * </strong> </label>
+          <input
+            type="number"
+            {...register(`itemdtl.${index}.qty1`, { valueAsNumber: true })}
+            disabled={isReadOnly}
+            className={`inputField ${rowErrors?.qty1 ? "border-red-500" : "border-gray-400"}`}
+          />
+        </div>
+
+        <div className="w-28">
+          <label className="block text-gray-700 font-medium mb-1"> Rate</label>
+          <input
+            type="number"
+            {...register(`itemdtl.${index}.rate`, { valueAsNumber: true })}
+            disabled={isReadOnly}
+            className="inputField border-gray-400 "
+          />
+        </div>
+
+        <div className="w-28">
+          <label className="block text-gray-700 font-medium mb-1"> Value</label>
+          <input
+            type="number"
+            tabIndex={-1}
+            value={value}
+            readOnly
+            className="inputField  bg-gray-100 border-gray-400"
+          />
+        </div>
+
+        {!isReadOnly && (
+          <div className="w-12 flex justify-center">
+            <button
+              type="button"
+              onClick={() => remove(index)}
+              // disabled={fieldsLength === 1}
+              className={`px-2 py-2 rounded flex items-center justify-center bg-red-400 hover:bg-red-600 text-white`}
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        )}
+
+      </div>
 
       {/* MODALS */}
       <SearchModal
@@ -242,7 +244,6 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
         columns={searchBrandColumns}
         searchFields={searchBrandFields}
         onSelect={handleBrandSelect}
-
       />
 
       <SearchModal
@@ -256,7 +257,7 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
         excludeIds={excludeIds}
         currentId={currentId}
       />
-    </div>
+    </>
   );
 
 

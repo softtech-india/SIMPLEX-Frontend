@@ -313,7 +313,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
   const handleGodownSelect = (row: any) => {
     setValue("godownid", row.id);
     setValue("godownName", row.name);
-    setVendorModalOpen(false);
+    setGodownModalOpen(false);
     setTimeout(() => {
       brandInputRefs.current[0]?.focus();
     }, 100);
