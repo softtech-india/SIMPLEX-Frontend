@@ -25,7 +25,7 @@ export function useSalesMen(branchId: string | null) {
     refetchOnMount: "always",
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
-    enabled: !!branchId, // Only fetch when branchId exists
+    // enabled: !!branchId,
   });
 }
 

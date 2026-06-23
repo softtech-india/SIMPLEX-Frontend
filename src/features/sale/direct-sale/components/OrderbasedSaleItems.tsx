@@ -68,7 +68,7 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
   const value = qty * rate;
 
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
-  const rateRef = useRef<HTMLInputElement>(null);
+  const qtyRef = useRef<HTMLInputElement>(null);
 
   const selectedProductId = item?.productid;
 
@@ -153,7 +153,7 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
     setValue(`itemdtl.${index}.qty1`, 0);
     setCategoryModalOpen(false);
     requestAnimationFrame(() => {
-      rateRef.current?.focus();
+      qtyRef.current?.focus();
     })
   };
 
@@ -220,6 +220,7 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
                 setValue(`itemdtl.${index}.qty1`, value);
               },
             })}
+            ref={qtyRef}
             disabled={isReadOnly || Number(watchedItems?.[index]?.clqty) === 0}
             className={`inputField 
             ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-300"} 
@@ -233,6 +234,7 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
           <input
             {...register(`itemdtl.${index}.unit`)}
             readOnly
+            tabIndex={-1}
             className={`inputField border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
           />
         </td>
@@ -246,7 +248,6 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
               <input
                 type="text"
                 inputMode="decimal"
-                ref={rateRef}
                 placeholder="0.000000"
                 value={field.value ?? ""}
 

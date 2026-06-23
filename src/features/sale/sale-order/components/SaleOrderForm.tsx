@@ -72,7 +72,6 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
       [SHORTCUTS.SAVE]: () => { formRef.current?.requestSubmit(); },
       [SHORTCUTS.EXIT]: () => { onClose(); },
       [SHORTCUTS.ADDITEM]: () => { handleAddItem(); },
-
     },
     visible
   );
@@ -156,7 +155,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
     if (SaleOrder) {
       reset({
         ...pruchaseOrderFormDefaults,
-
+        qrcode: "",
         ...SaleOrder,
 
         aprvstatus: "",
@@ -309,6 +308,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
   };
 
   const bindLookup = useLookupShortcuts(isReadOnly, lookupMap);
+
 
   const handleAddItem = async () => {
 
@@ -560,7 +560,23 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
                   className={`inputField border-gray-400 bg-gray-100 cursor-not-allowed `}
                 />
               </div>
-
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1"> Scan QR Code <span className="text-red-500"> *</span> </label>
+                <input
+                  type="text"
+                  {...register("qrcode")}
+                  ref={(el) => {
+                    scanInputRef.current = el;
+                    register("qrcode").ref(el);
+                  }}
+                  className="inputField border-gray-300"
+                  onKeyDown={(e: any) => {
+                    if (e.key !== "Enter") return;
+                    e.preventDefault();
+                    handleScan(e.target.value);
+                  }}
+                />
+              </div>
             </div>
           </section>
 
@@ -594,9 +610,10 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
                   setValue={setValue}
                   setFocus={setFocus}
                   register={register}
-                  errors={errors}
+                  // errors={errors}
                   remove={remove}
-                  watchedItems={watchedItems}
+                  // watchedItems={watchedItems}
+                  rowErrors={errors?.itemdtl?.[index]}
                   userId={userId}
                   companyId={companyId}
                   branchId={toolbarBranchId}

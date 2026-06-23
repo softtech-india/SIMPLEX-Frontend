@@ -711,6 +711,7 @@ export function DirectSaleForm(
         await createMutation.mutateAsync(payload);
         reset({
           ...directSaleFormDefaults,
+          qrcode: "",
           itemdtl: [],
         });
 

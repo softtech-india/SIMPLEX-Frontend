@@ -77,6 +77,9 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
   const [vendorModalOpen, setVendorModalOpen] = useState(false);
   const [godownModalOpen, setGodownModalOpen] = useState(false);
   const orderRef = useRef<HTMLInputElement>(null);
+  const brandInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+
 
 
   const { data: GoodReceivedNote, isLoading: isLoadingGoodReceivedNote } =
@@ -311,6 +314,9 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
     setValue("godownid", row.id);
     setValue("godownName", row.name);
     setVendorModalOpen(false);
+    setTimeout(() => {
+      brandInputRefs.current[0]?.focus();
+    }, 100);
   };
 
   const godownName = watch("godownName") || watch("godownnm");
@@ -346,6 +352,10 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
       ...defaultItemDtl,
       dtlid: fields.length + 1,
     })
+    const newIndex = fields.length;
+    setTimeout(() => {
+      brandInputRefs.current[newIndex]?.focus();
+    }, 100);
   };
 
   const handleGrnPendingSelect = (row: GrnPendingRow) => {
@@ -816,9 +826,11 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   visible={visible}
                   isReadOnly={isReadOnly}
                   fieldsLength={fields.length}
-
                   excludeIds={selectedProductIds}
                   currentId={watchedItems?.[index]?.productid}
+                  brandInputRef={(el) => {
+                    brandInputRefs.current[index] = el;
+                  }}
                 />
               ))}
             </div>

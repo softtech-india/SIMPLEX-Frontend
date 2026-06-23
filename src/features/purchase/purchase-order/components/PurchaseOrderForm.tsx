@@ -132,16 +132,17 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
   // Reset form 
   useEffect(() => {
     if (!visible) return;
-    if (!PurchaseOrder) return;
 
-    setTimeout(() => {
-      setFocus("orderdt");
-    }, 1000);
+
 
     if (isAddMode) {
-      reset(pruchaseOrderFormDefaults);
+      setTimeout(() => {
+        setFocus("orderdt");
+      }, 1000);
       return;
     }
+    if (!PurchaseOrder) return;
+    reset(pruchaseOrderFormDefaults);
 
     if (PurchaseOrder) {
       reset({
@@ -342,7 +343,9 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(pruchaseOrderFormDefaults);
-        // onClose();
+        setTimeout(() => {
+          setFocus("orderdt");
+        }, 1000);
         return;
       }
 
@@ -381,17 +384,38 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
     }
   };
   const handleAddItem = async () => {
+    // Validate the last item row before adding a new one
     const lastIndex = fields.length - 1;
-    const isValid = await trigger([
 
-    ]);
+    if (fields.length > 0) {
+      // Validate the last item's fields
+      const isValid = await trigger([
+        `itemdtl.${lastIndex}.productid`,
+        `itemdtl.${lastIndex}.qty1`,
+      ]);
 
-    if (!isValid) { return; }
+      if (!isValid) {
+        toast.error("Please complete the current item row first");
+        return;
+      }
+    }
 
+    // Append new item with default values
     append({
-      ...defaultItemDtl
+      productid: 0,
+      qty1: 0,
+      rate: 0,
+      value: 0,
+      qty2: 0,
+      tag: "I",
+      dtlid: fields.length + 1,
+      altunimethod: "A",
+      altunitfactor: 1,
+      alterunitfactortype: "M",
+      rateon: 1,
     });
 
+    // Focus on the brand input of the new row
     const newIndex = fields.length;
     setTimeout(() => {
       brandInputRefs.current[newIndex]?.focus();
@@ -538,7 +562,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                     type="text"
                     {...register("quotno")}
                     ref={(e) => {
-                      register("orderno").ref(e);
+                      register("quotno").ref(e);
                       proFormaRef.current = e;
                     }}
                     disabled={isReadOnly}
@@ -561,6 +585,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                   <label className="block text-gray-700 font-medium mb-1">Branch </label>
                   <input
                     type="text"
+                    tabIndex={-1}
                     value={formSelectedBranch}
                     readOnly
                     className={`inputField border-gray-400 bg-gray-100 cursor-not-allowed `}
