@@ -1,10 +1,11 @@
 import { Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import SearchModal from "@/common/components/SearchModal";
 import { toast } from "sonner";
 import { Controller } from "react-hook-form";
 import { useMasterModal } from "@/hooks/useMasterModal";
-
+import { useLookupShortcuts } from "@/common/hooks/useLookupShortcuts";
+import { LOOKUP_KEYS } from "@/common/constants/lookupKeys";
 
 type PurchaseOrderItemsProps = {
   index: number;
@@ -13,6 +14,7 @@ type PurchaseOrderItemsProps = {
   register: any;
   errors: any;
   setValue: any;
+  setFocus: any;
   remove: (index: number) => void;
   watchedItems: any;
   userId: number | string;
@@ -23,6 +25,7 @@ type PurchaseOrderItemsProps = {
   fieldsLength: number;
   excludeIds?: number[];
   currentId?: number;
+  brandInputRef?: (el: HTMLInputElement | null) => void;
 };
 
 export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
@@ -32,6 +35,7 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
   register,
   errors,
   setValue,
+  setFocus,
   remove,
   watchedItems,
   userId,
@@ -41,14 +45,14 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
   isReadOnly,
   fieldsLength,
   excludeIds,
-  currentId
+  currentId,
+  brandInputRef
 }) => {
 
   const { open } = useMasterModal();
   const handleSortcutCreate = async () => {
     await open("product");
   };
-
 
   const item = watchedItems?.[index];
   const qty = Number(item?.qty1) || 0;
@@ -57,6 +61,8 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
 
   const [brandModalOpen, setBrandModalOpen] = useState(false);
   const [productModalOpen, setProductModalOpen] = useState(false);
+  const productRef = useRef<HTMLInputElement>(null);
+  const qtyRef = useRef<HTMLInputElement>(null);
 
   // Model Search Brand Modal Handlers
   const baseBrandParams = {
@@ -78,6 +84,9 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
     setValue(`itemdtl.${index}.productid`, null);
     setValue(`itemdtl.${index}.productnm`, "");
     setBrandModalOpen(false);
+    setTimeout(() => {
+      productRef.current?.focus();
+    }, 100);
   };
 
   // Model Search product Modal Handlers
@@ -102,7 +111,6 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
   ];
 
   const handleProductSelect = (row: any) => {
-
     const alreadyExists = watchedItems?.some(
       (item: any) => item?.productid === row.id
     );
@@ -115,126 +123,167 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
     setValue(`itemdtl.${index}.productid`, row.id);
     setValue(`itemdtl.${index}.productnm`, row.productname);
     setProductModalOpen(false);
+
+    setTimeout(() => {
+      qtyRef.current?.focus();
+    }, 100);
   };
 
+  const lookupMap = {
+    product: () => setProductModalOpen(true),
+  };
+
+  const bindLookup = useLookupShortcuts(isReadOnly, lookupMap);
+
+  const handleKeyOpen = (e: React.KeyboardEvent, openFn: () => void) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openFn();
+    }
+  };
 
   return (
-    <div className="flex flex-wrap gap-4 items-end">
+    <>
+      <div className="flex flex-wrap gap-4 items-end">
+        <div className="w-68">
+          <label className="block text-gray-700 font-medium mb-1"> Brand <strong className="text-red-500"> * </strong> </label>
+          <input
+            type="text"
+            value={item?.pcategorynm || ""}
+            readOnly
+            ref={brandInputRef}
+            onKeyDown={(e) => handleKeyOpen(e, () => setBrandModalOpen(true))}
+            onClick={() => setBrandModalOpen(true)}
+            className="inputField w-full cursor-pointer border border-gray-400"
+            placeholder="Select Brand"
+          />
+        </div>
 
-      <div className="w-68">
-        <label className="block text-gray-700 font-medium mb-1"> Brand <strong className="text-red-500"> * </strong> </label>
-        <input
-          type="text"
-          value={item?.pcategorynm || ""}
-          readOnly
-          onClick={() => setBrandModalOpen(true)}
-          className="inputField w-full cursor-pointer border border-gray-400"
-          placeholder="Select Brand"
-        />
-      </div>
-
-      <div className="w-120">
-        <label className="block text-gray-700 font-medium mb-1"> Product <strong className="text-red-500"> * </strong> </label>
-        <input
-          type="text"
-          value={item?.productnm || ""}
-          readOnly
-          onClick={() => {
-            if (!item?.pcategoryid) return;
-            setProductModalOpen(true);
-          }}
-          className={`
+        <div className="w-120">
+          <label className="block text-gray-700 font-medium mb-1"> Product <strong className="text-red-500"> * </strong> </label>
+          <input
+            type="text"
+            value={item?.productnm || ""}
+            readOnly
+            {...bindLookup(LOOKUP_KEYS.product)}
+            ref={(e) => {
+              register(`itemdtl.${index}.productid`).ref(e);
+              productRef.current = e;
+            }}
+            onKeyDown={(e) => handleKeyOpen(e, () => setProductModalOpen(true))}
+            onClick={() => {
+              if (!item?.pcategoryid) {
+                toast.warning("Please select a brand first");
+                return;
+              }
+              setProductModalOpen(true);
+            }}
+            className={`
             inputField w-full cursor-pointer 
             ${errors?.itemdtl?.[index]?.productid && !item?.productid ? "border-red-500" : "border-gray-400"}
           `}
-          placeholder="Select Product"
-        />
-        {errors?.itemdtl?.[index]?.productid && !item?.productid && (
-          <p className="text-xs text-red-500 mt-1">  {errors.itemdtl[index].productid.message} </p>
-        )}
-      </div>
-
-      <div className="w-28">
-        <label className="block text-gray-700 font-medium mb-1"> Quantity <strong className="text-red-500"> * </strong> </label>
-        <input
-          type="number"
-          {...register(`itemdtl.${index}.qty1`, { valueAsNumber: true })}
-          disabled={isReadOnly}
-          className={`inputField ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-400"}`}
-        />
-        {errors?.itemdtl?.[index]?.qty1 && (
-          <p className="text-xs text-red-500 mt-1"> {errors.itemdtl[index].qty1.message}</p>
-        )}
-      </div>
-
-      <div className="w-28">
-        <label className="block text-gray-700 font-medium mb-1"> Rate</label>
-
-        <Controller
-          control={control}
-          name={`itemdtl.${index}.rate`}
-          render={({ field }) => (
-            <input
-              type="text"
-              inputMode="decimal"
-              placeholder="0.000000"
-              value={field.value ?? ""}
-
-              onChange={(e) => {
-                let value = e.target.value;
-                value = value.replace(/[^0-9.]/g, "");
-
-                const parts = value.split(".");
-                if (parts.length > 2) return;
-
-                const integerPart = parts[0] || "";
-                const decimalPart = parts[1] || "";
-
-                if (integerPart.length > 12) return;
-                if (decimalPart.length > 6) return;
-
-                field.onChange(value);
-              }}
-
-              onBlur={() => {
-                const numericValue = Number(field.value || 0);
-                field.onChange(numericValue);
-              }}
-
-              className={`inputField ${errors?.itemdtl?.[index]?.rate ? "border-red-500" : "border-gray-400"}`}
-            />
+            placeholder="Select Product"
+          />
+          {errors?.itemdtl?.[index]?.productid && !item?.productid && (
+            <p className="text-xs text-red-500 mt-1">
+              {errors.itemdtl[index].productid.message}
+            </p>
           )}
-        />
-        {/* {errors?.itemdtl?.[index]?.rate && (<p className="text-xs text-red-500 mt-1">{errors.itemdtl[index].rate.message} </p>)} */}
-      </div>
-
-      <div className="w-28">
-        <label className="block text-gray-700 font-medium mb-1"> Value</label>
-        <input
-          type="number"
-          value={Number(value.toFixed(2))}
-          readOnly
-          className="inputField  bg-gray-100 border-gray-400"
-        />
-      </div>
-
-      {!isReadOnly && (
-        <div className="w-12 flex justify-center">
-          <button
-            type="button"
-            onClick={() => remove(index)}
-            disabled={fieldsLength === 1}
-            className={`px-2 py-2 rounded flex items-center justify-center
-            ${fieldsLength === 1
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-red-400 hover:bg-red-600 text-white"
-              }`}
-          >
-            <Trash2 size={16} />
-          </button>
         </div>
-      )}
 
+        <div className="w-28">
+          <label className="block text-gray-700 font-medium mb-1"> Quantity <strong className="text-red-500"> * </strong> </label>
+          <Controller
+            control={control}
+            name={`itemdtl.${index}.qty1`}
+            defaultValue={0}
+            rules={{ required: "Quantity is required", min: { value: 0, message: "Quantity must be greater than 0" } }}
+            render={({ field }) => (
+              <input
+                type="number"
+                disabled={isReadOnly}
+                value={field.value ?? ''}
+                onChange={(e) => {
+                  const val = e.target.value === '' ? '' : Number(e.target.value);
+                  field.onChange(val);
+                }}
+                ref={(e) => {
+                  register(`itemdtl.${index}.qty1`).ref(e);
+                  qtyRef.current = e;
+                }}
+                className={`inputField ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-400"}`}
+              />
+            )}
+          />
+          {errors?.itemdtl?.[index]?.qty1 && (
+            <p className="text-xs text-red-500 mt-1">
+              {errors.itemdtl[index].qty1.message}
+            </p>
+          )}
+        </div>
+
+        <div className="w-28">
+          <label className="block text-gray-700 font-medium mb-1"> Rate</label>
+          <Controller
+            control={control}
+            name={`itemdtl.${index}.rate`}
+            defaultValue={0}
+            render={({ field }) => (
+              <input
+                type="text"
+                inputMode="decimal"
+                placeholder="0.000000"
+                value={field.value ?? ''}
+                onChange={(e) => {
+                  let value = e.target.value;
+                  value = value.replace(/[^0-9.]/g, "");
+                  const parts = value.split(".");
+                  if (parts.length > 2) return;
+                  const integerPart = parts[0] || "";
+                  const decimalPart = parts[1] || "";
+                  if (integerPart.length > 12) return;
+                  if (decimalPart.length > 6) return;
+                  field.onChange(value);
+                }}
+                onBlur={() => {
+                  const numericValue = Number(field.value || 0);
+                  field.onChange(numericValue);
+                }}
+                className={`inputField ${errors?.itemdtl?.[index]?.rate ? "border-red-500" : "border-gray-400"}`}
+              />
+            )}
+          />
+        </div>
+
+        <div className="w-28">
+          <label className="block text-gray-700 font-medium mb-1"> Value</label>
+          <input
+            type="number"
+            tabIndex={-1}
+            value={Number(value.toFixed(2))}
+            readOnly
+            className="inputField bg-gray-100 border-gray-400"
+          />
+        </div>
+
+        {!isReadOnly && (
+          <div className="w-12 flex justify-center">
+            <button
+              type="button"
+              onClick={() => remove(index)}
+              disabled={fieldsLength === 1}
+              className={`px-2 py-2 rounded flex items-center justify-center
+            ${fieldsLength === 1
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-red-400 hover:bg-red-600 text-white"
+                }`}
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        )}
+
+      </div>
       {/* MODALS */}
       <SearchModal
         open={brandModalOpen}
@@ -262,8 +311,6 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
           onCreateNew: handleSortcutCreate,
         }}
       />
-    </div>
+    </>
   );
-
-
 };

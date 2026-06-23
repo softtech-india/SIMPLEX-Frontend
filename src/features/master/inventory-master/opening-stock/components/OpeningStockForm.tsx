@@ -66,6 +66,8 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
 
   const [productModalOpen, setProductModalOpen] = useState(false);
   const productRef = useRef<HTMLInputElement>(null);
+  const godownInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
 
 
   const {
@@ -186,8 +188,10 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
     setValue("categorynm", row.categorynm);
     setValue("classnm", row.classnm);
     setValue("unit", row.unit);
-
     setProductModalOpen(false);
+    setTimeout(() => {
+      godownInputRefs.current[0]?.focus();
+    }, 100);
   };
 
   const calculateTotals = (items: any[] = []) => {
@@ -241,6 +245,10 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
     append({
       ...defaultItemDtl
     })
+    const newIndex = fields.length;
+    setTimeout(() => {
+      godownInputRefs.current[newIndex]?.focus();
+    }, 100);
   };
 
   // Submit handler
@@ -300,6 +308,12 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
     }
   };
 
+  const handleKeyOpen = (e: React.KeyboardEvent, openFn: () => void) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openFn();
+    }
+  };
 
   // Debug validation issues 
   const onError = (err: any) => {
@@ -347,6 +361,8 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
                     register("productid").ref(e);
                     productRef.current = e;
                   }}
+                  onKeyDown={(e) => handleKeyOpen(e, () => setProductModalOpen(true))}
+
                   onClick={() => {
                     setProductModalOpen(true);
                   }}
@@ -461,6 +477,9 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
                   visible={visible}
                   isReadOnly={isReadOnly}
                   fieldsLength={fields.length}
+                  godownInputRef={(el) => {
+                    godownInputRefs.current[index] = el;
+                  }}
                 />
               ))}
             </div>
@@ -477,6 +496,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
                   type="number"
                   value={totalQty}
                   readOnly
+                  tabIndex={-1}
                   className="inputField w-full bg-gray-100"
                 />
               </div>
@@ -486,6 +506,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
                   type="number"
                   value={Number(avgRate).toFixed(2)}
                   readOnly
+                  tabIndex={-1}
                   className="inputField w-full bg-gray-100"
                 />
               </div>
@@ -495,6 +516,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
                   type="number"
                   value={totalValue}
                   readOnly
+                  tabIndex={-1}
                   className="inputField w-full bg-gray-100"
                 />
               </div>

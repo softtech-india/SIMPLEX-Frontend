@@ -1,5 +1,5 @@
 import { Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import SearchModal from "@/common/components/SearchModal";
 import { toast } from "sonner";
 import { OperationMode } from "../types/goodReceivedNote.types";
@@ -23,11 +23,10 @@ type GoodReceivedNoteItemsProps = {
   visible: boolean;
   isReadOnly: boolean;
   fieldsLength: number;
-
   mode: OperationMode;
-
   excludeIds?: number[];
   currentId?: number;
+  brandInputRef?: (el: HTMLInputElement | null) => void;
 };
 
 export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
@@ -50,8 +49,8 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
   fieldsLength,
   mode,
   excludeIds,
-  currentId
-
+  currentId,
+  brandInputRef
 }) => {
   const item = watchedItems?.[index];
   const qty = Number(item?.qty1) || 0;
@@ -62,9 +61,8 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
     mode === 'Confirmed' ? Number(item.scanqty) * rate : 0;
 
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
-
-  // FIX: isScanned should be true when a product is selected (has productid)
-  // NOT based on scanqty
+  const productRef = useRef<HTMLInputElement>(null);
+  const qtyRef = useRef<HTMLInputElement>(null);
   const isScanned = item?.productid && item?.productid > 0;
 
   // Model Search Brand Modal Handlers
@@ -106,6 +104,16 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
     setValue(`itemdtl.${index}.qty1`, 0);
 
     setCategoryModalOpen(false);
+    setTimeout(() => {
+      qtyRef.current?.focus();
+    }, 100);
+  };
+
+  const handleKeyOpen = (e: React.KeyboardEvent, openFn: () => void) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openFn();
+    }
   };
 
   return (
@@ -120,6 +128,8 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
           type="text"
           value={item?.pcategorynm || ""}
           readOnly
+          ref={brandInputRef}
+          onKeyDown={(e) => handleKeyOpen(e, () => setCategoryModalOpen(true))}
           onClick={() => setCategoryModalOpen(true)}
           className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"} `}
           placeholder="Select brand"
@@ -171,6 +181,10 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
               setValue(`itemdtl.${index}.qty1`, value);
             },
           })}
+          ref={(e) => {
+            register(`itemdtl.${index}.qty1`).ref(e);
+            qtyRef.current = e;
+          }}
           disabled={isReadOnly}
           className={`
             inputField 
@@ -190,6 +204,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
         <input
           {...register(`itemdtl.${index}.unit`)}
           readOnly
+          tabIndex={-1}
           className={`inputField border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
         />
       </div>
@@ -219,6 +234,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
           min={0}
           value={value}
           readOnly
+          tabIndex={-1}
           className={`inputField  bg-gray-100 border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
         />
       </div>
@@ -233,6 +249,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
               type="number"
               min={0}
               {...register(`itemdtl.${index}.balanceqty1`)}
+              tabIndex={-1}
               readOnly
               className={`
                 inputField  bg-gray-100 cursor-not-allowed"

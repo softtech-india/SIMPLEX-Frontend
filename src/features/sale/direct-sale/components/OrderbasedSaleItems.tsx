@@ -1,5 +1,5 @@
 import { Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import SearchModal from "@/common/components/SearchModal";
 import { toast } from "sonner";
 import { OperationMode } from "../types/directSale.types";
@@ -15,6 +15,7 @@ type OrderbasedSaleItemsProps = {
   register: any;
   errors: any;
   setValue: any;
+  setFocus: any;
   remove: (index: number) => void;
   trigger: any;
   watchedItems: any;
@@ -32,6 +33,8 @@ type OrderbasedSaleItemsProps = {
 
   excludeIds?: number[];
   currentId?: number;
+  brandInputRef?: (el: HTMLInputElement | null) => void;
+
 };
 
 export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
@@ -41,6 +44,7 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
   register,
   errors,
   setValue,
+  setFocus,
   remove,
   trigger,
   watchedItems,
@@ -53,12 +57,10 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
   visible,
   isReadOnly,
   fieldsLength,
-
   mode,
-
   excludeIds,
-  currentId
-
+  currentId,
+  brandInputRef
 }) => {
   const item = watchedItems?.[index];
   const qty = Number(item?.qty1) || 0;
@@ -66,6 +68,7 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
   const value = qty * rate;
 
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const qtyRef = useRef<HTMLInputElement>(null);
 
   const selectedProductId = item?.productid;
 
@@ -148,10 +151,19 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
     setValue(`itemdtl.${index}.balanceqty1`, row.qty1);
     setValue(`itemdtl.${index}.unit`, row.unit);
     setValue(`itemdtl.${index}.qty1`, 0);
-
     setCategoryModalOpen(false);
+    requestAnimationFrame(() => {
+      qtyRef.current?.focus();
+    })
   };
 
+
+  const handleKeyOpen = (e: React.KeyboardEvent, openFn: () => void) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openFn();
+    }
+  };
   return (
     <>
       <tr className="border-b">
@@ -161,6 +173,8 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
             type="text"
             value={item?.pcategorynm || ""}
             readOnly
+            ref={brandInputRef}
+            onKeyDown={(e) => handleKeyOpen(e, () => setCategoryModalOpen(true))}
             onClick={() => setCategoryModalOpen(true)}
             className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"} `}
             placeholder="Select Brand"
@@ -206,6 +220,7 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
                 setValue(`itemdtl.${index}.qty1`, value);
               },
             })}
+            ref={qtyRef}
             disabled={isReadOnly || Number(watchedItems?.[index]?.clqty) === 0}
             className={`inputField 
             ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-300"} 
@@ -219,6 +234,7 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
           <input
             {...register(`itemdtl.${index}.unit`)}
             readOnly
+            tabIndex={-1}
             className={`inputField border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
           />
         </td>
@@ -227,6 +243,7 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
           <Controller
             control={control}
             name={`itemdtl.${index}.rate`}
+
             render={({ field }) => (
               <input
                 type="text"
@@ -323,10 +340,6 @@ export const OrderbasedSaleItems: React.FC<OrderbasedSaleItemsProps> = ({
         excludeIds={excludeIds}
         currentId={currentId}
       />
-
     </>
-
   );
-
-
 };

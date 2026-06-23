@@ -18,6 +18,7 @@ type OpeningStockItemsProps = {
   visible: boolean;
   isReadOnly: boolean;
   fieldsLength: number;
+  godownInputRef?: (el: HTMLInputElement | null) => void;
 };
 
 export const OpeningStockItems: React.FC<OpeningStockItemsProps> = ({
@@ -36,6 +37,7 @@ export const OpeningStockItems: React.FC<OpeningStockItemsProps> = ({
   visible,
   isReadOnly,
   fieldsLength,
+  godownInputRef
 }) => {
   const item = watchedItems?.[index];
   const qty = Number(item?.qty1) || 0;
@@ -69,6 +71,13 @@ export const OpeningStockItems: React.FC<OpeningStockItemsProps> = ({
     });
   };
 
+  const handleKeyOpen = (e: React.KeyboardEvent, openFn: () => void) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openFn();
+    }
+  };
+
   return (
     <div className="flex flex-wrap gap-4 items-end">
 
@@ -80,7 +89,9 @@ export const OpeningStockItems: React.FC<OpeningStockItemsProps> = ({
         <input
           type="text"
           readOnly
+          ref={godownInputRef}
           value={item?.godownnm || ""}
+          onKeyDown={(e) => handleKeyOpen(e, () => setGodownModalOpen(true))}
           onClick={() => setGodownModalOpen(true)}
           className={`inputField cursor-pointer ${errors?.itemdtl?.[index]?.godownnm ? "border-red-500" : "border-gray-400"}`}
           placeholder="Select Godown"
