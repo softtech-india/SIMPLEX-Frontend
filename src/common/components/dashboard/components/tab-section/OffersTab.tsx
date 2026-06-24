@@ -3,7 +3,7 @@ import React from "react";
 export default function OffersTab() {
   return (
     <>
-      <div className="min-h-screen px-2 space-y-2">
+      <div className="p-1 space-y-4">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           
           <h3 className="text-xl font-semibold text-gray-800 mb-4">

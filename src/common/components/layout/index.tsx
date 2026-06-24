@@ -5,11 +5,10 @@ import Sidebar from '../dashboard/components/Sidebar';
 import Footer from '../dashboard/components/Footer';
 import { MenuProvider } from '../../../context/MenuContext';
 import useIsMobile from '@/common/hooks/useIsMobile';
-import { getStorageItem } from '@/common/utility/storage';
-import { storageService } from '@/common/utility/storageService';
 import { useAppStorage } from '@/hooks/useAuthStorage';
 import { useReactiveStorage } from '@/hooks/useReactiveStorage';
-import { set } from 'lodash';
+import { logoutUser } from '@/features/auth/logout';
+import { storageService } from '@/common/utility/storageService';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -35,7 +34,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const router = useRouter();
   const isMobile = useIsMobile();
-  const { refreshStorage } = useAppStorage();
 
 
   // Save sidebar collapsed state to localStorage whenever it changes
@@ -98,10 +96,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // If userPrivilege is null or falsy, render nothing (or you could render a message)
   if (!userPrivilege) return null;
 
-  // Logout clears everything except pinned menus and redirects
   const logout = () => {
+    logoutUser(router);
+
     const pinnedMenus = storageService.getItem("pinned-menus");
-    const sidebarState = localStorage.getItem(SIDEBAR_COLLAPSED_KEY); // Preserve sidebar state
+    const sidebarState = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
 
     localStorage.clear();
 
@@ -111,10 +110,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     if (sidebarState !== null) {
       localStorage.setItem(SIDEBAR_COLLAPSED_KEY, sidebarState);
     }
-
-    refreshStorage();
-
-    router.push("/");
   };
 
   // Sidebar toggles for mobile and desktop
@@ -123,8 +118,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <MenuProvider>
-      <div className="min-h-screen flex flex-col bg-gray-50">
-        {/* Top navigation bar */}
+      <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
+
         <TopBar
           user={userPrivilege.user}
           sidebarOpen={sidebarOpen}
@@ -134,31 +129,30 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           onLogout={logout}
         />
 
-        <div className="flex flex-1 pt-16">
-          {/* Sidebar */}
+        <div className="flex flex-1 overflow-hidden">
+
           <Sidebar
             isOpen={sidebarOpen}
             collapsed={sidebarCollapsed}
+            setCollapsed={setSidebarCollapsed}
             onClose={() => setSidebarOpen(false)}
             menus={userPrivilege.priviledges}
           />
 
-          {/* Main content area */}
           <div
-            className={`flex flex-col flex-1 transition-all duration-300
-              ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-80'}`}
+            className={`flex flex-col flex-1 transition-all duration-300 overflow-hidden
+            ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-80'}`}
           >
-            <main className="flex-1 overflow-y-auto overflow-x-auto p-2">
-              <div className="w-full">
-                {children}
-              </div>
+
+            <main className="flex-1 overflow-auto px-2 py-2">
+              {children}
             </main>
 
-            {/* Footer only on desktop */}
             {!isMobile && <Footer />}
           </div>
         </div>
       </div>
     </MenuProvider>
   );
+
 }

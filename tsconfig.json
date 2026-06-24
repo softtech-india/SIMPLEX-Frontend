@@ -31,7 +31,8 @@
       "@/hooks/*": ["hooks/*"],
       "@/store/*": ["store/*"],
       "@/types/*": ["types/*"],
-      "@/utils/*": ["utils/*" ]
+      "@/utils/*": ["utils/*" ],
+      "@/providers/*": ["providers/*" ]
     },
     "ignoreDeprecations": "6.0"
   },

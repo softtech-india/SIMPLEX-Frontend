@@ -23,7 +23,7 @@ export default function TopBar({
   const { companyName } = useUserStore();
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-40 shadow-sm">
+    <header className="h-16 w-full bg-white border-b border-gray-200 shadow-sm z-40">
       <div className="h-full flex items-center justify-between px-4">
 
         <div className="flex items-center gap-4">
@@ -92,4 +92,6 @@ export default function TopBar({
       </div>
     </header>
   );
+
+  
 }

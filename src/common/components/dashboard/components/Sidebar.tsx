@@ -10,6 +10,7 @@ import {
 
 import useIsMobile from '@/common/hooks/useIsMobile';
 import { storageService } from '@/common/utility/storageService';
+import Link from 'next/link';
 
 /* =========================
    TYPES
@@ -28,6 +29,7 @@ interface SidebarProps {
   onClose: () => void;
   menus: MenuItem[];
   collapsed: boolean;
+  setCollapsed: (collapsed: boolean) => void;
 }
 
 interface MenuItemProps {
@@ -152,59 +154,89 @@ const MenuItemComponent: React.FC<MenuItemProps> = ({
 
   return (
     <div className="space-y-1">
-      <button
-        onClick={() =>
-          hasSubMenus
-            ? toggleMenu(menuKey, parentKey)
-            : handleNavigation(menu.path)
-        }
-        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium
-        ${isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'}`}
-        style={{ paddingLeft: `${level * 12 + 12}px` }}
-      >
-        <span className="flex items-center gap-3">
-          <Icon className="w-5 h-5 text-gray-500" />
-          {!collapsed && <span>{highlightText(menu.menuname, searchQuery)}</span>}
-        </span>
 
-        {!collapsed && (
-          <div className="flex items-center gap-2">
-            <Star
-              onClick={(e) => {
-                e.stopPropagation();
-                togglePin(menu.menuid);
-              }}
-              className={`w-4 h-4 ${isPinned ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'
-                }`}
-            />
+      {!hasSubMenus ? (
+        <>
+          <Link
+            href={menu.path || "#"}
+            onClick={() => handleNavigation()}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium
+            ${isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'}
+          `}
+            style={{ paddingLeft: `${level * 12 + 12}px` }}
+          >
+            <span className="flex items-center gap-3">
+              <Icon className="w-5 h-5 text-gray-500" />
+              {!collapsed && (
+                <span>{highlightText(menu.menuname, searchQuery)}</span>
+              )}
+            </span>
 
-            {hasSubMenus &&
-              (isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />)}
-          </div>
-        )}
-      </button>
+            {!collapsed && (
+              <Star
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  togglePin(menu.menuid);
+                }}
+                className={`w-4 h-4 ${isPinned ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+              />
+            )}
+          </Link>
+        </>
+      ) : (
+        <button
+          onClick={() => toggleMenu(menuKey, parentKey)}
+          className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium
+          ${isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'}`}
+          style={{ paddingLeft: `${level * 12 + 12}px` }}
+        >
+          <span className="flex items-center gap-3">
+            <Icon className="w-5 h-5 text-gray-500" />
+            {!collapsed && <span>{highlightText(menu.menuname, searchQuery)}</span>}
+          </span>
 
-      {hasSubMenus && isExpanded && !collapsed && (
-        <div className="ml-4 border-l pl-4 space-y-1">
-          {menu.items!.map((child: MenuItem) => (
-            <MenuItemComponent
-              key={child.menuid}
-              menu={child}
-              parentKey={menuKey}
-              level={level + 1}
-              collapsed={collapsed}
-              expandedMenus={expandedMenus}
-              toggleMenu={toggleMenu}
-              handleNavigation={handleNavigation}
-              routerPath={routerPath}
-              searchQuery={searchQuery}
-              togglePin={togglePin}
-              pinnedMenus={pinnedMenus}
-            />
-          ))}
-        </div>
+          {!collapsed && (
+            <div className="flex items-center gap-2">
+              <Star
+                onClick={(e) => {
+                  e.stopPropagation();
+                  togglePin(menu.menuid);
+                }}
+                className={`w-4 h-4 ${isPinned ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'
+                  }`}
+              />
+
+              {hasSubMenus &&
+                (isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />)}
+            </div>
+          )}
+        </button>
       )}
-    </div>
+
+      {
+        hasSubMenus && isExpanded && !collapsed && (
+          <div className="ml-4 border-l pl-4 space-y-1">
+            {menu.items!.map((child: MenuItem) => (
+              <MenuItemComponent
+                key={child.menuid}
+                menu={child}
+                parentKey={menuKey}
+                level={level + 1}
+                collapsed={collapsed}
+                expandedMenus={expandedMenus}
+                toggleMenu={toggleMenu}
+                handleNavigation={handleNavigation}
+                routerPath={routerPath}
+                searchQuery={searchQuery}
+                togglePin={togglePin}
+                pinnedMenus={pinnedMenus}
+              />
+            ))}
+          </div>
+        )
+      }
+    </div >
   );
 };
 
@@ -216,6 +248,7 @@ export default function Sidebar({
   onClose,
   menus = [],
   collapsed = false,
+  setCollapsed,
 }: SidebarProps) {
 
   const router = useRouter();
@@ -278,8 +311,13 @@ export default function Sidebar({
     });
   };
 
-  const handleNavigation = (path?: string) => {
-    if (path) router.push(path);
+  const handleNavigation = () => {
+    // if (path) {
+    //   router.push(path).then(() => {
+    //     setCollapsed(true)
+    //   });
+    // }
+    setCollapsed(true);
     if (isMobile) onClose();
   };
 
@@ -317,7 +355,7 @@ export default function Sidebar({
     <>
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/40 z-20 md:hidden"
+          className="fixed inset-0 bg-black/40 z-20 md:hidden h-[50vh]"
           onClick={onClose}
         />
       )}
@@ -325,7 +363,7 @@ export default function Sidebar({
       <aside
         className={`
           fixed top-16 left-0 bottom-0 bg-white border-r z-30
-          transition-all duration-300 ease-in-out overflow-y-auto
+          transition-all duration-300 ease-in-out overflow-y-hidden
           ${collapsed ? 'md:w-16' : 'md:w-80'} w-80
           ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
         `}
