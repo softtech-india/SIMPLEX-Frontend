@@ -1,15 +1,13 @@
 export interface SaleOrderItem {
   tag?: string;
   dtlid?: number;
-
   pcategoryid?: number;
   pcategorynm?: string;
-
   productid?: number;
   productnm?: string;
-  
   qty1?: number;
   qty2?: number;
+  clqty?: number;
   rate?: number;
   value?: number;
   altunimethod?: string;

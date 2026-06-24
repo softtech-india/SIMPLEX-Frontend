@@ -57,7 +57,8 @@ export function useSaleOrderById(params: UseSaleOrderByIdParams) {
         finid: params.finid,
       }),
 
-    enabled: !!params.id, 
+    enabled: !!params.id, // only run when id exists
+
     staleTime: 0,
     gcTime: 0,
 

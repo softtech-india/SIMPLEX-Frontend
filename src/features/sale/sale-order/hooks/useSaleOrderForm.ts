@@ -6,7 +6,7 @@ import {
   SaleOrderFormSchema,
 } from "../schemas/saleOrder.schema";
 
-import { defaultItemDtl, saleOrderFormDefaults } from "../constants/saleOrderFormDefaults";
+import { saleOrderFormDefaults } from "../constants/saleOrderFormDefaults";
 
 export const useSaleOrderForm = (
   isApproveMode: boolean,
@@ -19,10 +19,8 @@ export const useSaleOrderForm = (
 
     defaultValues: {
       ...saleOrderFormDefaults,
-      ...defaultValues ,
-
-      itemdtl: defaultValues?.itemdtl?.length ? defaultValues.itemdtl : [defaultItemDtl],
-      // itemdtl: defaultValues?.itemdtl ?? [defaultValues],
+      ...(defaultValues ?? {}),
+      itemdtl: defaultValues?.itemdtl ?? [],
     },
 
     mode: "onChange",
