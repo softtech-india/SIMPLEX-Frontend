@@ -6,7 +6,7 @@ import {
   SaleOrderFormSchema,
 } from "../schemas/saleOrder.schema";
 
-import { pruchaseOrderFormDefaults } from "../constants/saleOrderFormDefaults";
+import { saleOrderFormDefaults } from "../constants/saleOrderFormDefaults";
 
 export const useSaleOrderForm = (
   isApproveMode: boolean,
@@ -18,7 +18,7 @@ export const useSaleOrderForm = (
     resolver: zodResolver(schema),
 
     defaultValues: {
-      ...pruchaseOrderFormDefaults,
+      ...saleOrderFormDefaults,
       ...(defaultValues ?? {}),
       itemdtl: defaultValues?.itemdtl ?? [],
     },

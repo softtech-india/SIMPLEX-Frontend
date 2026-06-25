@@ -8,12 +8,11 @@ export const SaleOrderItemSchema = z.object({
 
   qty1: z.number().min(1, "Quantity should be greater than 0"),
   qty2: z.number().optional(),
-
+  clqty: z.number().optional(),
   rate: z.number().optional(),
   value: z.number().optional(),
 
   altunimethod: z.string().optional(),
-  pcategoryid: z.number().optional(),
   altunitfactor: z.number().optional(),
   alterunitfactortype: z.string().optional(),
   rateon: z.number().optional(),
@@ -33,6 +32,10 @@ export const SaleOrderBaseSchema = z.object({
   customerid: z.number().min(1, "Please select a customer"),
   customernm: z.string().optional(),
 
+  godownid: z.number().min(1, "Please select a godown"),
+  godownName: z.string().optional(),
+  godownnm: z.string().optional(),
+
   partyordno: z.string().optional(),
   partyorddt: z.string().optional(),
 
@@ -48,7 +51,6 @@ export const SaleOrderBaseSchema = z.object({
 
   aprvstatus: z.string().optional(),
   aprvremarks: z.string().optional(),
-  qrcode: z.string().optional(),
 
   itemdtl: z.array(SaleOrderItemSchema).min(1, "At least one item is required"),
 });

@@ -1,9 +1,10 @@
 import { Trash2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import SearchModal from "@/common/components/SearchModal";
 import { toast } from "sonner";
-import { useLookupShortcuts } from "@/common/hooks/useLookupShortcuts";
-import { useWatch } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
+import { fetchProductStock } from "@/api/master/product-api";
+import { Controller } from "react-hook-form";
 
 
 type SaleOrderItemsProps = {
@@ -11,21 +12,20 @@ type SaleOrderItemsProps = {
   field: { id: string };
   control: any;
   register: any;
-  rowErrors: any;
+  errors: any;
   setValue: any;
-  setFocus: any;
   remove: (index: number) => void;
-  // watchedItems: any;
+  watchedItems: any;
   userId: number | string;
   companyId: number | string;
   branchId: number | string;
+  orderDate: string;
+  GodownId: number | string;
   visible: boolean;
   isReadOnly: boolean;
   fieldsLength: number;
   excludeIds?: number[];
   currentId?: number;
-  brandInputRef?: (el: HTMLInputElement | null) => void;
-
 };
 
 export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
@@ -33,38 +33,66 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
   field,
   control,
   register,
-  rowErrors,
+  errors,
   setValue,
-  setFocus,
   remove,
-  // watchedItems,
+  watchedItems,
   userId,
   companyId,
   branchId,
+  orderDate,
+  GodownId,
   visible,
   isReadOnly,
   fieldsLength,
+
   excludeIds,
-  currentId,
-  brandInputRef
+  currentId
 
 }) => {
-
-
-  // const item = watchedItems?.[index];
-
-  const item = useWatch({
-    control,
-    name: `itemdtl.${index}`,
-  });
+  const item = watchedItems?.[index];
   const qty = Number(item?.qty1) || 0;
   const rate = Number(item?.rate) || 0;
   const value = qty * rate;
 
   const [brandModalOpen, setBrandModalOpen] = useState(false);
   const [productModalOpen, setProductModalOpen] = useState(false);
-  const productRef = useRef<HTMLInputElement>(null);
 
+  const selectedProductId = item?.productid;
+
+  const { data: currentProductStock } = useQuery({
+    queryKey: ["fetchProductStock", userId, companyId, branchId, selectedProductId, orderDate, GodownId],
+    queryFn: () => fetchProductStock(userId, companyId, branchId, selectedProductId, orderDate, GodownId),
+    enabled: !!userId && !!companyId && !!branchId && !!selectedProductId && !!GodownId && !!orderDate,
+    staleTime: 0,
+    retry: 1,
+    refetchOnWindowFocus: true,
+  });
+
+  useEffect(() => {
+    if (!currentProductStock?.length) return;
+
+    const stockData = currentProductStock[0];
+    const clqty = Number(stockData?.clqty || 0);
+
+    setValue(`itemdtl.${index}.clqty`, clqty);
+
+    const currentQty = Number(item?.qty1 || 1);
+
+    // out of stock
+    if (clqty === 0) {
+      setValue(`itemdtl.${index}.qty1`, 0);
+      toast.error("Sale quantity is not allowed because closing quantity is 0.");
+      return;
+    }
+
+    // adjust if current exceeds max
+    if (currentQty > clqty) {
+      setValue(`itemdtl.${index}.qty1`, clqty);
+      toast.error(`Sale quantity adjusted to ${clqty}`);
+    }
+
+  }, [currentProductStock, index, setValue]);
 
   // Model Search Brand Modal Handlers
   const baseBrandParams = {
@@ -86,9 +114,6 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
     setValue(`itemdtl.${index}.productid`, null);
     setValue(`itemdtl.${index}.productnm`, "");
     setBrandModalOpen(false);
-    setTimeout(() => {
-      productRef.current?.focus();
-    }, 100);
   };
 
   // Model Search product Modal Handlers
@@ -113,38 +138,23 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
   ];
 
   const handleProductSelect = (row: any) => {
-    // const alreadyExists = item?.some(
-    //   (item: any) => item?.productid === row.id
-    // );
+    const alreadyExists = watchedItems?.some(
+      (item: any) => item?.productid === row.id
+    );
 
-    // if (alreadyExists) {
-    //   toast.error("Brand already selected");
-    //   return;
-    // }
+    if (alreadyExists) {
+      toast.error("Brand already selected");
+      return;
+    }
 
     setValue(`itemdtl.${index}.productid`, row.id);
     setValue(`itemdtl.${index}.productnm`, row.productname);
     setProductModalOpen(false);
-    requestAnimationFrame(() => {
-      setFocus(`itemdtl.${index}.qty1`);
-    });
   };
 
-  const lookupMap = {
-    product: () => setProductModalOpen(true),
-  };
-
-  const bindLookup = useLookupShortcuts(isReadOnly, lookupMap);
-
-  const handleKeyOpen = (e: React.KeyboardEvent, openFn: () => void) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      openFn();
-    }
-  };
 
   return (
-    <div className="flex flex-wrap gap-4 items-end">
+    <div className="flex flex-wrap gap-1 items-end">
 
       <div className="w-68">
         <label className="block text-gray-700 font-medium mb-1"> Brand <strong className="text-red-500"> * </strong> </label>
@@ -152,8 +162,6 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
           type="text"
           value={item?.pcategorynm || ""}
           readOnly
-          ref={brandInputRef}
-          onKeyDown={(e) => handleKeyOpen(e, () => setBrandModalOpen(true))}
           onClick={() => setBrandModalOpen(true)}
           className="inputField w-full cursor-pointer border border-gray-400"
           placeholder="Select Brand"
@@ -166,67 +174,130 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
           type="text"
           value={item?.productnm || ""}
           readOnly
-          ref={(e) => {
-            register(`itemdtl.${index}.pcategoryid`).ref(e);
-            productRef.current = e;
-          }}
-          onKeyDown={(e) => handleKeyOpen(e, () => setProductModalOpen(true))}
           onClick={() => {
             if (!item?.pcategoryid) return;
             setProductModalOpen(true);
           }}
           className={`
             inputField w-full cursor-pointer 
-            ${rowErrors?.productid && !item?.productid ? "border-red-500" : "border-gray-400"}
+            ${errors?.itemdtl?.[index]?.productid && !item?.productid ? "border-red-500" : "border-gray-400"}
           `}
           placeholder="Select Product"
         />
-        {/* {errors?.itemdtl?.[index]?.productid && !item?.productid && (
-          <p className="text-xs text-red-500 mt-1">  {errors.itemdtl[index].productid.message} </p>
-        )} */}
       </div>
 
-      <div className="w-28">
-        <label className="block text-gray-700 font-medium mb-1"> Quantity <strong className="text-red-500"> * </strong> </label>
-        <input
-          type="number"
-          {...register(`itemdtl.${index}.qty1`, { valueAsNumber: true })}
-          disabled={isReadOnly}
-          className={`inputField ${rowErrors?.qty1 ? "border-red-500" : "border-gray-400"}`}
-        />
-        {/* {errors?.itemdtl?.[index]?.qty1 && (
-          <p className="text-xs text-red-500 mt-1"> {errors.itemdtl[index].qty1.message}</p>
-        )} */}
-      </div>
+        <div className="w-28">
+          <label className="block text-gray-700 font-medium mb-1"> Quantity <strong className="text-red-500"> * </strong> </label>
+          <input
+            type="number"
+            min={0}
+            {...register(`itemdtl.${index}.qty1`, {
+              valueAsNumber: true,
+              validate: (value: any) => {
+                const clqty = Number(item?.clqty || 0);
+                if (value > clqty) {
+                  return `Issued quantity (Qty1) cannot be greater than the available closing stock (${clqty}).`;
+                }
+                return true;
+              },
+              onChange: (e: any) => {
+                let value = Number(e.target.value);
+                const clqty = Number(item?.clqty || 0);
+                if (value < 1) value = 1;
 
-      <div className="w-28">
-        <label className="block text-gray-700 font-medium mb-1"> Rate</label>
-        <input
-          type="number"
-          {...register(`itemdtl.${index}.rate`, { valueAsNumber: true })}
-          disabled={isReadOnly}
-          className="inputField border-gray-400 "
-        />
-      </div>
+                if (value > clqty) {
+                  toast.error(
+                    `Issued quantity (Qty1) cannot be greater than available stock (${clqty}).`
+                  );
+                  value = clqty;
+                }
+                setValue(`itemdtl.${index}.qty1`, value, { shouldValidate: true });
+              },
+            })}
+            disabled={isReadOnly || Number(item?.clqty) === 0}
+            className={`inputField
+              ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-300"}
+              ${isReadOnly || Number(item?.clqty) === 0 ? "bg-gray-200 cursor-not-allowed" : ""}
+            `}
+            onKeyDown={(e) => {
+              if (e.key === "-") e.preventDefault();
+            }}
+          />
+        </div>
+
+        <div className="w-28">
+          <label className="block text-gray-700 font-medium mb-1"> Rate</label>
+          <Controller
+            control={control}
+            name={`itemdtl.${index}.rate`}
+
+            render={({ field }) => (
+              <input
+                type="text"
+                inputMode="decimal"
+                placeholder="0.000000"
+                value={field.value ?? ""}
+
+                onChange={(e) => {
+                  let value = e.target.value;
+                  value = value.replace(/[^0-9.]/g, "");
+
+                  const parts = value.split(".");
+                  if (parts.length > 2) return;
+
+                  const integerPart = parts[0] || "";
+                  const decimalPart = parts[1] || "";
+
+                  if (integerPart.length > 12) return;
+                  if (decimalPart.length > 6) return;
+
+                  field.onChange(value);
+                }}
+
+                onBlur={() => {
+                  const numericValue = Number(field.value || 0);
+                  field.onChange(numericValue);
+                }}
+
+                className={`inputField ${errors?.itemdtl?.[index]?.[index]?.rate ? "border-red-500" : "border-gray-400"}`}
+              />
+            )}
+          />
+        </div>
 
       <div className="w-28">
         <label className="block text-gray-700 font-medium mb-1"> Value</label>
         <input
           type="number"
-          tabIndex={-1}
           value={value}
           readOnly
           className="inputField  bg-gray-100 border-gray-400"
         />
       </div>
 
+      <td className="w-20">
+        <label className="block text-gray-700 font-medium mb-1"> Cl. Stock</label>
+        <input
+          type="number"
+          min={0}
+          {...register(`itemdtl.${index}.clqty`)}
+          readOnly
+          tabIndex={-1}
+          className="inputField bg-gray-100 border-gray-400"
+        />
+      </td>
+
       {!isReadOnly && (
         <div className="w-12 flex justify-center">
           <button
             type="button"
             onClick={() => remove(index)}
-            // disabled={fieldsLength === 1}
-            className={`px-2 py-2 rounded flex items-center justify-center bg-red-400 hover:bg-red-600 text-white`}
+            disabled={fieldsLength === 1}
+            className={`px-2 py-2 rounded flex items-center justify-center
+            ${fieldsLength === 1
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-red-400 hover:bg-red-600 text-white"
+              }`}
           >
             <Trash2 size={16} />
           </button>

@@ -40,14 +40,11 @@ export const ConfirmProvider = ({ children }: { children: React.ReactNode }) => 
     <ConfirmContext.Provider value={confirm}>
       {children}l
 
-      {/* Global Modal */}
       {open && (
         <div className="fixed inset-0 z-101 flex items-center justify-center bg-black/60 backdrop-blur-sm">
 
-          {/* Modal Card */}
           <div className="w-full max-w-md mx-4 bg-white rounded-xl shadow-2xl overflow-hidden animate-fadeIn">
 
-            {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
               <h3 className="text-lg font-semibold text-gray-900">
                 {options.title || "Confirm Action"}
@@ -61,14 +58,12 @@ export const ConfirmProvider = ({ children }: { children: React.ReactNode }) => 
               </button>
             </div>
 
-            {/* Body */}
             <div className="px-5 py-6">
               <p className="text-sm text-gray-600 leading-relaxed">
                 {options.message || "Are you sure you want to continue this action?"}
               </p>
             </div>
 
-            {/* Footer */}
             <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-gray-100 bg-gray-50">
 
               <button

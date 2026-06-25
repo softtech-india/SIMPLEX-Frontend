@@ -1,12 +1,20 @@
 @import "tailwindcss";
 @tailwind utilities;
 
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
 .form-login {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  /* background-image: url('/styles/images/lum3n--RBuQ2PK_L8-unsplash.jpg'); */
+  /* background-image: url('/styles/images/lum3n--RBuQ2PK_L8-unsplash.jpg');  #__next  */
   background-size: 100% 100%;
   background-position: center;
   margin: 0;
@@ -1737,7 +1745,6 @@ a.dx-link.dx-link-delete.dx-icon-trash.dx-link-icon {
   --secondary-button-active: #d1d5db;
   --secondary-button-text: #1f2937;
   --secondary-button-border: #d1d5db;
-
 }
 
 .dark {
@@ -1927,7 +1934,9 @@ a.dx-link.dx-link-delete.dx-icon-trash.dx-link-icon {
 
 /* Rows */
 .erp-grid .dx-row {
-  transition: background 0.2s ease, color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
 }
 
 /* Hover effect */
@@ -2130,4 +2139,49 @@ a.dx-link.dx-link-delete.dx-icon-trash.dx-link-icon {
 
 .erp-grid .dx-datagrid-content {
   min-width: 100%;
+}
+
+/* ======================================== FOR BOM Register Data grid */
+
+/* ======================================== FOR BOM Register Data grid */
+.erp-grid .dx-data-row.bom-header-row {
+  background-color: #ffe17f !important;
+}
+
+.erp-grid .dx-data-row.bom-header-row:hover {
+  background-color: #777 !important;
+}
+
+.erp-grid .dx-data-row.bom-header-row td {
+  background-color: transparent !important;
+}
+
+/* ======================================== FOR warehouse-stock Data grid */
+
+.erp-grid .dx-data-row.wh-total-row {
+  background-color: #ffe17f !important;
+}
+
+.erp-grid .dx-data-row.wh-total-row:hover {
+  background-color: #777 !important;
+}
+
+.erp-grid .dx-data-row.wh-total-row td {
+  background-color: transparent !important;
+}
+
+
+/* DataGrid.css */
+.dx-header-filter {
+  color: rgb(177, 177, 177) !important;
+}
+
+/* If you also want the filter row icons to be white */
+.dx-filter-row .dx-editor-cell .dx-icon-filter {
+  color: rgb(177, 177, 177) !important;
+}
+
+/* For the header filter popup text */
+.dx-header-filter-popup .dx-list-item-text {
+  color: rgb(177, 177, 177) !important;
 }

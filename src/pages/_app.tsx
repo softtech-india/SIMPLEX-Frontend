@@ -6,11 +6,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import "../styles/globals.css";
 import "devextreme/dist/css/dx.light.compact.css";
-import useIsMobile from "@/common/hooks/useIsMobile";
 import { Toaster } from "sonner";
 import Head from "next/head";
-import { ConfirmProvider } from "@/common/providers/ConfirmProvider";
+
 import { MasterModalHost } from "@/common/components/MasterModalHost";
+import { clearAuthData, LOGOUT_EVENT_KEY } from "@/features/auth/logout";
+import useUserStore from "@/store/userStore";
+import { ConfirmProvider } from "@/providers/ConfirmProvider";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,33 +48,49 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 }
 
+const didInit = { current: false };
+const PUBLIC_ROUTES = ["/", "/login", "/forgot-password", "/reset-password",];
+
 export default function App({ Component, pageProps }: AppProps) {
+
   const router = useRouter();
-  const isMobile = useIsMobile();
+  const isAuthenticated = useUserStore(
+    (state) => state.isAuthenticated
+  );
+
+  const isPublicPage = PUBLIC_ROUTES.includes(router.pathname);
 
   useEffect(() => {
-    console.log("Application.Running.Step.0");
-    console.log('isMobile 1 :', isMobile);
+    const onStorageChange = (event: StorageEvent) => {
+      if (event.key !== LOGOUT_EVENT_KEY) return;
+      clearAuthData();
+      router.replace("/");
+    };
+
+    window.addEventListener("storage", onStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", onStorageChange);
+    };
   }, []);
 
-  // Logout sync across tabs
   useEffect(() => {
-    const handleLogout = (event: StorageEvent) => {
-      if (event.key === "logout") {
-        localStorage.removeItem("isLoggedIn");
-        localStorage.removeItem("lastPath");
-        router.replace("/");
-      }
-    };
-    window.addEventListener("storage", handleLogout);
-    return () => window.removeEventListener("storage", handleLogout);
-  }, [router]);
+    if (didInit.current) return;
+    didInit.current = true;
 
-  const publicRoutes: string[] = ["/"];
-  const isPublicPage = publicRoutes.includes(router.pathname);
+    if (isAuthenticated && isPublicPage) {
+      router.replace("/dashboard");
+      return;
+    }
+
+    if (!isAuthenticated && !isPublicPage) {
+      router.replace("/");
+      return;
+    }
+  }, [isAuthenticated, router.pathname]);
+
 
   return (
-
     <>
       <Head>
         <link
@@ -84,18 +102,20 @@ export default function App({ Component, pageProps }: AppProps) {
       </Head>
 
       <ErrorBoundary>
+
         <QueryClientProvider client={queryClient}>
+
           <ConfirmProvider>
 
             {isPublicPage ? (
               <Component {...pageProps} />
             ) : (
-              <Layout>
-                <Component {...pageProps} />
-              </Layout>
-
+              <>
+                <Layout>
+                  <Component {...pageProps} />
+                </Layout>
+              </>
             )}
-
             <MasterModalHost />
             <Toaster
               position="top-right"
@@ -108,7 +128,8 @@ export default function App({ Component, pageProps }: AppProps) {
           </ConfirmProvider>
           {/* {process.env.NODE_ENV === "development" && <ReactQueryDevtools initialIsOpen={false} />} */}
         </QueryClientProvider>
-      </ErrorBoundary>
+
+      </ErrorBoundary >
     </>
 
   );

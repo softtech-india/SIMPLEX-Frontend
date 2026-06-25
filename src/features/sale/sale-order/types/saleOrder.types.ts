@@ -7,6 +7,7 @@ export interface SaleOrderItem {
   productnm?: string;
   qty1?: number;
   qty2?: number;
+  clqty?: number;
   rate?: number;
   value?: number;
   altunimethod?: string;
@@ -29,6 +30,10 @@ export interface SaleOrder {
 
   customerid?: number;
   customernm?: string;
+
+  godownid: number;
+  godownName?: string;
+  godownnm?: string;
 
   partyordno?: string;
   partyorddt?: string;

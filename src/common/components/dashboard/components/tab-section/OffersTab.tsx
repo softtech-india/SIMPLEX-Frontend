@@ -1,40 +1,25 @@
-import React from "react";
-
 export default function OffersTab() {
+ 
   return (
-    <>
-      <div className="min-h-screen px-2 space-y-2">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">
-            Offers
-          </h3>
-          <p className="text-gray-600">
-            This section is reserved for Offers content. You can list current offers,
-            promotions, banners, or cards here.
-          </p>
+    <div className="space-y-6 p-4 bg-slate-50 min-h-screen">
+      {/* Hero */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 p-8 text-white shadow-xl">
+        <div className="absolute right-0 top-0 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
 
-          {/* Example Offers list */}
-          <div className="mt-4 space-y-3">
-            <div className="border rounded-lg p-4 bg-blue-50">
-              <h4 className="text-md font-medium text-blue-700">
-                🔥 Seasonal Discount
-              </h4>
-              <p className="text-sm text-gray-600">
-                Offer details and conditions go here.
-              </p>
-            </div>
-            <div className="border rounded-lg p-4 bg-blue-50">
-              <h4 className="text-md font-medium text-blue-700">
-                💼 New Partner Incentive
-              </h4>
-              <p className="text-sm text-gray-600">
-                Partner offer details here.
-              </p>
-            </div>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">
+              Offers & Promotions
+            </h1>
+            <p className="mt-2 text-purple-100">
+              Manage discounts, campaigns and promotional activities.
+            </p>
           </div>
+
         </div>
       </div>
-    </>
+
+
+    </div>
   );
 }

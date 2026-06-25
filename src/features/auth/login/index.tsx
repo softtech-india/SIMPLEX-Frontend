@@ -9,15 +9,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { User, Lock, EyeOff, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { login } from "../services/auth.service";
-import useCompanyStore from "@/store/useCompanyStore";
 import useUserStore from "@/store/userStore";
 import { CONTACTS } from "../data";
 import { storageService } from "@/common/utility/storageService";
 import CompanySelectionModule from "@/features/utility/company-selection";
 
-// =======================
-// ZOD VALIDATION
-// =======================
+
 const loginSchema = z.object({
   username: z.string().trim().min(1, "Username is required"),
   password: z.string().trim().min(1, "Password is required"),
@@ -25,9 +22,6 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-// =======================
-// TYPES
-// =======================
 interface LoginResponseSuccess {
   success: true;
   message: string;
@@ -46,9 +40,12 @@ interface LoginResponseSuccess {
       branchnm: string;
       branch: string;
       finid: string;
+      finstdt: string;
+      finenddt: string;
       usertype: string;
       usersegment: string;
       multicompany?: string;
+      pcodetag: string;
     };
   };
 }
@@ -61,9 +58,7 @@ interface LoginResponseError {
 
 type LoginResponse = LoginResponseSuccess | LoginResponseError;
 
-// =======================
-// COMPONENT
-// =======================
+
 export default function Login() {
 
   const [showCompanySelection, setShowCompanySelection] = useState(false);
@@ -80,9 +75,6 @@ export default function Login() {
     defaultValues: { username: "", password: "" },
   });
 
-  // =======================
-  // LOGIN MUTATION
-  // =======================
   const loginMutation = useMutation({
     mutationFn: async (data: LoginFormData) => {
       const response: LoginResponse = await login(
@@ -114,12 +106,6 @@ export default function Login() {
       storageService.setItem("stateid", user.stateid);
       storageService.setItem("isLoggedIn", "true");
 
-      // useCompanyStore.getState().setCompanyData({
-      //   companyId: user.compid,
-      //   companyName: user.compnm,
-      //   branchId: user.branchid,
-      //   branchName: user.branchnm
-      // });
 
       useUserStore.getState().setUserData({
         userId: user.userid,
@@ -127,12 +113,15 @@ export default function Login() {
         companyName: user.compnm,
         branchId: user.branchid,
         finid: user.finid,
+        finstdt: user.finstdt,
+        finenddt: user.finenddt,
 
         branchnm: user.branchnm,
         userName: user.username,
 
         userType: user.usertype || "",
         userSegment: user.usersegment || "",
+        pcodetag: user.pcodetag || "",
       });
 
       toast.success('Login successful');
@@ -167,9 +156,6 @@ export default function Login() {
     router.push("/forgot-password");
   };
 
-  // =======================
-  // UI
-  // =======================
   return (
     <>
 

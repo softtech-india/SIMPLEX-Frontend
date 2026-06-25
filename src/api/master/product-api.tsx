@@ -63,6 +63,7 @@ export const fetchProductStock = async (
   branchid?: string | number | null,
   productid?: string | number | null,
   tilldt?: string | number | null,
+  godownid?: string | number | null,
 ) => {
   try {
     const response: any = await apiCall.get(
@@ -73,6 +74,7 @@ export const fetchProductStock = async (
         branchid: branchid,
         productid: productid,
         tilldt: tilldt,
+        godownid: godownid,
       }
     );
 

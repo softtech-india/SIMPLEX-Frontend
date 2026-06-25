@@ -46,7 +46,7 @@ export default function Breadcrumb({
             return (
               <div key={index} className="flex items-center gap-1.5">
                 {index > 0 && (
-                  <ChevronRight className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                  <ChevronRight className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                 )}
 
                 {!isLast && crumb.path ? (
@@ -54,12 +54,12 @@ export default function Breadcrumb({
                     href={crumb.path}
                     className="flex items-center gap-1 text-gray-500 hover:text-blue-600 transition-colors"
                   >
-                    {isFirst && showHome && <Home className="w-3.5 h-3.5 flex-shrink-0" />}
+                    {isFirst && showHome && <Home className="w-3.5 h-3.5 shrink-0" />}
                     <span className="hidden sm:inline">{crumb.name}</span>
                   </Link>
                 ) : (
                   <span className="flex items-center gap-1 text-gray-700 font-medium">
-                    {isFirst && showHome && <Home className="w-3.5 h-3.5 flex-shrink-0" />}
+                    {isFirst && showHome && <Home className="w-3.5 h-3.5 shrink-0" />}
                     {crumb.name}
                   </span>
                 )}
