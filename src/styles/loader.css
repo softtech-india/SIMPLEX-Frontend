@@ -1,0 +1,131 @@
+/* Fullscreen Overlay */
+#loader-wrapper {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(2px);
+
+  z-index: 100;
+}
+/* #loader-wrapper {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+
+  transition: opacity 0.3s ease;
+} */
+
+#loader-wrapper.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Small SaaS Loader */
+
+.loader-card {
+  position: relative;
+
+  width: 72px;
+  height: 72px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Ring */
+
+.spinner-ring {
+  position: absolute;
+  inset: 0;
+
+  border-radius: 50%;
+
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 240deg,
+    #f97316 360deg
+  );
+
+  animation: rotate 0.9s linear infinite;
+}
+
+.spinner-ring::before {
+  content: "";
+
+  position: absolute;
+  inset: 4px;
+
+  border-radius: 50%;
+
+  background: white;
+}
+
+/* Logo */
+
+.logo-wrapper {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner-image {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+/* Hide text for compact SaaS style */
+
+.loading-text {
+  display: none;
+}
+
+/* Animations */
+
+@keyframes rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes loaderFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

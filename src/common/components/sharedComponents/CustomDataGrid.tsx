@@ -489,7 +489,7 @@ const CustomDataGrid: React.FC<CustomDataGridProps> = ({
       />
 
       {/* Loading */}
-      <LoadPanel enabled />
+      <LoadPanel enabled={false} />
 
       {/* Grouping */}
       <GroupPanel visible />
