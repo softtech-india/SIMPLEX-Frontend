@@ -11,9 +11,11 @@ export const PickListOrderDetailSchema = z.object({
 export const PickListItemSchema = z.object({
   tag: z.string().optional(),
   dtlid: z.number().optional(),
-
+  pcategorynm: z.string().optional(),
   productid: z.number().min(1, "Please select a product"),
-  qty: z.number().min(1, "Quantity should be greater than 0"),
+  productnm: z.string().optional(),
+  qty1: z.number().min(1, "Quantity should be greater than 0"),
+  unit: z.string().optional(),
 });
 
 export const PickListBaseSchema = z.object({

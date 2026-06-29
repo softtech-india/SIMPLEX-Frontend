@@ -30,6 +30,25 @@ export const PICK_LIST_KEYS = {
   detail: (id: number) => [...PICK_LIST_KEYS.details(), id] as const,
 };
 
+
+export const useSoProductList = (
+  { userId, compid, strorder}: { userId: number; compid: number, strorder: string }
+) => {
+  return useQuery({
+    queryKey: ["so-product-list", strorder || ""],
+    queryFn: () =>
+      pickListService.fetchSoProductList({
+        userId,
+        compid,
+        strorder,
+      }),
+    enabled: !!strorder && strorder.length > 0,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: true,
+  });
+};
+
 export function usePickList(params: GetPickListParams) {
   return useQuery({
     queryKey: PICK_LIST_KEYS.list(params),

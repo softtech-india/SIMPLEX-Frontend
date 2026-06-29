@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Popup } from "devextreme-react/popup";
 import LoadPanel from "devextreme-react/load-panel";
 import { useQuery } from "@tanstack/react-query";
-import { usePickListById, useCreatePickList, useUpdatePickList, useDeletePickList, } from "../hooks/usePickList";
+import { usePickListById, useCreatePickList, useUpdatePickList, useDeletePickList, useSoProductList, } from "../hooks/usePickList";
 import { PickListFormType, OperationMode } from "../types/pickList.types";
 import { PickListFormSchema } from "../schemas/pickList.schema";
 import { defaultItemDtl, PickListFormDefaults } from "../constants/pickListFormDefaults";
@@ -86,14 +86,10 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
   });
 
   // Calculate Total Quantity and Vlaue
-  const watchedItems = useWatch({
-    control,
-    name: "itemdtl",
-  }) || [];
-
-  const totalQty = (watchedItems || []).reduce((sum, item) => {
-    return sum + (Number(item?.qty) || 0);
-  }, 0) || 0;
+  // const watchedItems = useWatch({
+  //   control,
+  //   name: "itemdtl",
+  // }) || [];
 
   // const totalValue = (watchedItems || []).reduce((sum, item) => {
   //   const qty = Number(item?.qty) || 0;
@@ -119,29 +115,25 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
     if (PickList) {
       reset({
         ...PickListFormDefaults,
-
         ...PickList,
 
-
         picklistdt: PickList.picklistdt ? formatDateForInput(PickList.picklistdt) : "",
-
-
         picklistno: PickList.picklistno ?? "",
 
         compid: Number(PickList.compid ?? 0),
         branchid: Number(PickList.branchid ?? 0),
         finid: Number(PickList.finid ?? 0),
         vnumid: Number(PickList.vnumid ?? 0),
-
-        qty: Number(PickList.qty ?? 0),
-
-
+        //  qty: Number(PickList.qty ?? 0),
 
         itemdtl:
           PickList.itemdtl?.map((item, index) => ({
-            tag: item.tag ?? "I",
             dtlid: item.dtlid ?? index + 1,
-            qty: Number(item.qty ?? 0),
+            pcategorynm: item.pcategorynm ?? "—",
+            productid: Number(item.productid ?? 0),
+            productnm: item.productnm ?? "",
+            qty1: Number(item.qty1 ?? 0),
+            unit: item.unit ?? "",
 
           })) ?? [],
       });
@@ -154,7 +146,7 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
   ];
 
   // Series No Options
-  const voucherType = "SO";
+  const voucherType = "PL";
   const { data: seriesNoOptions = [] } = useQuery({
     queryKey: ["fetchSeriesList", userId, companyId, toolbarBranchId, voucherType],
     queryFn: () => fetchSeriesList(userId, companyId, toolbarBranchId, voucherType, finid),
@@ -205,24 +197,68 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
     { value: "orderno", label: "Name" },
   ];
 
-  // const handleTbillSelect = (row: any) => {
-  //   console.log("Tbill row :", row)
-  //   setSelectedTbills(row);
-  //   setValue("tbillid", row.id);
-  //   setValue("tbillname", row.orderno);
-  //   setTbillModalOpen(false);
-
-  // }
-
   const handleTbillSelect = (rows: any[]) => {
     setSelectedTbills(rows);
 
     setValue("tbillid", rows.map((x) => x.id));
     setValue("tbillname", rows.map((x) => x.orderno).join(", "));
   };
-  
-  const ids = watch('tbillid')
-  console.log('ids :', ids);
+
+  const ids = watch('tbillid') || [];
+  const strorder = Array.isArray(ids) ? ids.join(",") : "";
+  console.log('strorder :', strorder);
+
+  // Query
+  const { data: SoProductData } = useSoProductList({
+    userId: Number(userId),
+    compid: Number(companyId),
+    strorder: strorder,
+  });
+
+  console.log('SoProductData :', SoProductData)
+  useEffect(() => {
+    if (isEditMode || isDeleteMode) return;
+
+    if (!SoProductData) return;
+
+    const soItems = SoProductData?.[0]?.itemdtl ?? [];
+
+    const formattedItems = soItems.map((item, index) => ({
+      dtlid: Number(item.dtlid ?? index + 1),
+      pcategorynm: item.pcategorynm ?? "—",
+      productid: Number(item.productid ?? 0),
+      productnm: item.productnm ?? "",
+      qty1: item.qty1 ?? 0,   
+      unit: item.unit ?? "",
+    }));
+
+    setValue("itemdtl", formattedItems, {
+      shouldDirty: false,
+      shouldValidate: false,
+    });
+  }, [SoProductData, isEditMode, isDeleteMode, setValue]);
+
+  const watchedItems = useWatch({
+    control,
+    name: "itemdtl",
+  });
+
+  useEffect(() => {
+    console.log("Pick Items Updated:", watchedItems);
+  }, [watchedItems]);
+
+  // Calculate Total Quantity and Vlaue
+
+  const totalQty = (watchedItems || []).reduce((sum, item) => {
+    return sum + (Number(item?.qty1) || 0);
+  }, 0) || 0;
+
+  // const totalValue = (watchedItems || []).reduce((sum, item) => {
+  //   const qty = Number(item?.qty) || 0;
+  //   const rate = Number(item?.rate) || 0;
+
+  //   return sum + qty * rate;
+  // }, 0) || 0;
 
   const calculateTotals = (items: any[] = []) => {
     let qty1 = 0;
@@ -250,15 +286,6 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
   };
 
 
-
-  const orderDate = watch('picklistdt') || '';
-
-
-
-  const selectedProductIds = watchedItems
-    ?.map((item: any) => item?.productid)
-    ?.filter(Boolean);
-
   const getButtonLabel = () => {
     if (isSubmitting) {
       if (isDeleteMode) return "Deleting...";
@@ -271,29 +298,6 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
     return "Save";
   };
 
-  const handleAddItem = async () => {
-    // Check if there are any fields before validating the last one
-    if (fields.length > 0) {
-      const lastIndex = fields.length - 1;
-      const isValid = await trigger([
-        `itemdtl.${lastIndex}.productid`,
-      ]);
-
-      if (!isValid) {
-        return;
-      }
-    }
-
-    append({
-      ...defaultItemDtl,
-      dtlid: fields.length + 1,
-    });
-
-    const newIndex = fields.length;
-    setTimeout(() => {
-      brandInputRefs.current[newIndex]?.focus();
-    }, 100);
-  };
 
   const handleFormSubmit = async (data: PickListFormSchema) => {
 
@@ -485,23 +489,6 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
                 />
               </div>
 
-              {/* <div className="w-80">
-                <label className="block text-gray-700 font-medium mb-1"> Tbill <span className="text-red-500">*</span> </label>
-                <input
-                  type="text"
-                  value={tbillname || ''}
-                  disabled={isReadOnly}
-                  readOnly
-                  onKeyDown={(e) => handleKeyOpen(e, () => setTbillModalOpen(true))}
-                  onClick={() => setTbillModalOpen(true)}
-                  className={`inputField w-full border border-gray-300 
-                    ${errors.tbillid && !tbillname ? "border-red-500" : "border-gray-400"}
-                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}
-                  `}
-                  placeholder="Select Tbill"
-                />
-              </div> */}
-
               <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Branch </label>
                 <input
@@ -547,8 +534,6 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
                 </div>
               )}
 
-
-
             </div>
           </section>
 
@@ -560,15 +545,6 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
                 Item Details
               </h2>
 
-              {!isReadOnly && (
-                <button
-                  type="button"
-                  onClick={handleAddItem}
-                  className="primary-btn text-xs px-3 py-1"
-                >
-                  + Add Item
-                </button>
-              )}
             </div>
 
             <div className="space-y-2">

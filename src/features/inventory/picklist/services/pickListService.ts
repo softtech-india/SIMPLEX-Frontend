@@ -37,6 +37,28 @@ class PickListService {
   }
 
 
+  // SO product list
+  async fetchSoProductList(
+    { userId, compid, strorder }: { userId: number; compid: number; strorder: string; }
+  ) {
+    try {
+      const response = await apiCall.get<PickListApiResponse>(
+        `${this.baseUrl}so/productlist`,
+        {
+          userId,
+          compid,
+          strorder, 
+        }
+      );
+
+      return response.data || [];
+    } catch (error: unknown) {
+      console.error("Error fetching SO Product list:", error);
+      throw new Error(getErrorMessage(error));
+    }
+  }
+
+
   async getAllPickLists(params: GetPickListParams): Promise<PickList[]> {
     try {
       const response = await apiCall.get<PickListApiResponse>(

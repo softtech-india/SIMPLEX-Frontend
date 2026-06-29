@@ -6,10 +6,12 @@ export interface PickListOrderDetail {
 }
 
 export interface PickListItem {
-  tag?: string;
   dtlid?: number;
+  pcategorynm?: string;
   productid?: number;
-  qty?: number;
+  productnm?: string;
+  qty1?: number;
+  unit?: string;
 }
 
 export interface PickList {

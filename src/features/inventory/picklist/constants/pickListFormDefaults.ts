@@ -13,7 +13,10 @@ export const defaultItemDtl = {
   tag: "I",
   dtlid: 1,
   productid: 0,
-  qty: 0,
+  productnm: "",
+  pcategorynm: "",
+  qty1: 0,   
+  unit: "",
 };
 
 export const PickListFormDefaults: PickListFormSchema = {
@@ -37,6 +40,5 @@ export const PickListFormDefaults: PickListFormSchema = {
   qty: 0,
 
   orderdtl: [],
-
   itemdtl: [],
 };
