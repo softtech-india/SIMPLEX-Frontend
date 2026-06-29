@@ -14,6 +14,7 @@ import { fetchBranchList } from "@/api/master/ledger-api";
 import { useQuery } from '@tanstack/react-query';
 import useUserStore from '@/store/userStore';
 import { useReactiveStorage } from '@/hooks/useReactiveStorage';
+import Loader from '@/common/components/Loader';
 
 export default function OpeningStockModule() {
 
@@ -196,11 +197,7 @@ export default function OpeningStockModule() {
         />
 
 
-        <LoadPanel
-          shadingColor="rgba(0,0,0,0.4)"
-          visible={isLoading}
-          showIndicator
-        />
+        {isLoading && <Loader />}
 
       </div>
     </>

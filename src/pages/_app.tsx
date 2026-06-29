@@ -5,6 +5,7 @@ import Layout from "../common/components/layout";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import "../styles/globals.css";
+import "../styles/loader.css";
 import "devextreme/dist/css/dx.light.compact.css";
 import { Toaster } from "sonner";
 import Head from "next/head";

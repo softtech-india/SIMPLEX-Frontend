@@ -11,6 +11,7 @@ import { MasterToolbar } from '@/common/components/barmanager/MasterToolbar';
 import { usePrivileges } from '@/common/hooks/usePrivileges';
 import { exportToExcel, ExcelColumn } from '@/common/utility/exportToExcel';
 import { useReactiveStorage } from '@/hooks/useReactiveStorage';
+import Loader from '@/common/components/Loader';
 
 export default function ProdGroupModule() {
 
@@ -138,11 +139,7 @@ export default function ProdGroupModule() {
         mode={formMode}
       />
 
-      <LoadPanel
-        shadingColor="rgba(0,0,0,0.4)"
-        visible={isLoading}
-        showIndicator
-      />
+      {isLoading && <Loader />}
 
     </div>
   );
