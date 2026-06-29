@@ -29,12 +29,18 @@ export const SaleOrderBaseSchema = z.object({
   orderdt: z.string().optional(),
   orderno: z.string().optional(),
 
+  // customerid: z.number().min(1, "Please select a customer"),
+  pcategorynm: z.string().optional(),
+
   customerid: z.number().min(1, "Please select a customer"),
   customernm: z.string().optional(),
 
   godownid: z.number().min(1, "Please select a godown"),
   godownName: z.string().optional(),
   godownnm: z.string().optional(),
+
+
+  qrcode: z.string().optional(),
 
   partyordno: z.string().optional(),
   partyorddt: z.string().optional(),

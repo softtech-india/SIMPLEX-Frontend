@@ -26,6 +26,7 @@ type SaleOrderItemsProps = {
   fieldsLength: number;
   excludeIds?: number[];
   currentId?: number;
+  brandInputRef?: (el: HTMLInputElement | null) => void;
 };
 
 export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
@@ -45,10 +46,9 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
   visible,
   isReadOnly,
   fieldsLength,
-
   excludeIds,
-  currentId
-
+  currentId,
+  brandInputRef
 }) => {
   const item = watchedItems?.[index];
   const qty = Number(item?.qty1) || 0;
@@ -61,9 +61,23 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
   const selectedProductId = item?.productid;
 
   const { data: currentProductStock } = useQuery({
-    queryKey: ["fetchProductStock", userId, companyId, branchId, selectedProductId, orderDate, GodownId],
+    queryKey: [
+      "fetchProductStock",
+      userId,
+      companyId,
+      branchId,
+      selectedProductId,
+      orderDate,
+      GodownId,
+    ],
     queryFn: () => fetchProductStock(userId, companyId, branchId, selectedProductId, orderDate, GodownId),
-    enabled: !!userId && !!companyId && !!branchId && !!selectedProductId && !!GodownId && !!orderDate,
+    enabled:
+      !!userId &&
+      !!companyId &&
+      !!branchId &&
+      !!selectedProductId &&
+      !!GodownId &&
+      !!orderDate,
     staleTime: 0,
     retry: 1,
     refetchOnWindowFocus: true,
@@ -92,7 +106,7 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
       toast.error(`Sale quantity adjusted to ${clqty}`);
     }
 
-  }, [currentProductStock, index, setValue]);
+  }, [currentProductStock, item?.qty1, index, setValue]);
 
   // Model Search Brand Modal Handlers
   const baseBrandParams = {
@@ -139,7 +153,8 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
 
   const handleProductSelect = (row: any) => {
     const alreadyExists = watchedItems?.some(
-      (item: any) => item?.productid === row.id
+      (item: any, i: number) =>
+        i !== index && item?.productid === row.id
     );
 
     if (alreadyExists) {
@@ -162,6 +177,8 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
           type="text"
           value={item?.pcategorynm || ""}
           readOnly
+          ref={brandInputRef}
+
           onClick={() => setBrandModalOpen(true)}
           className="inputField w-full cursor-pointer border border-gray-400"
           placeholder="Select Brand"
@@ -186,84 +203,84 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
         />
       </div>
 
-        <div className="w-28">
-          <label className="block text-gray-700 font-medium mb-1"> Quantity <strong className="text-red-500"> * </strong> </label>
-          <input
-            type="number"
-            min={0}
-            {...register(`itemdtl.${index}.qty1`, {
-              valueAsNumber: true,
-              validate: (value: any) => {
-                const clqty = Number(item?.clqty || 0);
-                if (value > clqty) {
-                  return `Issued quantity (Qty1) cannot be greater than the available closing stock (${clqty}).`;
-                }
-                return true;
-              },
-              onChange: (e: any) => {
-                let value = Number(e.target.value);
-                const clqty = Number(item?.clqty || 0);
-                if (value < 1) value = 1;
+      <div className="w-28">
+        <label className="block text-gray-700 font-medium mb-1"> Quantity <strong className="text-red-500"> * </strong> </label>
+        <input
+          type="number"
+          min={0}
+          {...register(`itemdtl.${index}.qty1`, {
+            valueAsNumber: true,
+            validate: (value: any) => {
+              const clqty = Number(item?.clqty || 0);
+              if (value > clqty) {
+                return `Issued quantity (Qty1) cannot be greater than the available closing stock (${clqty}).`;
+              }
+              return true;
+            },
+            onChange: (e: any) => {
+              let value = Number(e.target.value);
+              const clqty = Number(item?.clqty || 0);
+              if (value < 1) value = 1;
 
-                if (value > clqty) {
-                  toast.error(
-                    `Issued quantity (Qty1) cannot be greater than available stock (${clqty}).`
-                  );
-                  value = clqty;
-                }
-                setValue(`itemdtl.${index}.qty1`, value, { shouldValidate: true });
-              },
-            })}
-            disabled={isReadOnly || Number(item?.clqty) === 0}
-            className={`inputField
+              if (value > clqty) {
+                toast.error(
+                  `Issued quantity (Qty1) cannot be greater than available stock (${clqty}).`
+                );
+                value = clqty;
+              }
+              setValue(`itemdtl.${index}.qty1`, value, { shouldValidate: true });
+            },
+          })}
+          disabled={isReadOnly || Number(item?.clqty) === 0}
+          className={`inputField
               ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-300"}
               ${isReadOnly || Number(item?.clqty) === 0 ? "bg-gray-200 cursor-not-allowed" : ""}
             `}
-            onKeyDown={(e) => {
-              if (e.key === "-") e.preventDefault();
-            }}
-          />
-        </div>
+          onKeyDown={(e) => {
+            if (e.key === "-") e.preventDefault();
+          }}
+        />
+      </div>
 
-        <div className="w-28">
-          <label className="block text-gray-700 font-medium mb-1"> Rate</label>
-          <Controller
-            control={control}
-            name={`itemdtl.${index}.rate`}
+      <div className="w-28">
+        <label className="block text-gray-700 font-medium mb-1"> Rate</label>
+        <Controller
+          control={control}
+          name={`itemdtl.${index}.rate`}
 
-            render={({ field }) => (
-              <input
-                type="text"
-                inputMode="decimal"
-                placeholder="0.000000"
-                value={field.value ?? ""}
+          render={({ field }) => (
+            <input
+              type="text"
+              inputMode="decimal"
+              placeholder="0.000000"
+              value={field.value ?? ""}
 
-                onChange={(e) => {
-                  let value = e.target.value;
-                  value = value.replace(/[^0-9.]/g, "");
+              onChange={(e) => {
+                let value = e.target.value;
+                value = value.replace(/[^0-9.]/g, "");
 
-                  const parts = value.split(".");
-                  if (parts.length > 2) return;
+                const parts = value.split(".");
+                if (parts.length > 2) return;
 
-                  const integerPart = parts[0] || "";
-                  const decimalPart = parts[1] || "";
+                const integerPart = parts[0] || "";
+                const decimalPart = parts[1] || "";
 
-                  if (integerPart.length > 12) return;
-                  if (decimalPart.length > 6) return;
+                if (integerPart.length > 12) return;
+                if (decimalPart.length > 6) return;
 
-                  field.onChange(value);
-                }}
+                field.onChange(value);
+              }}
 
-                onBlur={() => {
-                  const numericValue = Number(field.value || 0);
-                  field.onChange(numericValue);
-                }}
+              onBlur={() => {
+                const numericValue = Number(field.value || 0);
+                field.onChange(numericValue);
+              }}
 
-                className={`inputField ${errors?.itemdtl?.[index]?.[index]?.rate ? "border-red-500" : "border-gray-400"}`}
-              />
-            )}
-          />
-        </div>
+              className={`inputField ${errors?.itemdtl?.[index]?.rate ? "border-red-500" : "border-gray-400"}`}
+            />
+          )}
+        />
+      </div>
 
       <div className="w-28">
         <label className="block text-gray-700 font-medium mb-1"> Value</label>
@@ -292,12 +309,8 @@ export const SaleOrderItems: React.FC<SaleOrderItemsProps> = ({
           <button
             type="button"
             onClick={() => remove(index)}
-            disabled={fieldsLength === 1}
-            className={`px-2 py-2 rounded flex items-center justify-center
-            ${fieldsLength === 1
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-red-400 hover:bg-red-600 text-white"
-              }`}
+            // disabled={fieldsLength === 1}
+            className={`px-2 py-2 rounded flex items-center justify-center bg-red-400 hover:bg-red-600 text-white`}
           >
             <Trash2 size={16} />
           </button>

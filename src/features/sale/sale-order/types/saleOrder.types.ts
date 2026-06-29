@@ -34,6 +34,7 @@ export interface SaleOrder {
   godownid: number;
   godownName?: string;
   godownnm?: string;
+  qrcode?: string;
 
   partyordno?: string;
   partyorddt?: string;

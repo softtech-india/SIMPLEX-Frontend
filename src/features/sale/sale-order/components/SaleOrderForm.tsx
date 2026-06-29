@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useSaleOrderById, useCreateSaleOrder, useUpdateSaleOrder, useDeleteSaleOrder, useApproveSaleOrder } from "../hooks/useSaleOrder";
 import { SaleOrderFormType, OperationMode } from "../types/saleOrder.types";
 import { SaleOrderFormSchema } from "../schemas/saleOrder.schema";
-import { saleOrderFormDefaults } from "../constants/saleOrderFormDefaults";
+import { defaultItemDtl, saleOrderFormDefaults } from "../constants/saleOrderFormDefaults";
 import { useSaleOrderForm } from "../hooks/useSaleOrderForm";
 import { useFieldArray } from "react-hook-form";
 import { fetchSeriesList } from "@/api/purchase/purchase-api";
@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
 import { SHORTCUTS } from "@/common/constants/shortcuts";
+import { useSaleQrScanner } from "@/hooks/useSaleQrScanner";
 
 interface SaleOrderFormProps {
   visible: boolean;
@@ -29,9 +30,10 @@ interface SaleOrderFormProps {
   mode: OperationMode;
   formSelectedBranch: string;
   toolbarBranchId: number;
+  onUpdated?: () => void;
 }
 
-export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSelectedBranch, toolbarBranchId }: SaleOrderFormProps) {
+export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSelectedBranch, toolbarBranchId, onUpdated }: SaleOrderFormProps) {
 
   const {
     userId,
@@ -45,6 +47,10 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
   const [godownModalOpen, setGodownModalOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const godownRef = useRef<HTMLInputElement>(null);
+  const brandInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+
 
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
@@ -85,10 +91,12 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
     reset,
     watch,
     setValue,
+    getValues,
+    trigger,
     formState: { errors },
   } = useSaleOrderForm(isApproveMode);
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control,
     name: "itemdtl",
   });
@@ -109,6 +117,17 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
 
     return sum + qty * rate;
   }, 0) || 0;
+
+  const { scanInputRef, handleScan } = useSaleQrScanner({
+    setValue,
+    onUpdateItems: (updater) => {
+      const currentItems = getValues("itemdtl") || [];
+      const updatedItems = updater(currentItems);
+
+      replace(updatedItems);
+      trigger("itemdtl");
+    },
+  });
 
   // Reset form 
   useEffect(() => {
@@ -226,6 +245,9 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
     setValue("customerid", row.id);
     setValue("customernm", row.name);
     setCustomerModalOpen(false);
+    requestAnimationFrame(() => {
+      godownRef.current?.focus();
+    });
   };
 
   const customerName = watch("customernm")
@@ -246,10 +268,13 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
   ];
 
   const handleGodownSelect = (row: any) => {
-    console.log("godown row :", row)
+    // console.log("godown row :", row)
     setValue("godownid", row.id);
     setValue("godownName", row.name);
     setGodownModalOpen(false);
+    requestAnimationFrame(() => {
+      setFocus("qrcode");
+    });
 
   };
 
@@ -293,9 +318,49 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
   const orderDate = watch('orderdt') || '';
   const GodownId = watch('godownid') || 0;
 
+
+  const selectedProductIds = watchedItems
+    ?.map((item: any) => item?.productid)
+    ?.filter(Boolean);
+
+  const getButtonLabel = () => {
+    if (isSubmitting) {
+      if (isDeleteMode) return "Deleting...";
+      if (isApproveMode) return "Approving...";
+      return "Saving...";
+    }
+
+    if (isDeleteMode) return "Delete";
+    if (isApproveMode) return "Approve";
+    return "Save";
+  };
+
+  const handleAddItem = async () => {
+    // Check if there are any fields before validating the last one
+    if (fields.length > 0) {
+      const lastIndex = fields.length - 1;
+      const isValid = await trigger([
+        `itemdtl.${lastIndex}.productid`,
+      ]);
+
+      if (!isValid) {
+        return;
+      }
+    }
+
+    append({
+      ...defaultItemDtl,
+      dtlid: fields.length + 1,
+    });
+
+    const newIndex = fields.length;
+    setTimeout(() => {
+      brandInputRefs.current[newIndex]?.focus();
+    }, 100);
+  };
+
   const handleFormSubmit = async (data: SaleOrderFormSchema) => {
     try {
-
       if (isDeleteMode) {
         const ok = await confirmDelete({
           title: "Delete Sale Order",
@@ -325,15 +390,20 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
         afttax: 0,
         ordamt: totprodval,
         itemdtl,
-
       };
-
-      // console.log("FINAL SUBMIT PAYLOAD:", JSON.stringify(payload, null, 2));
 
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
+        // Reset the form completely including items
         reset(saleOrderFormDefaults);
-        // onClose();
+        // IMPORTANT: Clear the items array
+        replace([]);
+        // Force a re-render by updating the fields array
+        requestAnimationFrame(() => {
+          replace([]);
+        });
+        toast.success("Sale Order created successfully");
+        // onClose(); // Optionally close after successful creation
         return;
       }
 
@@ -342,51 +412,46 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
           id: formSaleOrderId,
           data: payload,
         });
+        onUpdated?.(); // Make sure this is defined in props
         onClose();
+        return;
       }
 
-      const approvePayload: SaleOrderFormType = {
-        ...data,
-        id: formSaleOrderId,
-        compid: companyId,
-        branchid: toolbarBranchId,
-        qty1: Number(qty1),
-        qty2: Number(qty1),
-        totprodval: totprodval,
-        finid: Number(finid),
-        afttax: 0,
-        ordamt: totprodval,
-        itemdtl,
-      };
-
       if (isApproveMode) {
+        const approvePayload: SaleOrderFormType = {
+          ...data,
+          id: formSaleOrderId,
+          compid: companyId,
+          branchid: toolbarBranchId,
+          qty1: Number(qty1),
+          qty2: Number(qty1),
+          totprodval: totprodval,
+          finid: Number(finid),
+          afttax: 0,
+          ordamt: totprodval,
+          itemdtl,
+        };
 
-        await approveMutation.mutateAsync(approvePayload)
+        await approveMutation.mutateAsync(approvePayload);
         reset(saleOrderFormDefaults);
+        replace([]);
         onClose();
         return;
       }
 
     } catch (error) {
       console.error("Submit error:", error);
+      toast.error("An error occurred while saving");
     }
   };
 
 
-  const selectedProductIds = watchedItems
-    ?.map((item: any) => item?.productid)
-    ?.filter(Boolean);
 
-  const getButtonLabel = () => {
-    if (isSubmitting) {
-      if (isDeleteMode) return "Deleting...";
-      if (isApproveMode) return "Approving...";
-      return "Saving...";
+  const handleKeyOpen = (e: React.KeyboardEvent, openFn: () => void) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openFn();
     }
-
-    if (isDeleteMode) return "Delete";
-    if (isApproveMode) return "Approve";
-    return "Save";
   };
 
   // Debug validation issues 
@@ -469,6 +534,8 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
                   value={customerName || ''}
                   disabled={isReadOnly}
                   readOnly
+                  onKeyDown={(e) => handleKeyOpen(e, () => setCustomerModalOpen(true))}
+
                   onClick={() => setCustomerModalOpen(true)}
                   className={`inputField w-full border border-gray-300 
                     ${errors.customerid && !customerName ? "border-red-500" : "border-gray-400"}
@@ -517,7 +584,11 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
                   value={godownName || ''}
                   disabled={isReadOnly}
                   readOnly
+                  onKeyDown={(e) => handleKeyOpen(e, () => setGodownModalOpen(true))}
                   onClick={() => setGodownModalOpen(true)}
+                  ref={(e) => {
+                    godownRef.current = e;
+                  }}
                   className={`inputField w-full border border-gray-300 
                     ${errors.godownid && !godownName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}
@@ -525,7 +596,24 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
                   placeholder="Select Godown"
                 />
               </div>
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1"> Scan QR Code <span className="text-red-500"> *</span> </label>
 
+                <input
+                  type="text"
+                  {...register("qrcode")}
+                  ref={(el) => {
+                    scanInputRef.current = el;
+                    register("qrcode").ref(el);
+                  }}
+                  className="inputField border-gray-300"
+                  onKeyDown={(e: any) => {
+                    if (e.key !== "Enter") return;
+                    e.preventDefault();
+                    handleScan(e.target.value);
+                  }}
+                />
+              </div>
 
             </div>
           </section>
@@ -541,21 +629,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
               {!isReadOnly && (
                 <button
                   type="button"
-                  onClick={() =>
-                    append({
-                      productid: 0,
-                      qty1: 0,
-                      rate: 0,
-                      value: 0,
-                      qty2: 0,
-                      tag: "I",
-                      dtlid: fields.length + 1,
-                      altunimethod: "A",
-                      altunitfactor: 1,
-                      alterunitfactortype: "M",
-                      rateon: 1,
-                    })
-                  }
+                  onClick={handleAddItem}
                   className="primary-btn text-xs px-3 py-1"
                 >
                   + Add Item
@@ -583,9 +657,11 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
                   visible={visible}
                   isReadOnly={isReadOnly}
                   fieldsLength={fields.length}
-
                   excludeIds={selectedProductIds}
                   currentId={watchedItems?.[index]?.productid}
+                  brandInputRef={(el) => {
+                    brandInputRefs.current[index] = el;
+                  }}
                 />
               ))}
             </div>
