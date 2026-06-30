@@ -15,7 +15,7 @@ export const defaultItemDtl = {
   productid: 0,
   productnm: "",
   pcategorynm: "",
-  qty1: 0,   
+  qty1: 0,
   unit: "",
 };
 
@@ -26,6 +26,9 @@ export const PickListFormDefaults: PickListFormSchema = {
 
   vnumid: 0,
   vnummethod: "A",
+
+  godownid: 0,
+  godownnm: "",
 
   tbillid: [],
   tbillname: '',

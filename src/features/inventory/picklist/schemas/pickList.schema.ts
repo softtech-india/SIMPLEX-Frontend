@@ -5,7 +5,7 @@ export const PickListOrderDetailSchema = z.object({
   dtlid: z.number().optional(),
 
   orderid: z.number().min(1, "Please select an order"),
-  qty: z.number().min(1, "Quantity should be greater than 0"),
+  orderno: z.string().optional(),
 });
 
 export const PickListItemSchema = z.object({
@@ -14,7 +14,7 @@ export const PickListItemSchema = z.object({
   pcategorynm: z.string().optional(),
   productid: z.number().min(1, "Please select a product"),
   productnm: z.string().optional(),
-  qty1: z.number().min(1, "Quantity should be greater than 0"),
+  qty: z.number().min(1, "Quantity should be greater than 0"),
   unit: z.string().optional(),
 });
 
@@ -26,8 +26,10 @@ export const PickListBaseSchema = z.object({
   vnumid: z.number().min(1, "This field is required"),
   vnummethod: z.string().min(1, "This field is required"),
 
-  tbillid: z.array(z.number()).min(1, "Please select at least one Tbill"),
+  godownid: z.number().min(1, " "),
+  godownnm: z.string().optional(),
 
+  tbillid: z.array(z.number()).min(1, "Please select at least one Tbill"),
   tbillname: z.string().optional(),
 
   picklistdt: z.string().optional(),
@@ -40,8 +42,7 @@ export const PickListBaseSchema = z.object({
   qty: z.number().optional(),
 
   orderdtl: z
-    .array(PickListOrderDetailSchema)
-    .min(1, "At least one order is required"),
+    .array(PickListOrderDetailSchema).optional(),
 
   itemdtl: z
     .array(PickListItemSchema)

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { pickListService } from '../services/pickListService';
-import { PickListFormType } from '../types/pickList.types';
+import { PickListFormType, PickListItem } from '../types/pickList.types';
 import { toast } from 'sonner';
 
 export interface GetPickListParams {
@@ -31,23 +31,41 @@ export const PICK_LIST_KEYS = {
 };
 
 
-export const useSoProductList = (
-  { userId, compid, strorder}: { userId: number; compid: number, strorder: string }
-) => {
-  return useQuery({
-    queryKey: ["so-product-list", strorder || ""],
+export const useSoProductList = ({
+  userId, compid, strorder,
+}: {
+  userId: number; compid: number; strorder: string;
+}) => {
+  return useQuery<PickListItem[]>({
+    queryKey: ["so-product-list", strorder],
     queryFn: () =>
       pickListService.fetchSoProductList({
-        userId,
-        compid,
-        strorder,
+        userId, compid, strorder,
       }),
-    enabled: !!strorder && strorder.length > 0,
+    enabled: !!strorder,
     staleTime: 0,
     gcTime: 0,
     refetchOnMount: true,
   });
 };
+
+// export const useSoProductList = (
+//   { userId, compid, strorder}: { userId: number; compid: number, strorder: string }
+// ) => {
+//   return useQuery({
+//     queryKey: ["so-product-list", strorder || ""],
+//     queryFn: () =>
+//       pickListService.fetchSoProductList({
+//         userId,
+//         compid,
+//         strorder,
+//       }),
+//     enabled: !!strorder && strorder.length > 0,
+//     staleTime: 0,
+//     gcTime: 0,
+//     refetchOnMount: true,
+//   });
+// };
 
 export function usePickList(params: GetPickListParams) {
   return useQuery({

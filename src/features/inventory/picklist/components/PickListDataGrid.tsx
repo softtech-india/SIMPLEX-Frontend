@@ -16,12 +16,12 @@ interface PickListDataGridProps {
 export const PickListDataGrid = forwardRef<any, PickListDataGridProps>(
   ({ dataSource, onSelectionChanged, onExporting, height = 500 }, ref) => {
 
-    const columns = [
-      { dataField: "picklistdt", caption: "Order No.", width: 150, headerFilter: true },
-      { dataField: "picklistno", caption: "Order date", dataType: "date", format: "dd-MM-yyyy", width: 120, },
+    const columns = [ // 
+      { dataField: "picklistno", caption: "Order No.", width: 150, headerFilter: true },
+      { dataField: "picklistdt", caption: "Order date", dataType: "date", format: "dd-MM-yyyy", width: 120, },
       { dataField: "transportername", caption: "Transporter", width: 200, headerFilter: true },
       { dataField: "vehicleno", caption: "Vehicle No", width: 100, headerFilter: true },
-      { dataField: "qty1", caption: "Quantity", width: 80, headerFilter: true },
+      { dataField: "qty", caption: "Quantity", width: 80, headerFilter: true },
       { dataField: "narration", caption: "Narration", width: 200, headerFilter: true },
       { dataField: 'entryby', caption: 'Entry User', width: 120 },
       { dataField: 'entrydt', caption: 'Entry Date', width: 150, dataType: 'date' },

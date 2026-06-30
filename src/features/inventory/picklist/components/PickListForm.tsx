@@ -5,23 +5,22 @@ import { Popup } from "devextreme-react/popup";
 import LoadPanel from "devextreme-react/load-panel";
 import { useQuery } from "@tanstack/react-query";
 import { usePickListById, useCreatePickList, useUpdatePickList, useDeletePickList, useSoProductList, } from "../hooks/usePickList";
-import { PickListFormType, OperationMode } from "../types/pickList.types";
+import { PickListFormType, OperationMode, PickListItem, PickListOrderDetail } from "../types/pickList.types";
 import { PickListFormSchema } from "../schemas/pickList.schema";
-import { defaultItemDtl, PickListFormDefaults } from "../constants/pickListFormDefaults";
+import { PickListFormDefaults } from "../constants/pickListFormDefaults";
 import { usePickListForm } from "../hooks/usePickListForm";
-import { useFieldArray } from "react-hook-form";
+
 import { fetchSeriesList } from "@/api/purchase/purchase-api";
 import useUserStore from "@/store/userStore";
 import { FormSelect } from "@/common/components/FormSelect";
-//import { PickListItems } from "./PickListItems";
+import { PickListItems } from "./PickListItems";
 import { useWatch } from "react-hook-form";
 import { formatDateForInput } from "@/helpers/dateUtils";
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
 import { SHORTCUTS } from "@/common/constants/shortcuts";
 import MultipleSearchModal from "@/common/components/MultipleSearchModal";
-
-
+import SearchModal from "@/common/components/SearchModal";
 
 interface PickListFormProps {
   visible: boolean;
@@ -45,6 +44,7 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
   const brandInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [tbillModalOpen, setTbillModalOpen] = useState(false);
   const [selectedTbills, setSelectedTbills] = useState<any[]>([]);
+  const [godownModalOpen, setGodownModalOpen] = useState(false);
 
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
@@ -80,65 +80,78 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
     control, register, handleSubmit, setFocus, reset, watch, setValue, getValues, trigger, formState: { errors },
   } = usePickListForm(isApproveMode);
 
-  const { fields, append, remove, replace } = useFieldArray({
-    control,
-    name: "itemdtl",
-  });
-
-  // Calculate Total Quantity and Vlaue
-  // const watchedItems = useWatch({
-  //   control,
-  //   name: "itemdtl",
-  // }) || [];
-
-  // const totalValue = (watchedItems || []).reduce((sum, item) => {
-  //   const qty = Number(item?.qty) || 0;
-  //   const rate = Number(item?.rate) || 0;
-
-  //   return sum + qty * rate;
-  // }, 0) || 0;
-
-
-  // Reset form 
   useEffect(() => {
     if (!visible) return;
 
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       setFocus("picklistdt");
-    }, 1000);
+    }, 300);
 
     if (isAddMode) {
       reset(PickListFormDefaults);
-      return;
+      setSelectedTbills([]);
+      return () => clearTimeout(timer);
     }
 
     if (PickList) {
+      const orderdtl =
+        PickList.orderdtl?.map((item, index) => ({
+          tag: item.tag ?? "U",
+          dtlid: item.dtlid ?? index + 1,
+          orderid: Number(item.orderid ?? 0),
+          orderno: item.orderno ?? "",
+        })) ?? [];
+
+      // ✅ derive tbillid from orderdtl (IMPORTANT)
+      const tbillid = orderdtl.map((o) => o.orderid);
+
       reset({
         ...PickListFormDefaults,
-        ...PickList,
 
-        picklistdt: PickList.picklistdt ? formatDateForInput(PickList.picklistdt) : "",
+        picklistdt: PickList.picklistdt
+          ? formatDateForInput(PickList.picklistdt)
+          : "",
+
         picklistno: PickList.picklistno ?? "",
+
+        godownid: PickList.godownid ?? 0,
+        godownnm: PickList.godownnm ?? "",
+
+        tbillid,
+        tbillname: PickList.tbillname ?? "",
 
         compid: Number(PickList.compid ?? 0),
         branchid: Number(PickList.branchid ?? 0),
         finid: Number(PickList.finid ?? 0),
         vnumid: Number(PickList.vnumid ?? 0),
-        //  qty: Number(PickList.qty ?? 0),
+
+        qty: Number(PickList.qty ?? 0),
+
+        orderdtl,
 
         itemdtl:
           PickList.itemdtl?.map((item, index) => ({
+            tag: item.tag ?? "U",
             dtlid: item.dtlid ?? index + 1,
             pcategorynm: item.pcategorynm ?? "—",
             productid: Number(item.productid ?? 0),
             productnm: item.productnm ?? "",
-            qty1: Number(item.qty1 ?? 0),
+            qty: Number(item.qty ?? 0),
             unit: item.unit ?? "",
-
           })) ?? [],
       });
+
+      // optional: sync UI chips
+      setSelectedTbills(
+        orderdtl.map((o) => ({
+          id: o.orderid,
+          orderno: o.orderno ?? "",
+        }))
+      );
     }
-  }, [PickList, isAddMode, reset, visible, setFocus]);
+
+    return () => clearTimeout(timer);
+  }, [PickList, isAddMode, visible, reset, setFocus]);
 
   const numMethodOptions = [
     { label: "Auto", value: "A" },
@@ -178,6 +191,26 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
     (s: any) => s.value === watch("vnumid")
   );
 
+  // Model Search Godown Modal Handlers
+  const baseGodownParams = {
+    userid: userId,
+    compid: companyId,
+    branchid: toolbarBranchId
+  };
+
+  const searchGodownColumns = [
+    { key: "name", label: "name." },
+  ];
+
+  const searchGodownFields = [
+    { value: "name", label: "Name" },
+  ];
+
+  const handleGodownSelect = (row: any) => {
+    setValue("godownid", row.id);
+    setValue("godownnm", row.name);
+  };
+  const GodownName = watch("godownnm")
 
   // Model Search Tbill Modal Handlers
   const baseTbillParams = {
@@ -204,9 +237,9 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
     setValue("tbillname", rows.map((x) => x.orderno).join(", "));
   };
 
-  const ids = watch('tbillid') || [];
-  const strorder = Array.isArray(ids) ? ids.join(",") : "";
-  console.log('strorder :', strorder);
+  const tbillid = watch('tbillid') || [];
+  const tbillname = watch("tbillname") || [];
+  const strorder = Array.isArray(tbillid) ? tbillid.join(",") : "";
 
   // Query
   const { data: SoProductData } = useSoProductList({
@@ -215,20 +248,18 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
     strorder: strorder,
   });
 
-  console.log('SoProductData :', SoProductData)
   useEffect(() => {
     if (isEditMode || isDeleteMode) return;
 
     if (!SoProductData) return;
 
-    const soItems = SoProductData?.[0]?.itemdtl ?? [];
-
-    const formattedItems = soItems.map((item, index) => ({
-      dtlid: Number(item.dtlid ?? index + 1),
-      pcategorynm: item.pcategorynm ?? "—",
-      productid: Number(item.productid ?? 0),
+    const formattedItems: PickListItem[] = SoProductData.map((item, index) => ({
+      tag: 'I',
+      dtlid: item.dtlid ?? index + 1,
+      pcategorynm: item.pcategorynm ?? "",
+      productid: item.productid ?? "",
       productnm: item.productnm ?? "",
-      qty1: item.qty1 ?? 0,   
+      qty: item.qty1 ?? 0,
       unit: item.unit ?? "",
     }));
 
@@ -243,46 +274,30 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
     name: "itemdtl",
   });
 
-  useEffect(() => {
-    console.log("Pick Items Updated:", watchedItems);
-  }, [watchedItems]);
-
-  // Calculate Total Quantity and Vlaue
-
-  const totalQty = (watchedItems || []).reduce((sum, item) => {
-    return sum + (Number(item?.qty1) || 0);
-  }, 0) || 0;
-
-  // const totalValue = (watchedItems || []).reduce((sum, item) => {
-  //   const qty = Number(item?.qty) || 0;
-  //   const rate = Number(item?.rate) || 0;
-
-  //   return sum + qty * rate;
-  // }, 0) || 0;
-
+  // Utility Funtyion
   const calculateTotals = (items: any[] = []) => {
-    let qty1 = 0;
+    let totalqty = 0;
     let totprodval = 0;
 
     const itemdtl = items.map((item, index) => {
-      const qty = Number(item?.qty1) || 0;
+      const qty = Number(item?.qty) || 0;
       const rate = Number(item?.rate) || 0;
       const value = qty * rate;
 
-      qty1 += qty;
+      totalqty += qty;
       totprodval += value;
 
       return {
         tag: item?.tag || "I",
         dtlid: item?.dtlid || index + 1,
         productid: Number(item.productid ?? 0),
-        qty1: Number(qty),
+        qty: Number(qty),
         rate: Number(rate),
         value: value,
       };
     });
 
-    return { qty1, totprodval, itemdtl };
+    return { totalqty, totprodval, itemdtl };
   };
 
 
@@ -312,16 +327,11 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
 
       deleteMutation.mutate(
         {
-          id: formPickListId,
-          userid: Number(userId),
-          compid: Number(companyId),
+          id: formPickListId, userid: Number(userId), compid: Number(companyId),
         },
         {
           onSuccess: (data) => {
-
-            if (!data?.success) {
-              return;
-            }
+            if (!data?.success) return;
             onClose();
           },
         }
@@ -330,54 +340,52 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
       return;
     }
 
-    const { qty1, totprodval, itemdtl } = calculateTotals(data.itemdtl || []);
+    const { totalqty, totprodval, itemdtl } = calculateTotals(data.itemdtl || []);
+
+    const orderdtl: PickListOrderDetail[] = (data.tbillid || []).map(
+      (orderId, index) => ({
+        tag: "I",
+        dtlid: index + 1,
+        orderid: orderId,
+      })
+    );
 
     const payload: PickListFormType = {
       ...data,
       compid: Number(companyId),
       branchid: toolbarBranchId,
-      qty: Number(qty1),
+      qty: Number(totalqty),
+      orderdtl,
       itemdtl,
     };
 
 
     if (isAddMode) {
-
+      console.log("FINAL SUBMIT PAYLOAD:", JSON.stringify(payload, null, 2));
       createMutation.mutate(payload, {
         onSuccess: (data) => {
-          if (!data?.success) {
-            return;
-          }
+          if (!data?.success) return;
           reset(PickListFormDefaults);
         },
       });
-
       return;
     }
 
     if (isEditMode) {
       updateMutation.mutate(
         {
-          id: formPickListId,
-          data: payload,
+          id: formPickListId, data: payload,
         },
         {
           onSuccess: (data) => {
-            if (!data?.success) {
-              return;
-            }
+            if (!data?.success) return;
             onClose()
           },
-
         }
       );
     }
 
-
-
   };
-
-
 
   const handleKeyOpen = (e: React.KeyboardEvent, openFn: () => void) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -499,28 +507,39 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
                 />
               </div>
 
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1"> Godown <strong className="text-red-500 text-sm"> * </strong></label>
+                <input
+                  type="text"
+                  value={GodownName || ''}
+                  disabled={isReadOnly}
+                  readOnly
+                  onClick={() => setGodownModalOpen(true)}
+                  className={`inputField w-full border border-gray-300 
+                    ${errors.godownid && !GodownName ? "border-red-500" : "border-gray-400"}
+                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
+                  }
+                  placeholder="Select godown"
+                />
+              </div>
+
               <div className="w-80">
-                <label className="block text-gray-700 font-medium mb-1">
-                  Tbill <span className="text-red-500">*</span>
-                </label>
+                <label className="block text-gray-700 font-medium mb-1">  Tbill <span className="text-red-500"> *</span>  </label>
 
                 <input
                   type="text"
                   readOnly
                   disabled={isReadOnly}
-                  value={
-                    selectedTbills.length === 0 ? "" : `${selectedTbills.length} Tbill(s) Selected`
-                  }
+                  value={tbillid.length === 0 ? "" : `${tbillid.length} Tbill(s) Selected`}
                   placeholder="Select Tbill(s)"
                   onKeyDown={(e) => handleKeyOpen(e, () => setTbillModalOpen(true))}
                   onClick={() => !isReadOnly && setTbillModalOpen(true)}
                   className={`inputField w-full
-                    ${errors.tbillid && selectedTbills.length === 0 ? "border-red-500" : "border-gray-400"}
+                    ${errors.tbillid && tbillid.length === 0 ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}
                   `}
                 />
               </div>
-
               {selectedTbills.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-2">
                   {selectedTbills.map((item) => (
@@ -538,7 +557,7 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
           </section>
 
           {/* Item Details */}
-          <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
+          <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
 
             <div className="flex justify-between items-center">
               <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
@@ -547,69 +566,12 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
 
             </div>
 
-            <div className="space-y-2">
-
-
-              {/* {fields.map((field, index) => (
-                <PickListItems
-                  key={field.id}
-                  index={index}
-                  field={field}
-                  control={control}
-                  setValue={setValue}
-                  register={register}
-                  errors={errors}
-                  remove={remove}
-                  watchedItems={watchedItems}
-                  userId={userId}
-                  companyId={companyId}
-                  branchId={toolbarBranchId}
-                  orderDate={orderDate}
-                  visible={visible}
-                  isReadOnly={isReadOnly}
-                  fieldsLength={fields.length}
-                  excludeIds={selectedProductIds}
-                  currentId={watchedItems?.[index]?.productid}
-
-                />
-              ))} */}
-
-
-            </div>
-
-            <div className="flex flex-wrap gap-1 items-center border-t pt-3">
-
-              <div className="w-68" />
-
-              <div className="w-120" />
-
-              <div className="w-28 relative">
-                <span className="absolute -left-20 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-700 whitespace-nowrap">
-                  Total Qty
-                </span>
-                <input
-                  type="number"
-                  value={totalQty}
-                  readOnly
-                  className="inputField w-full bg-gray-100"
-                />
-              </div>
-
-              <div className="w-28" />
-
-              {/* <div className="w-28 relative">
-                <span className="absolute -left-24 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-700 whitespace-nowrap">
-                  Total Value
-                </span>
-                <input
-                  type="number"
-                  value={totalValue}
-                  readOnly
-                  className="inputField w-full bg-gray-100"
-                />
-              </div> */}
-
-              <div className="w-12" />
+            <div className="space-y-1">
+              <PickListItems
+                items={watchedItems}
+                errors={errors}
+                register={register}
+              />
 
             </div>
 
@@ -646,6 +608,16 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
 
       </form>
 
+
+      <SearchModal
+        open={godownModalOpen}
+        onClose={() => setGodownModalOpen(false)}
+        endpoint="godown"
+        baseParams={baseGodownParams}
+        columns={searchGodownColumns}
+        searchFields={searchGodownFields}
+        onSelect={handleGodownSelect}
+      />
 
       <MultipleSearchModal
         open={tbillModalOpen}

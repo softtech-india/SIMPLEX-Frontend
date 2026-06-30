@@ -1,5 +1,5 @@
 import { apiCall } from "@/utils/apiClient";
-import { PickList, PickListFormType, PickListApiResponse } from '../types/pickList.types';
+import { PickList, PickListFormType, PickListApiResponse, PickListItem, SoProductListApiResponse } from '../types/pickList.types';
 import { storageService } from "@/common/utility/storageService";
 import { getErrorMessage } from "@/helpers/getErrorMessage";
 
@@ -38,26 +38,19 @@ class PickListService {
 
 
   // SO product list
-  async fetchSoProductList(
-    { userId, compid, strorder }: { userId: number; compid: number; strorder: string; }
-  ) {
-    try {
-      const response = await apiCall.get<PickListApiResponse>(
-        `${this.baseUrl}so/productlist`,
-        {
-          userId,
-          compid,
-          strorder, 
-        }
-      );
+  async fetchSoProductList({
+    userId, compid, strorder,
+  }: {
+    userId: number; compid: number; strorder: string;
+  }): Promise<PickListItem[]> {
+    const response: SoProductListApiResponse = await apiCall.get(`${this.baseUrl}so/productlist`,
+      {
+        userId, compid, strorder,
+      }
+    );
 
-      return response.data || [];
-    } catch (error: unknown) {
-      console.error("Error fetching SO Product list:", error);
-      throw new Error(getErrorMessage(error));
-    }
+    return response.data ?? [];
   }
-
 
   async getAllPickLists(params: GetPickListParams): Promise<PickList[]> {
     try {
