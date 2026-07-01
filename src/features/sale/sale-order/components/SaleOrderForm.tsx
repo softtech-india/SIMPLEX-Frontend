@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Popup } from "devextreme-react/popup";
-import LoadPanel from "devextreme-react/load-panel";
 import { useQuery } from "@tanstack/react-query";
 import { useSaleOrderById, useCreateSaleOrder, useUpdateSaleOrder, useDeleteSaleOrder, useApproveSaleOrder } from "../hooks/useSaleOrder";
 import { SaleOrderFormType, OperationMode } from "../types/saleOrder.types";
@@ -22,6 +21,7 @@ import { useConfirm } from "@/common/hooks/useConfirm";
 import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
 import { SHORTCUTS } from "@/common/constants/shortcuts";
 import { useSaleQrScanner } from "@/hooks/useSaleQrScanner";
+import Loader from "@/common/components/Loader";
 
 interface SaleOrderFormProps {
   visible: boolean;
@@ -402,7 +402,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
         requestAnimationFrame(() => {
           replace([]);
         });
-       // toast.success("T-Bill created successfully");
+        // toast.success("T-Bill created successfully");
         // onClose(); // Optionally close after successful creation
         return;
       }
@@ -788,11 +788,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
           </button>
         </div>
 
-        <LoadPanel
-          shadingColor="rgba(0,0,0,0.4)"
-          visible={isSubmitting || isLoadingSaleOrder}
-          showIndicator
-        />
+        {isSubmitting || isLoadingSaleOrder && <Loader />}
 
       </form>
 

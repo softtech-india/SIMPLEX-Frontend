@@ -15,6 +15,7 @@ import { RequisitionDataGrid } from './components/RequisitionDataGrid';
 import { RequisitionForm } from './components/RequisitionForm';
 import { LoadPanel } from 'devextreme-react';
 import { useReactiveStorage } from '@/hooks/useReactiveStorage';
+import Loader from '@/common/components/Loader';
 
 
 export default function RequisitionModule() {
@@ -209,11 +210,7 @@ export default function RequisitionModule() {
           mode={formMode}
         />
 
-        <LoadPanel
-          shadingColor="rgba(0,0,0,0.4)"
-          visible={isLoading}
-          showIndicator
-        />
+        {isLoading && <Loader />}
 
       </div>
     </>

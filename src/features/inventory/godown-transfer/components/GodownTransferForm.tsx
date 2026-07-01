@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Popup } from "devextreme-react/popup";
-import { LoadPanel } from "devextreme-react";
 import { useQuery } from "@tanstack/react-query";
 import { useFieldArray, useWatch } from "react-hook-form";
 import { toast } from "sonner";
@@ -15,7 +14,6 @@ import {
 import { GodownTransferFormSchema, } from "../schemas/godownTransfer.schema";
 import { godownTransferFormDefaults, } from "../constants/godownTransferFormDefaults";
 import { useGodownTransferForm, } from "../hooks/useGodownTransferForm";
-import { godownTransferService, } from "../services/godownTransferService";
 import { OperationMode, } from "../types/godowntransfer.types";
 import { FormSelect } from "@/common/components/FormSelect";
 import SearchModal from "@/common/components/SearchModal";
@@ -24,6 +22,7 @@ import { fetchSeriesList } from "@/api/purchase/purchase-api";
 import useUserStore from "@/store/userStore";
 import { formatDateForInput } from "@/helpers/dateUtils";
 import { useConfirm } from "@/common/hooks/useConfirm";
+import Loader from "@/common/components/Loader";
 
 interface GodownTransferFormProps {
   visible: boolean;
@@ -702,11 +701,8 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
           </button>
         </div>
 
-        <LoadPanel
-          shadingColor="rgba(0,0,0,0.4)"
-          visible={isSubmitting || isLoadingGodownTransfer}
-          showIndicator
-        />
+
+        {isSubmitting || isLoadingGodownTransfer && <Loader />}
 
         <SearchModal
           open={branchModalOpen}

@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Popup } from "devextreme-react/popup";
-import LoadPanel from "devextreme-react/load-panel";
 import { useQuery } from "@tanstack/react-query";
 import { usePurchaseOrderById, useCreatePurchaseOrder, useUpdatePurchaseOrder, useDeletePurchaseOrder, useApprovePurchaseOrder } from "../hooks/usePurchaseOrder";
 import { PurchaseOrderFormType, OperationMode } from "../types/purchaseOrder.types";
@@ -21,10 +20,10 @@ import { toast } from "sonner";
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
 import { SHORTCUTS } from "@/common/constants/shortcuts";
-import { VendorForm } from "@/features/master/account-master/vendor/components/VendorForm";
 import { useMasterModal } from "@/hooks/useMasterModal";
 import { useLookupShortcuts } from "@/common/hooks/useLookupShortcuts";
 import { LOOKUP_KEYS } from "@/common/constants/lookupKeys";
+import Loader from "@/common/components/Loader";
 
 interface PurchaseOrderFormProps {
   visible: boolean;
@@ -845,11 +844,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
             </button>
           </div>
 
-          <LoadPanel
-            shadingColor="rgba(0,0,0,0.4)"
-            visible={isSubmitting || isLoadingPurchaseOrder}
-            showIndicator
-          />
+          {isSubmitting || isLoadingPurchaseOrder && <Loader />}
 
           <SearchModal
             open={vendorFormOpen}

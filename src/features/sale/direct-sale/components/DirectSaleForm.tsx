@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Popup } from "devextreme-react/popup";
-import LoadPanel from "devextreme-react/load-panel";
 import { useQuery } from "@tanstack/react-query";
 import { useDirectSaleById, useCreateDirectSale, useUpdateDirectSale, useDeleteDirectSale, useApproveDirectSale } from "../hooks/useDirectSale";
 import { DirectSaleFormType, OperationMode } from "../types/directSale.types";
@@ -29,6 +28,7 @@ import { useMasterModal } from "@/hooks/useMasterModal";
 import { getFormErrorMessage } from "@/helpers/formErrorMessage";
 import { useLookupShortcuts } from "@/common/hooks/useLookupShortcuts";
 import { LOOKUP_KEYS } from "@/common/constants/lookupKeys";
+import Loader from "@/common/components/Loader";
 
 interface DirectSaleFormProps {
   visible: boolean;
@@ -1267,11 +1267,7 @@ export function DirectSaleForm(
             </button>
           </div>
 
-          <LoadPanel
-            shadingColor="rgba(0,0,0,0.4)"
-            visible={isSubmitting || isLoadingDirectSale}
-            showIndicator
-          />
+          {isSubmitting || isLoadingDirectSale && <Loader />}
 
         </form >
 

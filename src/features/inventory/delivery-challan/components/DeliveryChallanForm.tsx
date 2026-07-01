@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Popup } from "devextreme-react/popup";
-import LoadPanel from "devextreme-react/load-panel";
 import { useQuery } from "@tanstack/react-query";
 import { useDeliveryChallanById, useCreateDeliveryChallan, useUpdateDeliveryChallan, useDeleteDeliveryChallan, useSoPackedProductList, } from "../hooks/useDeliveryChallan";
 import { DeliveryChallanFormType, OperationMode, DeliveryChallanItem } from "../types/deliveryChallan.types";
@@ -21,6 +20,7 @@ import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
 import { SHORTCUTS } from "@/common/constants/shortcuts";
 import MultipleSearchModal from "@/common/components/MultipleSearchModal";
 import SearchModal from "@/common/components/SearchModal";
+import Loader from "@/common/components/Loader";
 
 interface DeliveryChallanFormProps {
   visible: boolean;
@@ -600,11 +600,7 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
           </button>
         </div>
 
-        <LoadPanel
-          shadingColor="rgba(0,0,0,0.4)"
-          visible={isSubmitting || isLoadingDeliveryChallan}
-          showIndicator
-        />
+        {isSubmitting || isLoadingDeliveryChallan && <Loader />}
 
       </form>
 

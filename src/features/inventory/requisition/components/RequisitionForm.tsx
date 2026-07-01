@@ -17,10 +17,10 @@ import { useWatch } from "react-hook-form";
 import { formatDateForInput } from "@/helpers/dateUtils";
 import SearchModal from "@/common/components/SearchModal";
 import { toast } from "sonner";
-import { LoadPanel } from "devextreme-react";
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { LOOKUP_KEYS } from "@/common/constants/lookupKeys";
 import { useLookupShortcuts } from "@/common/hooks/useLookupShortcuts";
+import Loader from "@/common/components/Loader";
 
 interface RequisitionFormProps {
   visible: boolean;
@@ -604,11 +604,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
           </button>
         </div>
 
-        <LoadPanel
-          shadingColor="rgba(0,0,0,0.4)"
-          visible={isSubmitting || isLoadingRequisition}
-          showIndicator
-        />
+        {isSubmitting || isLoadingRequisition && <Loader />}
 
         <SearchModal
           open={toBranchModalOpen}

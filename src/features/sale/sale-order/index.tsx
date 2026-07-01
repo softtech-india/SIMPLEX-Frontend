@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import LoadPanel from 'devextreme-react/load-panel';
 import { SaleOrderDataGrid } from './components/SaleOrderDataGrid';
 import { SaleOrderForm } from './components/SaleOrderForm';
 import { useSaleOrderList } from './hooks/useSaleOrder';
@@ -13,8 +12,9 @@ import { exportToExcel, ExcelColumn } from '@/common/utility/exportToExcel';
 import { fetchBranchList } from "@/api/master/ledger-api";
 import { useQuery } from '@tanstack/react-query';
 import useUserStore from '@/store/userStore';
-import { currentDate, formatDate } from '@/helpers/dateUtils';
+import { currentDate } from '@/helpers/dateUtils';
 import { useReactiveStorage } from '@/hooks/useReactiveStorage';
+import Loader from '@/common/components/Loader';
 
 
 export default function SaleOrderModule() {
@@ -225,7 +225,6 @@ export default function SaleOrderModule() {
           </div>
         )}
 
-
         <SaleOrderForm
           visible={isFormOpen}
           onClose={handleFormClose}
@@ -235,12 +234,7 @@ export default function SaleOrderModule() {
           mode={formMode}
         />
 
-
-        <LoadPanel
-          shadingColor="rgba(0,0,0,0.4)"
-          visible={isLoading}
-          showIndicator
-        />
+        {isLoading && <Loader />}
 
       </div>
     </>

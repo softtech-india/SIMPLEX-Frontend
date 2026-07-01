@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import LoadPanel from 'devextreme-react/load-panel';
 import { PurchaseOrderDataGrid } from './components/PurchaseOrderDataGrid';
 import { PurchaseOrderForm } from './components/PurchaseOrderForm';
 import { usePurchaseOrderList } from './hooks/usePurchaseOrder';
@@ -15,6 +14,7 @@ import { useQuery } from '@tanstack/react-query';
 import useUserStore from '@/store/userStore';
 import { currentDate, formatDate } from '@/helpers/dateUtils';
 import { useReactiveStorage } from '@/hooks/useReactiveStorage';
+import Loader from '@/common/components/Loader';
 
 
 export default function PurchaseOrderModule() {
@@ -228,12 +228,7 @@ export default function PurchaseOrderModule() {
           mode={formMode}
         />
 
-
-        <LoadPanel
-          shadingColor="rgba(0,0,0,0.4)"
-          visible={isLoading}
-          showIndicator
-        />
+        {isLoading && <Loader />}
 
       </div>
     </>

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import LoadPanel from 'devextreme-react/load-panel';
 import { DirectSaleDataGrid } from './components/DirectSaleDataGrid';
 import { DirectSaleForm } from './components/DirectSaleForm';
 import { useDirectSaleList, usePrintSaleBill } from './hooks/useDirectSale';
@@ -16,6 +15,7 @@ import useUserStore from '@/store/userStore';
 import { currentDate } from '@/helpers/dateUtils';
 import { usePathname } from 'next/navigation';
 import { useReactiveStorage } from '@/hooks/useReactiveStorage';
+import Loader from '@/common/components/Loader';
 
 
 export default function DirectSaleModule() {
@@ -150,10 +150,6 @@ export default function DirectSaleModule() {
     });
   }, [DirectSaleList]);
 
-  // useEffect(() => {
-  //   console.log("formSelectedBranch :", formSelectedBranch);
-  // }, [formSelectedBranch]);
-
   return (
     <>
       <div className="Sale-module ">
@@ -242,11 +238,7 @@ export default function DirectSaleModule() {
           />
         )}
 
-        <LoadPanel
-          shadingColor="rgba(0,0,0,0.4)"
-          visible={isLoading}
-          showIndicator
-        />
+        {isLoading && <Loader />}
 
       </div>
     </>

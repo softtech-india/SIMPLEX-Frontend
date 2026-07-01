@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Popup } from "devextreme-react/popup";
-import LoadPanel from "devextreme-react/load-panel";
 import { useQuery } from "@tanstack/react-query";
 import { usePickListById, useCreatePickList, useUpdatePickList, useDeletePickList, useSoProductList, } from "../hooks/usePickList";
 import { PickListFormType, OperationMode, PickListItem, PickListOrderDetail } from "../types/pickList.types";
@@ -21,6 +20,7 @@ import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
 import { SHORTCUTS } from "@/common/constants/shortcuts";
 import MultipleSearchModal from "@/common/components/MultipleSearchModal";
 import SearchModal from "@/common/components/SearchModal";
+import Loader from "@/common/components/Loader";
 
 interface PickListFormProps {
   visible: boolean;
@@ -606,11 +606,7 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
           </button>
         </div>
 
-        <LoadPanel
-          shadingColor="rgba(0,0,0,0.4)"
-          visible={isSubmitting || isLoadingPickList}
-          showIndicator
-        />
+        {isSubmitting || isLoadingPickList && <Loader />}
 
       </form>
 

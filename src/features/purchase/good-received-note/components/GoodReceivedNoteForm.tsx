@@ -2,12 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Popup } from "devextreme-react/popup";
-import LoadPanel from "devextreme-react/load-panel";
 import { useQuery } from "@tanstack/react-query";
 import { useGoodReceivedNoteById, useCreateGoodReceivedNote, useUpdateGoodReceivedNote, useDeleteGoodReceivedNote, useCreateConfirmGrn } from "../hooks/useGoodReceivedNote";
-import { fetchGodownList, fetchVendorList } from "@/api/master/ledger-api";
-import { ConfirmGrn, ConfirmGrnType, ConfirmItems, GoodReceivedNoteFormType, OperationMode } from "../types/goodReceivedNote.types";
-import { GoodReceivedNoteFormSchema, ConfirmGoodReceivedNoteFormSchema } from "../schemas/goodReceivedNote.schema";
+import { ConfirmGrn, ConfirmItems, GoodReceivedNoteFormType, OperationMode } from "../types/goodReceivedNote.types";
+import { GoodReceivedNoteFormSchema } from "../schemas/goodReceivedNote.schema";
 import { defaultItemDtl, goodReceivedNoteFormDefaults } from "../constants/goodReceivedNoteFormDefaults";
 import { useGoodReceivedNoteForm } from "../hooks/useGoodReceivedNoteForm";
 import { useFieldArray } from "react-hook-form";
@@ -25,6 +23,7 @@ import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
 import { SHORTCUTS } from "@/common/constants/shortcuts";
 import { useLookupShortcuts } from "@/common/hooks/useLookupShortcuts";
 import { LOOKUP_KEYS } from "@/common/constants/lookupKeys";
+import Loader from "@/common/components/Loader";
 
 
 interface GoodReceivedNoteProps {
@@ -932,11 +931,8 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
           </button>
         </div>
 
-        <LoadPanel
-          shadingColor="rgba(0,0,0,0.4)"
-          visible={isSubmitting || isLoadingGoodReceivedNote}
-          showIndicator
-        />
+        {isSubmitting || isLoadingGoodReceivedNote && <Loader />}
+
       </form>
 
 
