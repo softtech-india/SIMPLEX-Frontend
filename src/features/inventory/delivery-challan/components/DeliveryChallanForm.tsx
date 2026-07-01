@@ -119,7 +119,7 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
             pcategorynm: item.pcategorynm ?? "",
             productid: Number(item.productid ?? 0),
             productnm: item.productnm ?? "",
-            qty1: Number(item.qty1 ?? 0),
+            qty: Number(item.qty ?? 0),
             unit: item.unit ?? "",
           })) ?? [],
       });
@@ -256,7 +256,9 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
       pcategorynm: item.pcategorynm ?? "",
       productid: item.productid ?? "",
       productnm: item.productnm ?? "",
-      qty1: item.qty1 ?? 0,
+      qty: item.qty1 ?? 0,
+      rate: item.rate ?? 0,
+      value: item.value ?? 0,
       unit: item.unit ?? "",
     }));
 
@@ -277,11 +279,11 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
     let totprodval = 0;
 
     const itemdtl = items.map((item, index) => {
-      const qty1 = Number(item?.qty1) || 0;
+      const qty = Number(item?.qty) || 0;
       const rate = Number(item?.rate) || 0;
-      const value = qty1 * rate;
+      const value = qty * rate;
 
-      totalqty += qty1;
+      totalqty += qty;
       totprodval += value;
 
       return {
@@ -290,7 +292,9 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
         orderdtlid: item?.dtlid,
         pcategorynm: item?.pcategorynm || "",
         productid: Number(item.productid ?? 0),
-        qty1: Number(qty1),
+        qty: Number(qty),
+        rate: Number(rate),
+        value: Number(value),
         unit: item?.unit || "PCS",
       };
     });
@@ -340,15 +344,14 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
 
     const { totalqty, totprodval, itemdtl } = calculateTotals(data.itemdtl || []);
 
-
     const payload: DeliveryChallanFormType = {
       ...data,
       compid: Number(companyId),
       branchid: toolbarBranchId,
       qty: Number(totalqty),
+      amt: Number(totprodval),
       itemdtl,
     };
-
 
     if (isAddMode) {
       console.log("FINAL SUBMIT PAYLOAD:", JSON.stringify(payload, null, 2));

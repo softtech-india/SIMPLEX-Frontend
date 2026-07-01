@@ -7,7 +7,9 @@ export const DeliveryChallanItemSchema = z.object({
   pcategorynm: z.string().optional(),
   productid: z.number().min(1, "Please select a product"),
   productnm: z.string().optional(),
-  qty1: z.number().min(1, "Quantity should be greater than 0"),
+  qty: z.number().min(1, "Quantity should be greater than 0"),
+  rate: z.number().optional(),
+  value: z.number().optional(),
   unit: z.string().optional(),
 });
 

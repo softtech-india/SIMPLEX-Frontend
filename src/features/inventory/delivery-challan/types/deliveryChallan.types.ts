@@ -5,7 +5,10 @@ export interface DeliveryChallanItem {
   pcategorynm?: string;
   productid: number;
   productnm?: string;
-  qty1: number;
+  qty1?: number;
+  qty: number;
+  rate?: number;
+  value?: number;
   unit?: string;
 }
 

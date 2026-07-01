@@ -22,6 +22,8 @@ export const DeliveryChallanDataGrid = forwardRef<any, DeliveryChallanDataGridPr
       { dataField: "transportername", caption: "Transporter", width: 200, headerFilter: true },
       { dataField: "vehicleno", caption: "Vehicle No", width: 100, headerFilter: true },
       { dataField: "qty", caption: "Quantity", width: 80, headerFilter: true },
+      { dataField: "rate", caption: "Rate", width: 80, headerFilter: true },
+      { dataField: "value", caption: "Value", width: 80, headerFilter: true },
       { dataField: "narration", caption: "Narration", width: 200, headerFilter: true },
       { dataField: 'entryby', caption: 'Entry User', width: 120 },
       { dataField: 'entrydt', caption: 'Entry Date', width: 150, dataType: 'date' },

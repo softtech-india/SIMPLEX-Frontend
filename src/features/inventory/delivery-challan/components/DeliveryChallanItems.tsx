@@ -1,12 +1,5 @@
 import React, { useMemo } from "react";
-import {
-  UseFormRegister,
-  FieldErrors,
-} from "react-hook-form";
-
-import {
-  DeliveryChallanItem,
-} from "../types/deliveryChallan.types";
+import { DeliveryChallanItem } from "../types/deliveryChallan.types";
 
 type DeliveryChallanItemsProps = {
   items?: DeliveryChallanItem[];
@@ -16,10 +9,16 @@ type DeliveryChallanItemsProps = {
 
 export const DeliveryChallanItems = React.memo(({ items = [], register }: DeliveryChallanItemsProps) => {
 
-
   const totalQty = useMemo(() => {
     return items.reduce(
-      (sum, i) => sum + Number(i.qty1 ?? 0),
+      (sum, i) => sum + Number(i.qty ?? 0),
+      0
+    );
+  }, [items]);
+
+  const totalValue = useMemo(() => {
+    return items.reduce(
+      (sum, i) => sum + Number(i.qty ?? 0) * Number(i.rate ?? 0),
       0
     );
   }, [items]);
@@ -35,6 +34,8 @@ export const DeliveryChallanItems = React.memo(({ items = [], register }: Delive
             <th className="border px-2 py-2">Brand</th>
             <th className="border px-2 py-2">Product</th>
             <th className="border px-2 py-2 w-28 text-right">Qty</th>
+            <th className="border px-2 py-2 w-28 text-right">Rate</th>
+            <th className="border px-2 py-2 w-28 text-right">Value</th>
             <th className="border px-2 py-2 w-24">Unit</th>
           </tr>
         </thead>
@@ -43,19 +44,12 @@ export const DeliveryChallanItems = React.memo(({ items = [], register }: Delive
         <tbody>
           {items.length === 0 ? (
             <tr>
-              <td
-                colSpan={5}
-                className="border p-1 text-center text-gray-500"
-              >
-                No items found
-              </td>
+              <td colSpan={7} className="border p-1 text-center text-gray-500" >  No items found </td>
             </tr>
           ) : (
             items.map((item, index) => (
               <tr key={item.dtlid ?? index}>
-                <td className="border p-1 text-center">
-                  {index + 1}
-                </td>
+                <td className="border p-1 text-center"> {item.dtlid ?? index + 1}  </td>
 
                 <td className="border p-1">
                   <input
@@ -77,20 +71,34 @@ export const DeliveryChallanItems = React.memo(({ items = [], register }: Delive
                   <input
                     type="number"
                     className="inputField w-full text-right"
-                    value={item.qty1 ?? ""}
+                    value={item.qty ?? ""}
                     readOnly
-                  // {...register(`itemdtl.${index}.qty1`, {
-                  //   valueAsNumber: true,
-                  // })}
                   />
                 </td>
 
                 <td className="border p-1">
                   <input
+                    type="number"
+                    className="inputField w-full text-right"
+                    // value={item.rate ?? ""}
+                    {...register(`itemdtl.${index}.rate`, { valueAsNumber: true, })}
+                  // readOnly
+                  />
+                </td>
+
+                <td className="border p-1">
+                  <input
+                    type="number"
+                    className="inputField w-full text-right"
+                    value={item.qty * (item.rate ?? 0)}
+                    readOnly
+                  />
+                </td>
+                <td className="border p-1">
+                  <input
                     className="inputField w-full"
                     value={item.unit ?? ""}
                     readOnly
-                    // {...register(`itemdtl.${index}.unit`)}
                   />
                 </td>
               </tr>
@@ -98,7 +106,6 @@ export const DeliveryChallanItems = React.memo(({ items = [], register }: Delive
           )}
         </tbody>
 
-        {/* FOOTER */}
         <tfoot>
           <tr className="bg-gray-50 font-semibold">
             <td
@@ -111,8 +118,11 @@ export const DeliveryChallanItems = React.memo(({ items = [], register }: Delive
             <td className="border px-2 py-2 text-right">
               {totalQty}
             </td>
-
-            <td className="border px-2 py-2"></td>
+            <td></td>
+            <td className="border px-2 py-2 text-right">
+              {totalValue.toFixed(2)}
+            </td>
+            <td></td>
           </tr>
         </tfoot>
 
