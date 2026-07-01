@@ -109,7 +109,7 @@ export const RequisitionItems: React.FC<RequisitionItemsProps> = ({
   };
 
   return (
-    <div className="flex flex-wrap gap-4 items-end">
+    <div className="flex flex-wrap gap-1 items-end">
 
       <div className="w-68">
         <label className="block text-gray-700 text-sm font-medium mb-1">

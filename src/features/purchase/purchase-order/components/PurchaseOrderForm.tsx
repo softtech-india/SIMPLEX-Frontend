@@ -460,13 +460,13 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
           onSubmit={handleSubmit(handleFormSubmit, onError)}
           className="flex flex-col h-full"
         >
-          <div className="flex-1 overflow-y-auto p-2 space-y-2">
+          <div className="flex-1 overflow-y-auto p-1 space-y-1">
 
-            <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
+            <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
 
               <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50"> Purchase Order Information </h2>
 
-              <div className="flex flex-wrap gap-4 items-end">
+              <div className="flex flex-wrap gap-1 items-end">
 
                 <div className="w-48">
                   <label className="block text-gray-700 font-medium mb-1">Series No.</label>
@@ -661,7 +661,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
           </section> */}
 
             {/* Item Details */}
-            <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
+            <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
 
               <div className="flex justify-between items-center">
                 <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
@@ -693,7 +693,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {fields.map((field, index) => (
                   <PurchaseOrderItems
                     key={field.id}
@@ -721,7 +721,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                 ))}
               </div>
 
-              <div className="flex flex-wrap gap-4 items-center border-t pt-3">
+              <div className="flex flex-wrap gap-1 items-center border-t-2 mt-1">
 
                 <div className="w-68" />
 
@@ -762,17 +762,17 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
             </section>
 
             {/* Remarks */}
-            <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
+            <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
               <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
                 Remarks
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
                 <div>
                   <label className="block text-gray-700 font-medium mb-1">Remark 1 </label>
                   <input
                     {...register("rem1")}
-                    placeholder="Remark 1"
+                    placeholder="Write remarks... "
                     disabled={isReadOnly}
                     className={`inputField ${errors.rem1 ? "" : "border-gray-400"}`}
                   />
@@ -781,7 +781,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                   <label className="block text-gray-700 font-medium mb-1">Remark 2 </label>
                   <input
                     {...register("rem2")}
-                    placeholder="Remark 2"
+                    placeholder="Write remarks... "
                     disabled={isReadOnly}
                     className={`inputField ${errors.rem2 ? "" : "border-gray-400"}`}
                   />
@@ -792,12 +792,12 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
 
             {isApproveMode && (
               <>
-                <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
+                <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
                   <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
                     Approvable
                   </h2>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
                     <div >
                       <label className="block text-gray-700 font-medium mb-1">Approve Status <strong className="text-red-500"> * </strong> </label>
                       <FormSelect

@@ -115,7 +115,7 @@ export function MasterToolbar({
 
   return (
     <div className="bg-blue-900 md:bg-white border md:border-gray-200 rounded-lg shadow-sm p-1">
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-1">
 
         {canAdd && (
           <button onClick={onAdd} className="secondary-btn">

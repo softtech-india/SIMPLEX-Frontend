@@ -10,13 +10,13 @@ interface PicklistPageProps {
 
 const breadcrumbs: BreadcrumbItem[] = [
   { name: "Inventory" },
-  { name: "Pick list" },
+  { name: "Pick List" },
 ];
 
 export const getStaticProps: GetStaticProps<PicklistPageProps> = async () => {
   return {
     props: {
-      pageTitle: "Pick list",
+      pageTitle: "Pick List",
     },
   };
 };
@@ -24,7 +24,7 @@ export const getStaticProps: GetStaticProps<PicklistPageProps> = async () => {
 export default function PicklistPage({ pageTitle }: PicklistPageProps) {
   return (
     <>
-      <PageHead title={pageTitle} description="List of Pick list" />
+      <PageHead title={pageTitle} description="List of Pick List" />
       <BreadcrumbHeader title={pageTitle} breadcrumbs={breadcrumbs} />
       <div>
         <PickListModule />

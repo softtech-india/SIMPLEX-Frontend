@@ -17,12 +17,12 @@ export const DirectSaleDataGrid = forwardRef<any, DirectSaleDataGridProps>(
   ({ dataSource, onSelectionChanged, onExporting, height = 500 }, ref) => {
 
     const columns = [
-      { dataField: "billno", caption: "Bill No.", width: 150, headerFilter: true },
-      { dataField: "billdt", caption: "Bill date", dataType: "date", format: "dd-MM-yyyy", width: 120, },
+      { dataField: "billno", caption: "Sale No.", width: 150, headerFilter: true },
+      { dataField: "billdt", caption: "Sale Date", dataType: "date", format: "dd-MM-yyyy", width: 120, },
       { dataField: "customernm", caption: "Customer", width: 200, headerFilter: true },
       { dataField: "qty1", caption: "Quantity", width: 80, headerFilter: true },
       { dataField: "itemtval", caption: "Total Value", width: 100, headerFilter: true },
-      { dataField: "billamt", caption: "Bill Amount", width: 200, headerFilter: true },
+      { dataField: "billamt", caption: "Sale Amount", width: 200, headerFilter: true },
 
       { dataField: 'entryby', caption: 'Entry User', width: 120 },
       { dataField: 'entrydt', caption: 'Entry Date', width: 150, dataType: 'date' },

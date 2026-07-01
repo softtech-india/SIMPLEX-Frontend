@@ -18,11 +18,11 @@ export const GodownTransferDataGrid = forwardRef<any, GodownTransferDataGridProp
     const columns = [
       
       { dataField: "gtno", caption: "Transfer No.", width: 150, headerFilter: true },
-      { dataField: "gtdt", caption: "Date", dataType: "date", format: "dd-MM-yyyy", width: 100 },
+      { dataField: "gtdt", caption: "GT Date", dataType: "date", format: "dd-MM-yyyy", width: 100 },
       { dataField: "godownnm", caption: "From Godown", width: 150, headerFilter: true },
       { dataField: "reqno", caption: "Requisition No.", width: 150, headerFilter: true },
-      { dataField: "reqdt", caption: "Date", dataType: "date", format: "dd-MM-yyyy", width: 100 },
-      { dataField: "tobranchnm", caption: "To Branch", width: 150, headerFilter: true },
+      { dataField: "reqdt", caption: "Requisition Date", dataType: "date", format: "dd-MM-yyyy", width: 100 },
+      // { dataField: "tobranchnm", caption: "To Branch", width: 150, headerFilter: true },
       { dataField: "togodownnm", caption: "To Godown", width: 150, headerFilter: true },
       { dataField: "totqty", caption: "Total Qty", width: 70, headerFilter: true },
       { dataField: "recvstatusdesc", caption: "Receive Status", width: 90, headerFilter: true },

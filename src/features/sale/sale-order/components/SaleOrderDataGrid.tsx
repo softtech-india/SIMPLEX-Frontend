@@ -18,7 +18,7 @@ export const SaleOrderDataGrid = forwardRef<any, SaleOrderDataGridProps>(
   ({ dataSource, onSelectionChanged, onExporting, height = 600 }, ref) => {
 
     const columns = [
-      { dataField: "orderno", caption: "Order No.", width: 150, headerFilter: true },
+      { dataField: "orderno", caption: "T-Bill No.", width: 150, headerFilter: true },
       // {
       //   dataField: "aprvstatus", caption: "Approve", width: 90, headerFilter: true,
       //   cellRender: (data: any) => {
@@ -44,7 +44,7 @@ export const SaleOrderDataGrid = forwardRef<any, SaleOrderDataGridProps>(
       //     );
       //   },
       // },
-      { dataField: "orderdt", caption: "Order date", dataType: "date", format: "dd-MM-yyyy", width: 120, },
+      { dataField: "orderdt", caption: "T-Bill date", dataType: "date", format: "dd-MM-yyyy", width: 120, },
       { dataField: "customernm", caption: "Customer", width: 200, headerFilter: true },
       { dataField: "qty1", caption: "Quantity", width: 80, headerFilter: true },
       { dataField: "totprodval", caption: "Total Value", width: 100, headerFilter: true },

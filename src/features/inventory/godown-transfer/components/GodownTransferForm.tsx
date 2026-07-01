@@ -355,7 +355,7 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
 
   const handleFormSubmit = async (data: any) => {
     try {
-      
+
       if (isDeleteMode) {
         const ok = await confirmDelete({
           title: "Delete Godown Transfer",
@@ -442,7 +442,7 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
     <Popup
       visible={visible}
       onHiding={onClose}
-      title={`${mode} Godown Transfer : ${formSelectedBranch}`}
+      title={`${mode} Godown Transfer`}
       width="90vw"
       height="90vh"
       dragEnabled
@@ -453,13 +453,13 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
         onSubmit={handleSubmit(handleFormSubmit, onError)}
         className="flex flex-col h-full"
       >
-        <div className="flex-1 overflow-y-auto p-2 space-y-2">
-          <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
+        <div className="flex-1 overflow-y-auto p-1 space-y-1">
+          <section className="border rounded-md p-1 shadow-sm bg-white space-y-3">
             <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
               Godown Transfer Information
             </h2>
 
-            <div className="flex flex-wrap gap-4 items-end">
+            <div className="flex flex-wrap gap-1 items-end">
               <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Series No.</label>
                 <FormSelect
@@ -489,6 +489,16 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
                   className={`inputField ${errors.gtdt ? "border-red-500" : "border-gray-400"} ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 />
               </div>
+              <div className="w-100">
+                <label className="block text-gray-700 font-medium mb-1">Remarks</label>
+                <input
+                  type="text"
+                  {...register("rem")}
+                  disabled={isReadOnly}
+                  className={`inputField ${errors.rem ? "border-red-500" : "border-gray-400"} ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                  placeholder="Enter Remarks"
+                />
+              </div>
 
               <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Branch</label>
@@ -502,12 +512,12 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
             </div>
           </section>
 
-          <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
+          <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
             <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
               Transfer Details
             </h2>
 
-            <div className="flex flex-wrap gap-4 items-end">
+            <div className="flex flex-wrap gap-1 items-end">
 
               <div className="w-80">
                 <label className="block text-gray-700 font-medium mb-1"> From Godown <span className="text-red-500"> * </span> </label>
@@ -523,7 +533,7 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
                   `}
                   placeholder="Select Godown"
                 />
-                {errors?.godownid && (<p className="text-xs text-red-500 mt-1">{errors.godownid.message}</p>)}
+                {/* {errors?.godownid && (<p className="text-xs text-red-500 mt-1">{errors.godownid.message}</p>)} */}
               </div>
 
               {/* <div className="w-80">
@@ -565,7 +575,7 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
                   `}
                   placeholder="Select To Godown"
                 />
-                {errors?.togodownid && (<p className="text-xs text-red-500 mt-1">{errors.togodownid.message}</p>)}
+                {/* {errors?.togodownid && (<p className="text-xs text-red-500 mt-1">{errors.togodownid.message}</p>)} */}
               </div>
 
               <div className="w-76">
@@ -582,14 +592,18 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
                   `}
                   placeholder="Select Pending Requisition"
                 />
-                {errors?.reqno && (<p className="text-xs text-red-500 mt-1">{errors.reqno.message}</p>)}
+                {/* {errors?.reqno && (<p className="text-xs text-red-500 mt-1">{errors.reqno.message}</p>)} */}
               </div>
             </div>
           </section>
 
-          <section className="border rounded-md p-3 bg-white space-y-3">
+          <section className="border rounded-md p-1 bg-white space-y-1">
+
             <div className="flex justify-between items-center">
-              <h2 className="text-sm font-semibold">Item Details</h2>
+              <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
+                Item Details
+              </h2>
+
               {!isReadOnly && !isEditMode && (
                 <button
                   type="button"
@@ -611,7 +625,7 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1">
               {fields.map((field, index) => (
                 <GodownTransferItems
                   key={field.id}
@@ -637,11 +651,11 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
               ))}
             </div>
 
-            <div className="flex flex-wrap gap-4 items-center border-t pt-3">
-              <div className="w-80" />
-              <div className="w-68" />
+            <div className="flex flex-wrap gap-1 items-center border-t-2 pt-1">
+              <div className="w-60" />
+              <div className="w-72" />
 
-              <div className="w-20 relative">
+              <div className="w-24 relative ">
                 <span className="absolute -left-20 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-700 whitespace-nowrap">
                   Total
                 </span>
@@ -652,8 +666,9 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
                   className="inputField w-full bg-gray-100 cursor-not-allowed"
                 />
               </div>
-
-              <div className="w-24 relative">
+              <div className="w-14" />
+              <div className="w-24" />
+              <div className="w-28 ">
                 <input
                   type="number"
                   value={totalValue}
@@ -661,21 +676,10 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
                   className="inputField w-full bg-gray-100 cursor-not-allowed"
                 />
               </div>
+              <div className="w-24 "></div>
             </div>
           </section>
 
-          <section className="border rounded-md p-3 bg-white">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label>Remark</label>
-                <input
-                  {...register("rem")}
-                  disabled={isReadOnly}
-                  className="inputField"
-                />
-              </div>
-            </div>
-          </section>
         </div>
 
         <div className="border-t p-2 flex justify-end gap-4 bg-gray-50">

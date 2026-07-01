@@ -537,7 +537,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
               ))}
             </div>
 
-            <div className="flex flex-wrap gap-1 items-center border-t pt-3">
+            <div className="flex flex-wrap gap-1 items-center border-t-2 pt-1">
               <div className="w-96" />
               <div className="w-92" />
               <div className="w-28 relative">
@@ -560,12 +560,12 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
               Remarks
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
               <div>
                 <label className="block text-gray-700 font-medium mb-1">Remark 1</label>
                 <input
                   {...register("rem1")}
-                  placeholder="Remark 1"
+                  placeholder="Write remarks..."
                   disabled={isReadOnly}
                   className="inputField border-gray-400"
                 />
@@ -574,7 +574,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
                 <label className="block text-gray-700 font-medium mb-1">Remark 2</label>
                 <input
                   {...register("rem2")}
-                  placeholder="Remark 2"
+                  placeholder="Write remarks..."
                   disabled={isReadOnly}
                   className="inputField border-gray-400"
                 />

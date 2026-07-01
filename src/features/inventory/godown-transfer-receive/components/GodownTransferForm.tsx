@@ -506,7 +506,7 @@ export function GodownTransferForm({
     <Popup
       visible={visible}
       onHiding={onClose}
-      title={`${mode} Godown Transfer : ${formSelectedBranch}`}
+      title={`${mode} Godown Transfer`}
       width="90vw"
       height="90vh"
       dragEnabled

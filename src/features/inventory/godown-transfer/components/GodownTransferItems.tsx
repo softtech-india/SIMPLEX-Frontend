@@ -101,10 +101,11 @@ export const GodownTransferItems: React.FC<GodownTransferItemsProps> = ({
   };
 
   return (
-    <div className="flex flex-wrap gap-4 items-end">
+    <div className="flex flex-wrap gap-1 items-end">
+      
       <div className="w-60">
         <label className="block text-gray-700 text-sm font-medium mb-1">
-          Category
+          Brand
         </label>
         <input
           type="text"
@@ -143,11 +144,11 @@ export const GodownTransferItems: React.FC<GodownTransferItemsProps> = ({
             ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
           placeholder="Select Product"
         />
-        {errors?.itemdtl?.[index]?.productid && (
+        {/* {errors?.itemdtl?.[index]?.productid && (
           <p className="text-xs text-red-500 mt-1">
             {errors.itemdtl[index].productid.message}
           </p>
-        )}
+        )} */}
       </div>
 
       <div className="w-24">

@@ -158,7 +158,7 @@ export default function DirectSaleModule() {
     <>
       <div className="Sale-module ">
 
-        <div className="bg-white rounded-xl shadow-sm border mt-2">
+        <div className="bg-white rounded-xl shadow-sm border mt-1">
 
           <TransactionToolbar
             title="Direct Sales"
@@ -215,14 +215,8 @@ export default function DirectSaleModule() {
         </div>
 
         {!isMobile && (
-          <div
-            className={`
-      ${sidebarState === '1' ? 'w-358' : 'w-294'}
-      transition-all duration-300 ease-in-out
-      px-2 sm:px-2 md:px-2 bg-white lg:px-2
-      rounded-xl shadow-sm border border-gray-200
-      p-2 overflow-x-auto my-4
-    `}
+          <div className={` ${sidebarState === '1' ? 'w-358' : 'w-294'} transition-all duration-300 ease-in-out 
+           bg-white rounded-xl shadow-sm border border-gray-200 p-1 overflow-x-auto my-1 `}
           >
             <DirectSaleDataGrid
               dataSource={DirectSaleList}
@@ -247,7 +241,7 @@ export default function DirectSaleModule() {
             mode={formMode}
           />
         )}
-        
+
         <LoadPanel
           shadingColor="rgba(0,0,0,0.4)"
           visible={isLoading}

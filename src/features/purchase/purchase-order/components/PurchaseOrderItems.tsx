@@ -144,7 +144,7 @@ export const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
 
   return (
     <>
-      <div className="flex flex-wrap gap-4 items-end">
+      <div className="flex flex-wrap gap-1 items-end">
         <div className="w-68">
           <label className="block text-gray-700 font-medium mb-1"> Brand <strong className="text-red-500"> * </strong> </label>
           <input

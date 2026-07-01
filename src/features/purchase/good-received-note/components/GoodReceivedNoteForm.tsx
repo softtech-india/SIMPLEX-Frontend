@@ -596,7 +596,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
     <Popup
       visible={visible}
       onHiding={onClose}
-      title={`${mode} Good Received Note : ${formSelectedBranch}`}
+      title={`${mode} Good Received Note `}
       width="90vw"
       height="90vh"
       dragEnabled
@@ -608,15 +608,15 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
         onSubmit={handleSubmit(handleFormSubmit, onError)}
         className="flex flex-col h-full"
       >
-        <div className="flex-1 overflow-y-auto p-2 space-y-2">
+        <div className="flex-1 overflow-y-auto p-1 space-y-1">
 
-          <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
+          <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
 
             <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
               Good Received Note Information
             </h2>
 
-            <div className="flex flex-wrap gap-4 items-end">
+            <div className="flex flex-wrap gap-1 items-end">
 
               <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Series No.</label>
@@ -771,7 +771,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
           </section>
 
           {/* Item Details */}
-          <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
+          <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
 
             <div className="flex justify-between items-center">
               <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
@@ -804,7 +804,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1">
               {fields.map((field, index) => (
                 <GoodReceivedNoteItems
                   key={field.id}
@@ -835,11 +835,11 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
               ))}
             </div>
 
-            <div className="flex flex-wrap gap-4 items-center border-t pt-3">
+            <div className="flex flex-wrap gap-1 items-center border-t-2 pt-1">
+
+              <div className="w-60" />
 
               <div className="w-68" />
-
-              <div className="w-80" />
 
               <div className="w-20 relative">
                 <span className="absolute -left-20 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-700 whitespace-nowrap">
@@ -855,9 +855,9 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
               </div>
 
               <div className="w-14" />
-              <div className="w-24" />
+              <div className="w-20" />
 
-              <div className="w-24 relative">
+              <div className="w-20 relative">
                 <input
                   type="number"
                   value={totalValue}
@@ -869,7 +869,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
 
               {(mode === 'Confirmed') && (
                 <>
-                  <div className="w-14 relative">
+                  <div className="w-20 relative">
                     <input
                       type="number"
                       value={totalScanQty}

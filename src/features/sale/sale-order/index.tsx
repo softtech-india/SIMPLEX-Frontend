@@ -148,7 +148,7 @@ export default function SaleOrderModule() {
     <>
       <div className="Sale-order-module ">
 
-        <div className="bg-white rounded-xl shadow-sm border mt-2">
+        <div className="bg-white rounded-xl shadow-sm border mt-1">
 
           <TransactionToolbar
             title="Sale Orders"
@@ -208,9 +208,9 @@ export default function SaleOrderModule() {
             className={`
       ${sidebarState === '1' ? 'w-358' : 'w-294'}
       transition-all duration-300 ease-in-out
-      px-2 sm:px-2 md:px-2 bg-white lg:px-2
+      px-1 bg-white 
       rounded-xl shadow-sm border border-gray-200
-      p-2 overflow-x-auto my-4
+      p-1 overflow-x-auto my-1
     `}
           >
             <SaleOrderDataGrid
