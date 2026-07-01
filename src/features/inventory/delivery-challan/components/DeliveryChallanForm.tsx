@@ -136,7 +136,7 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
   ];
 
   // Series No Options
-  const voucherType = "PL";
+  const voucherType = "DC";
   const { data: seriesNoOptions = [] } = useQuery({
     queryKey: ["fetchSeriesList", userId, companyId, toolbarBranchId, voucherType],
     queryFn: () => fetchSeriesList(userId, companyId, toolbarBranchId, voucherType, finid),
@@ -220,7 +220,8 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
   };
 
   const searchPicklistColumns = [
-    { key: "picklistno", label: "name." },
+    { key: "orderno", label: "Order No" },
+    { key: "picklistno", label: "Picklist No" },
   ];
 
   const searchPicklistFields = [
@@ -316,8 +317,8 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
     if (isDeleteMode) {
 
       const ok = await confirmDelete({
-        title: "Delete pick list ",
-        message: "Are you sure you want to delete this pick list ?",
+        title: "Delete Delivery Challan ",
+        message: "Are you sure you want to delete this Delivery Challan ?",
       });
 
       if (!ok) return;
@@ -393,7 +394,7 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
     <Popup
       visible={visible}
       onHiding={onClose}
-      title={`${mode} Pick List`}
+      title={`${mode} Delivery Challan`}
       width="90vw"
       height="90vh"
       dragEnabled
@@ -409,7 +410,7 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
 
           <section className="border rounded-md p-1 shadow-sm bg-white space-y-3">
 
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50"> Pick List Information </h2>
+            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50"> Delivery Challan Information </h2>
 
             <div className="flex flex-wrap gap-1 items-end">
 

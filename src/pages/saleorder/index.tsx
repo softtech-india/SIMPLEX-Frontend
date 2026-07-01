@@ -9,13 +9,13 @@ interface SaleOrderPageProps {
 
 const breadcrumbs: BreadcrumbItem[] = [
   { name: "Sale" },
-  { name: "Sale Order" },
+  { name: "T-Bill" },
 ];
 
 export const getStaticProps: GetStaticProps<SaleOrderPageProps> = async () => {
   return {
     props: {
-      pageTitle: "Sale Order",
+      pageTitle: "T-Bill",
     },
   };
 };
@@ -23,7 +23,7 @@ export const getStaticProps: GetStaticProps<SaleOrderPageProps> = async () => {
 export default function SaleOrderPage({ pageTitle }: SaleOrderPageProps) {
   return (
     <>
-      <PageHead title={pageTitle} description="List of Sale Order" />
+      <PageHead title={pageTitle} description="List of T-Bill" />
       <BreadcrumbHeader title={pageTitle} breadcrumbs={breadcrumbs} />
       <div>
         <SaleOrderModule />

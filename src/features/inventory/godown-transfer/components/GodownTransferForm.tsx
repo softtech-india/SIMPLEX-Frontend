@@ -526,7 +526,7 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
                 {errors?.godownid && (<p className="text-xs text-red-500 mt-1">{errors.godownid.message}</p>)}
               </div>
 
-              <div className="w-80">
+              {/* <div className="w-80">
                 <label className="block text-gray-700 font-medium mb-1">  To Branch <span className="text-red-500"> * </span> </label>
                 <input
                   type="text"
@@ -542,7 +542,7 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
                   placeholder="Select Branch"
                 />
                 {errors?.tobranchid && (<p className="text-xs text-red-500 mt-1">{errors.tobranchid.message}</p>)}
-              </div>
+              </div> */}
 
               <div className="w-80">
                 <label className="block text-gray-700 font-medium mb-1"> To Godown <span className="text-red-500"> * </span> </label>

@@ -446,7 +446,7 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Order Date</label>
+                <label className="block text-gray-700 font-medium mb-1">Picklist Date</label>
                 <input
                   type="date"
                   {...register("picklistdt")}
@@ -456,12 +456,16 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Order No</label>
+                <label className="block text-gray-700 font-medium mb-1">Picklist No</label>
                 <input
                   type="text"
                   {...register("picklistno")}
-                  disabled={isReadOnly}
-                  className={` inputField  ${errors.picklistno ? "" : "border-gray-400"}  `}
+                  disabled={isReadOnly || selectedSeries?.manualallow === "N"}
+                  className={`
+                    inputField 
+                    ${errors.picklistno ? "" : "border-gray-400"} 
+                    ${selectedSeries?.manualallow === "N" ? "bg-gray-100 cursor-not-allowed" : ""}
+                  `}
                   placeholder="Enter pick list no."
                 />
               </div>

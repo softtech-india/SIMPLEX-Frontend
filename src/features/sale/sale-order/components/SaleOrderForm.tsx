@@ -402,7 +402,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
         requestAnimationFrame(() => {
           replace([]);
         });
-        toast.success("Sale Order created successfully");
+       // toast.success("Sale Order created successfully");
         // onClose(); // Optionally close after successful creation
         return;
       }
