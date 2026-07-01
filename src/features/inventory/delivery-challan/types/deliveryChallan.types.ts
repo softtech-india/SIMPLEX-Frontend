@@ -1,13 +1,11 @@
 export interface DeliveryChallanItem {
   tag?: string;
   dtlid?: number;
+  orderdtlid?: number;
+  pcategorynm?: string;
   productid: number;
   productnm?: string;
-
-  qty: number;
-  rate?: number;
-  value?: number;
-
+  qty1: number;
   unit?: string;
 }
 

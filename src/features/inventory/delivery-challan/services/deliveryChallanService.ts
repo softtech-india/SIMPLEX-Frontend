@@ -1,5 +1,5 @@
 import { apiCall } from "@/utils/apiClient";
-import { DeliveryChallan, DeliveryChallanApiResponse, DeliveryChallanFormType, } from "../types/deliveryChallan.types";
+import { DeliveryChallan, DeliveryChallanApiResponse, DeliveryChallanFormType, DeliveryChallanItem, DeliveryChallanItemApiResponse, } from "../types/deliveryChallan.types";
 import { storageService } from "@/common/utility/storageService";
 import { getErrorMessage } from "@/helpers/getErrorMessage";
 
@@ -38,18 +38,34 @@ class DeliveryChallanService {
     return response;
   }
 
+
+  // SO Picked product list
+  async fetchSoPickedProductList({
+    userId, compid, orderid,
+  }: {
+    userId: number; compid: number; orderid: number;
+  }): Promise<DeliveryChallanItem[]> {
+    const response: DeliveryChallanItemApiResponse = await apiCall.get(`${this.baseUrl}so/pickedproductlist`,
+      {
+        userId, compid, orderid,
+      }
+    );
+
+    return response.data ?? [];
+  }
+
   async getAllDeliveryChallans(
     params: GetDeliveryChallanParams
   ): Promise<DeliveryChallan[]> {
     try {
       const response = await apiCall.get<DeliveryChallanApiResponse>(
-        `${this.baseUrl}deliverychallan`,
+        `${this.baseUrl}dc`,
         params
       );
 
-      const handledResponse = this.validateResponse(response);
+     // const handledResponse = this.validateResponse(response);
 
-      return handledResponse.data || [];
+      return response.data || [];
     } catch (error: any) {
       console.error("Error fetching Delivery Challans:", error);
       throw new Error(getErrorMessage(error));

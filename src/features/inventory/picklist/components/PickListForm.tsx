@@ -213,13 +213,15 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
   const GodownName = watch("godownnm")
 
   // Model Search Tbill Modal Handlers
+  const today = new Date();
+  const year = today.getMonth() >= 3 ? today.getFullYear() : today.getFullYear() - 1;
   const baseTbillParams = {
     userid: userId,
     compid: companyId,
     branchid: toolbarBranchId,
     finid: Number(finid),
-    startdt: '2026-04-01',
-    enddt: '2027-03-31'
+    startdt: `${year}-04-01`,
+    enddt: `${year + 1}-03-31`
   };
 
   const searchTbillColumns = [

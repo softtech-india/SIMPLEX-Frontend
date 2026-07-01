@@ -14,12 +14,12 @@ type DeliveryChallanItemsProps = {
   errors: any;
 };
 
-export const DeliveryChallanItems = React.memo( ({ items = [], register }: DeliveryChallanItemsProps) => {
+export const DeliveryChallanItems = React.memo(({ items = [], register }: DeliveryChallanItemsProps) => {
 
 
   const totalQty = useMemo(() => {
     return items.reduce(
-      (sum, i) => sum + Number(i.qty ?? 0),
+      (sum, i) => sum + Number(i.qty1 ?? 0),
       0
     );
   }, [items]);
@@ -32,9 +32,9 @@ export const DeliveryChallanItems = React.memo( ({ items = [], register }: Deliv
         <thead className="bg-slate-100">
           <tr>
             <th className="border px-2 py-2 w-14">#</th>
-            {/* <th className="border px-2 py-2">Brand</th> */}
+            <th className="border px-2 py-2">Brand</th>
             <th className="border px-2 py-2">Product</th>
-            <th className="border px-2 py-2 w-28 text-right">  Qty </th>
+            <th className="border px-2 py-2 w-28 text-right">Qty</th>
             <th className="border px-2 py-2 w-24">Unit</th>
           </tr>
         </thead>
@@ -57,13 +57,13 @@ export const DeliveryChallanItems = React.memo( ({ items = [], register }: Deliv
                   {index + 1}
                 </td>
 
-                {/* <td className="border p-1">
+                <td className="border p-1">
                   <input
                     className="inputField w-full bg-gray-50"
                     value={item.pcategorynm ?? ""}
                     readOnly
                   />
-                </td> */}
+                </td>
 
                 <td className="border p-1">
                   <input
@@ -77,16 +77,20 @@ export const DeliveryChallanItems = React.memo( ({ items = [], register }: Deliv
                   <input
                     type="number"
                     className="inputField w-full text-right"
-                    {...register(`itemdtl.${index}.qty`, {
-                      valueAsNumber: true,
-                    })}
+                    value={item.qty1 ?? ""}
+                    readOnly
+                  // {...register(`itemdtl.${index}.qty1`, {
+                  //   valueAsNumber: true,
+                  // })}
                   />
                 </td>
 
                 <td className="border p-1">
                   <input
                     className="inputField w-full"
-                    {...register(`itemdtl.${index}.unit`)}
+                    value={item.unit ?? ""}
+                    readOnly
+                    // {...register(`itemdtl.${index}.unit`)}
                   />
                 </td>
               </tr>

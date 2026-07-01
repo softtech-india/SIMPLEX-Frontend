@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Popup } from "devextreme-react/popup";
 import LoadPanel from "devextreme-react/load-panel";
 import { useQuery } from "@tanstack/react-query";
-import { useDeliveryChallanById, useCreateDeliveryChallan, useUpdateDeliveryChallan, useDeleteDeliveryChallan, } from "../hooks/useDeliveryChallan";
+import { useDeliveryChallanById, useCreateDeliveryChallan, useUpdateDeliveryChallan, useDeleteDeliveryChallan, useSoPackedProductList, } from "../hooks/useDeliveryChallan";
 import { DeliveryChallanFormType, OperationMode, DeliveryChallanItem } from "../types/deliveryChallan.types";
 import { DeliveryChallanFormSchema } from "../schemas/deliveryChallan.schema";
 import { DeliveryChallanFormDefaults } from "../constants/deliveryChallanFormDefaults";
@@ -116,9 +116,10 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
           DeliveryChallan.itemdtl?.map((item, index) => ({
             tag: item.tag ?? "U",
             dtlid: item.dtlid ?? index + 1,
+            pcategorynm: item.pcategorynm ?? "",
             productid: Number(item.productid ?? 0),
             productnm: item.productnm ?? "",
-            qty: Number(item.qty ?? 0),
+            qty1: Number(item.qty1 ?? 0),
             unit: item.unit ?? "",
           })) ?? [],
       });
@@ -210,16 +211,12 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
   const customerName = watch("customernm")
 
   // Model Search Picklist Modal Handlers
-
-  const today = new Date();
-  const year = today.getMonth() >= 3 ? today.getFullYear() : today.getFullYear() - 1;
   const basePicklistParams = {
     userid: userId,
     compid: companyId,
     branchid: toolbarBranchId,
     finid: Number(finid),
-    startdt: `${year}-04-01`,
-    enddt: `${year + 1}-03-31`,
+    customerid: watch("customerid") || 0,
   };
 
   const searchPicklistColumns = [
@@ -232,12 +229,46 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
 
   const handlePicklistSelect = (row: any) => {
     console.log('Picklist Row :', row)
-    setValue("picklistid", row.id);
+    setValue("orderid", row.id);
+    setValue("picklistid", row.picklistid);
     setValue("picklistnm", row.picklistno);
     setPicklistModalOpen(false);
   };
 
   const PicklistName = watch("picklistnm")
+
+  // Query
+  const { data: SoPackedProductData } = useSoPackedProductList({
+    userId: Number(userId),
+    compid: Number(companyId),
+    orderid: watch("orderid") || 0,
+  });
+
+  useEffect(() => {
+    if (isEditMode || isDeleteMode) return;
+
+    if (!SoPackedProductData) return;
+
+    const formattedItems: DeliveryChallanItem[] = SoPackedProductData.map((item, index) => ({
+      tag: 'I',
+      dtlid: item.dtlid ?? index + 1,
+      pcategorynm: item.pcategorynm ?? "",
+      productid: item.productid ?? "",
+      productnm: item.productnm ?? "",
+      qty1: item.qty1 ?? 0,
+      unit: item.unit ?? "",
+    }));
+
+    setValue("itemdtl", formattedItems, {
+      shouldDirty: false,
+      shouldValidate: false,
+    });
+  }, [SoPackedProductData, isEditMode, isDeleteMode, setValue]);
+
+  const watchedItems = useWatch({
+    control,
+    name: "itemdtl",
+  });
 
   // Utility Funtyion
   const calculateTotals = (items: any[] = []) => {
@@ -245,20 +276,21 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
     let totprodval = 0;
 
     const itemdtl = items.map((item, index) => {
-      const qty = Number(item?.qty) || 0;
+      const qty1 = Number(item?.qty1) || 0;
       const rate = Number(item?.rate) || 0;
-      const value = qty * rate;
+      const value = qty1 * rate;
 
-      totalqty += qty;
+      totalqty += qty1;
       totprodval += value;
 
       return {
         tag: item?.tag || "I",
-        dtlid: item?.dtlid || index + 1,
+        dtlid: index + 1,
+        orderdtlid: item?.dtlid,
+        pcategorynm: item?.pcategorynm || "",
         productid: Number(item.productid ?? 0),
-        qty: Number(qty),
-        rate: Number(rate),
-        value: value,
+        qty1: Number(qty1),
+        unit: item?.unit || "PCS",
       };
     });
 
@@ -534,11 +566,11 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
             </div>
 
             <div className="space-y-1">
-              {/* <DeliveryChallanItems
+              <DeliveryChallanItems
                 items={watchedItems}
                 errors={errors}
                 register={register}
-              /> */}
+              />
 
             </div>
 
@@ -599,15 +631,12 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
       <SearchModal
         open={picklistModalOpen}
         onClose={() => setPicklistModalOpen(false)}
-        endpoint="picklist"
+        endpoint="so/pendingpickedlist"
         baseParams={basePicklistParams}
         columns={searchPicklistColumns}
         searchFields={searchPicklistFields}
         onSelect={handlePicklistSelect}
       />
-
-
-
 
     </Popup>
   );

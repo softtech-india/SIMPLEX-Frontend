@@ -5,13 +5,13 @@ const today = new Date().toISOString().split("T")[0];
 export const defaultItemDtl = {
   tag: "I",
   dtlid: 1,
-
+  orderdtlid: 0,
+  pcategorynm: "",
   productid: 0,
   productnm: "",
+  qty1: 0,
+  unit: "",
 
-  qty: 0,
-  rate: 0,
-  value: 0,
 };
 
 export const DeliveryChallanFormDefaults: DeliveryChallanFormSchema = {

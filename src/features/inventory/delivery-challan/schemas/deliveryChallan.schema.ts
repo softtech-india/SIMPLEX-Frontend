@@ -3,13 +3,12 @@ import { z } from "zod";
 export const DeliveryChallanItemSchema = z.object({
   tag: z.string().optional(),
   dtlid: z.number().optional(),
-
+  orderdtlid: z.number().optional(),
+  pcategorynm: z.string().optional(),
   productid: z.number().min(1, "Please select a product"),
   productnm: z.string().optional(),
-
-  qty: z.number().min(1, "Quantity should be greater than 0"),
-  rate: z.number().optional(),
-  value: z.number().optional(),
+  qty1: z.number().min(1, "Quantity should be greater than 0"),
+  unit: z.string().optional(),
 });
 
 export const DeliveryChallanBaseSchema = z.object({

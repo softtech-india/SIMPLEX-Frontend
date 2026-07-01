@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { deliveryChallanService } from "../services/deliveryChallanService";
-import { DeliveryChallanFormType } from "../types/deliveryChallan.types";
+import { DeliveryChallanFormType, DeliveryChallanItem } from "../types/deliveryChallan.types";
 import { toast } from "sonner";
 
 export interface GetDeliveryChallanParams {
@@ -20,6 +20,26 @@ type UseDeliveryChallanByIdParams = {
   compid: number;
   branchid: number | string;
   finid: number;
+};
+
+
+
+export const useSoPackedProductList = ({
+  userId, compid, orderid,
+}: {
+  userId: number; compid: number; orderid: number;
+}) => {
+  return useQuery<DeliveryChallanItem[]>({
+    queryKey: ["so-picked-product-list", orderid],
+    queryFn: () =>
+      deliveryChallanService.fetchSoPickedProductList({
+        userId, compid, orderid,
+      }),
+    enabled: !!orderid,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: true,
+  });
 };
 
 export const DELIVERY_CHALLAN_KEYS = {
