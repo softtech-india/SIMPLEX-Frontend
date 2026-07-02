@@ -2,6 +2,7 @@ import { apiCall } from "@/utils/apiClient";
 import { Requisition, RequisitionFormType, RequisitionApiResponse } from '../types/requisition.types';
 import { toast } from "sonner";
 import { storageService } from "@/common/utility/storageService";
+import axios from "axios";
 
 export interface GetRequisitionParams {
   userid: number;
@@ -174,6 +175,31 @@ class RequisitionService {
     }
   }
 
+  async getRequisitionPrintById(id: number | undefined): Promise<Blob> {
+    const token = localStorage.getItem("accessToken") || "";
+    try {
+      const response = await axios.get(
+        `${this.baseUrl}requisition/print/pdf`,
+        {
+          params: {
+            userid: this.getUserId(),
+            compid: this.getCompanyId(),
+            id: id,
+          },
+          responseType: "blob",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+
+    } catch (error: any) {
+      console.error("Error fetching Delivery Challan print:", error);
+      throw error;
+    }
+  }
 
 
 }

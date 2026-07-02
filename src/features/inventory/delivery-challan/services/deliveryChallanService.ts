@@ -2,6 +2,7 @@ import { apiCall } from "@/utils/apiClient";
 import { DeliveryChallan, DeliveryChallanApiResponse, DeliveryChallanFormType, DeliveryChallanItem, DeliveryChallanItemApiResponse, } from "../types/deliveryChallan.types";
 import { storageService } from "@/common/utility/storageService";
 import { getErrorMessage } from "@/helpers/getErrorMessage";
+import axios from "axios";
 
 export interface GetDeliveryChallanParams {
   userid: number;
@@ -63,7 +64,7 @@ class DeliveryChallanService {
         params
       );
 
-     // const handledResponse = this.validateResponse(response);
+      // const handledResponse = this.validateResponse(response);
 
       return response.data || [];
     } catch (error: any) {
@@ -176,6 +177,31 @@ class DeliveryChallanService {
     }
   }
 
+  async getDeliveryChallanPrintById(id: number): Promise<Blob> {
+    const token = localStorage.getItem("accessToken") || "";
+    try {
+      const response = await axios.get(
+        `${this.baseUrl}dc/print/pdf`,
+        {
+          params: {
+            userid: this.getUserId(),
+            compid: this.getCompanyId(),
+            id: id,
+          },
+          responseType: "blob",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+
+    } catch (error: any) {
+      console.error("Error fetching Delivery Challan print:", error);
+      throw error;
+    }
+  }
 
 }
 

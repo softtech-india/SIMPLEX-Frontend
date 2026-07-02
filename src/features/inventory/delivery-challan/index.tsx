@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { DeliveryChallanDataGrid } from './components/DeliveryChallanGrid';
 import { DeliveryChallanForm } from './components/DeliveryChallanForm';
-import { useDeliveryChallan } from './hooks/useDeliveryChallan';
+import { useDeliveryChallan, usePrintDeliveryChallan } from './hooks/useDeliveryChallan';
 import { DeliveryChallan, OperationMode } from './types/deliveryChallan.types';
 import useIsMobile from "@/common/hooks/useIsMobile";
 import { TransactionToolbar } from '@/common/components/barmanager/TransactionToolbar';
@@ -23,6 +23,8 @@ export default function DeliveryChallanModule() {
   const isMobile = useIsMobile()
   const permissions = usePrivileges();
   const { userId, companyId, branchId, finid, branchnm } = useUserStore();
+
+  const { mutate: printDeliveryChallan, isPending: isPrinting } = usePrintDeliveryChallan();
 
   // State 
   const [selectedRow, setselectedRow] = useState<DeliveryChallan | null>(null);
@@ -98,7 +100,13 @@ export default function DeliveryChallanModule() {
   const handleEditClick = useCallback(() => openForm('Edit'), [openForm]);
   const handleDeleteClick = useCallback(() => openForm('Delete'), [openForm]);
   const handleViewClick = useCallback(() => openForm('View'), [openForm]);
-  const handlePrintClick = useCallback(() => openForm('Print'), [openForm]);
+  //const handlePrintClick = useCallback(() => openForm('Print'), [openForm]);
+
+  const handlePrintClick = useCallback(() => {
+    if (!selectedRow) return;
+
+    printDeliveryChallan(selectedRow.id || 0);
+  }, [printDeliveryChallan, selectedRow]);
 
 
   const handleRefresh = useCallback(() => {
@@ -145,7 +153,7 @@ export default function DeliveryChallanModule() {
             onRefresh={handleRefresh}
             onView={handleViewClick}
             onPrint={handlePrintClick}
-
+            isPrinting={isPrinting}
 
             selectFromDate={{
               name: "fromDate",

@@ -156,3 +156,37 @@ export function useDeleteSaleOrder() {
     },
   });
 }
+
+export function usePrintTbill() {
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const blob = await saleOrderService.getTbillPrintById(id);
+
+      const url = URL.createObjectURL(blob);
+      const tab = window.open(url, "_blank");
+
+      if (!tab) throw new Error("Popup blocked");
+
+      const interval = setInterval(() => {
+        try {
+          if (tab.document?.readyState === "complete") {
+            clearInterval(interval);
+
+            tab.focus();
+            // tab.print();
+
+            setTimeout(() => {
+              URL.revokeObjectURL(url);
+            }, 2000);
+          }
+        } catch {
+          console.warn("Waiting for PDF to load...");
+        }
+      }, 300);
+    },
+
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to print PDF");
+    },
+  });
+}

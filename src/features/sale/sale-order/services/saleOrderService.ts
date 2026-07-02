@@ -2,6 +2,7 @@ import { apiCall } from "@/utils/apiClient";
 import { SaleOrder, SaleOrderFormType, SaleOrderApiResponse } from '../types/saleOrder.types';
 import { toast } from "sonner";
 import { storageService } from "@/common/utility/storageService";
+import axios from "axios";
 
 export interface GetSaleOrderParams {
   userid: number;
@@ -175,6 +176,34 @@ class SaleOrderService {
       throw error;
     }
   }
+
+  async getTbillPrintById(id: number | undefined): Promise<Blob> {
+    const token = localStorage.getItem("accessToken") || "";
+    try {
+      const response = await axios.get(
+        `${this.baseUrl}so/print/pdf`,
+        {
+          params: {
+            userid: this.getUserId(),
+            compid: this.getCompanyId(),
+            id: id,
+            withrate: 'N',
+          },
+          responseType: "blob",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+
+    } catch (error: any) {
+      console.error("Error fetching Delivery Challan print:", error);
+      throw error;
+    }
+  }
+
 
 
 }
