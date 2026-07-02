@@ -16,7 +16,6 @@ import { SaleOrderItems } from "./SaleOrderItems";
 import { useWatch } from "react-hook-form";
 import { formatDateForInput } from "@/helpers/dateUtils";
 import SearchModal from "@/common/components/SearchModal";
-import { toast } from "sonner";
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
 import { SHORTCUTS } from "@/common/constants/shortcuts";
@@ -362,90 +361,112 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
   };
 
   const handleFormSubmit = async (data: SaleOrderFormSchema) => {
-    try {
-      if (isDeleteMode) {
-        const ok = await confirmDelete({
-          title: "Delete T-Bill",
-          message: "Are you sure you want to delete this T-Bill?",
-        });
 
-        if (!ok) return;
+    if (isDeleteMode) {
 
-        await deleteMutation.mutateAsync({
-          id: formSaleOrderId,
-          userid: Number(userId),
-          compid: Number(companyId),
-        });
-        onClose();
-        return;
-      }
+      const ok = await confirmDelete({
+        title: "Delete T-Bill? ",
+        message: "Are you sure you want to delete this T-Bill? ?",
+      });
 
-      const { qty1, totprodval, itemdtl } = calculateTotals(data.itemdtl || []);
+      if (!ok) return;
 
-      const payload: SaleOrderFormType = {
+      deleteMutation.mutate(
+        {
+          id: formSaleOrderId, userid: Number(userId), compid: Number(companyId),
+        },
+        {
+          onSuccess: (data) => {
+            if (!data?.success) return;
+            onClose();
+          },
+        }
+      );
+
+      return;
+    }
+
+    const { qty1, totprodval, itemdtl } = calculateTotals(data.itemdtl || []);
+
+    const payload: SaleOrderFormType = {
+      ...data,
+      compid: companyId,
+      branchid: toolbarBranchId,
+      qty1: Number(qty1),
+      qty2: Number(qty1),
+      totprodval: totprodval,
+      afttax: 0,
+      ordamt: totprodval,
+      itemdtl,
+    };
+
+    if (isAddMode) {
+
+      createMutation.mutate(payload, {
+        onSuccess: (data) => {
+          if (!data?.success) return;
+
+          reset(saleOrderFormDefaults);
+          replace([]);
+          requestAnimationFrame(() => {
+            replace([]);
+          });
+         // onClose();
+
+          printTbill({
+            id: data.id || 0,
+            withrate: "Y",
+          })
+        },
+      });
+      return;
+    }
+
+    if (isEditMode) {
+      updateMutation.mutate(
+        {
+          id: formSaleOrderId, data: payload,
+        },
+        {
+          onSuccess: (data) => {
+            if (!data?.success) return;
+
+            onUpdated?.();
+
+            onClose();
+
+            printTbill({
+              id: formSaleOrderId,
+              withrate: "Y",
+            })
+
+          },
+        }
+      );
+    }
+
+    if (isApproveMode) {
+      const approvePayload: SaleOrderFormType = {
         ...data,
+        id: formSaleOrderId,
         compid: companyId,
         branchid: toolbarBranchId,
         qty1: Number(qty1),
         qty2: Number(qty1),
         totprodval: totprodval,
+        finid: Number(finid),
         afttax: 0,
         ordamt: totprodval,
         itemdtl,
       };
 
-      if (isAddMode) {
-        await createMutation.mutateAsync(payload);
-        reset(saleOrderFormDefaults);
-        replace([]);
-        requestAnimationFrame(() => {
-          replace([]);
-        });
-        // onClose(); 
-        return;
-      }
-
-      if (isEditMode) {
-        await updateMutation.mutateAsync({
-          id: formSaleOrderId,
-          data: payload,
-        });
-        onUpdated?.(); // Make sure this is defined in props
-        onClose();
-        // Print
-        printTbill({
-          id: formSaleOrderId,
-          withrate: "Y",
-        })
-        return;
-      }
-
-      if (isApproveMode) {
-        const approvePayload: SaleOrderFormType = {
-          ...data,
-          id: formSaleOrderId,
-          compid: companyId,
-          branchid: toolbarBranchId,
-          qty1: Number(qty1),
-          qty2: Number(qty1),
-          totprodval: totprodval,
-          finid: Number(finid),
-          afttax: 0,
-          ordamt: totprodval,
-          itemdtl,
-        };
-
-        await approveMutation.mutateAsync(approvePayload);
-        reset(saleOrderFormDefaults);
-        replace([]);
-        onClose();
-        return;
-      }
-
-    } catch (error) {
-      console.error("Submit error:", error);
-      toast.error("An error occurred while saving");
+      await approveMutation.mutateAsync(approvePayload);
+      reset(saleOrderFormDefaults);
+      replace([]);
+      onClose();
+      return;
     }
+
   };
 
 

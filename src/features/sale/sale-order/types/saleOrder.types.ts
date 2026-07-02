@@ -73,6 +73,7 @@ export interface SaleOrderApiResponse {
   success: boolean;
   message: string;
   data: SaleOrder[];
+  id: string | number;
 }
 
 export type OperationMode = "Add" | "Edit" | "Delete" | "View" | "Print" | "Approve";

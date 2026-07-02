@@ -656,98 +656,112 @@ export function DirectSaleForm(
   const bindLookup = useLookupShortcuts(isReadOnly, lookupMap);
 
   const handleFormSubmit = async (data: DirectSaleFormSchema) => {
-    try {
 
-      const isValid = await trigger();
-      if (!isValid) return;
+    const isValid = await trigger();
+    if (!isValid) return;
 
-      if (isDeleteMode) {
-        const ok = await confirmDelete({
-          title: "Delete Sale",
-          message: "Are you sure you want to delete this Sale?",
-        });
+    if (isDeleteMode) {
 
-        if (!ok) return;
+      const ok = await confirmDelete({
+        title: "Delete Sale ",
+        message: "Are you sure you want to delete this Sale ?",
+      });
 
-        await deleteMutation.mutateAsync({
-          id: formDirectSaleId,
-          userid: Number(userId),
-          compid: Number(companyId),
-        });
-        onClose();
-        return;
-      }
+      if (!ok) return;
 
-      const {
-        qty1, qtyrateval, discval, netval, beftaxval, taxableval, taxval, amtwithtaxval,
-        afttaxval, billamt, cgstval, sgstval, igstval, itemdtl
-      } = calculateTotals(data.itemdtl || []);
+      deleteMutation.mutate(
+        {
+          id: formDirectSaleId, userid: Number(userId), compid: Number(companyId),
+        },
+        {
+          onSuccess: (data) => {
+            if (!data?.success) return;
+            onClose();
+          },
+        }
+      );
 
-      const payload: DirectSaleFormType = {
-        ...data,
-
-        compid: companyId,
-        branchid: toolbarBranchId,
-        finid: Number(finid),
-
-        qty1: Number(qty1),
-        qtyrateval: Number(qtyrateval),
-        discval: Number(discval),
-        netval: Number(netval),
-        beftaxval: Number(beftaxval),
-        taxableval: Number(taxableval),
-        taxval: Number(taxval),
-        amtwithtaxval: Number(amtwithtaxval),
-        afttaxval: Number(afttaxval),
-        billamt: Number(billamt),
-        cgstval: Number(cgstval),
-        sgstval: Number(sgstval),
-        igstval: Number(igstval),
-
-        itemdtl,
-      };
-
-
-      if (isAddMode) {
-        await createMutation.mutateAsync(payload);
-        reset({
-          ...directSaleFormDefaults,
-          qrcode: "",
-          itemdtl: [],
-        });
-
-        // IMPORTANT: next tick sync
-        requestAnimationFrame(() => {
-          replace([]);
-        });
-        // onClose();
-
-        printSaleBill({
-          id: data.id || 0,
-          withrate: "Y",
-        })
-
-        return;
-      }
-
-      if (isEditMode) {
-        await updateMutation.mutateAsync({
-          id: formDirectSaleId,
-          data: payload,
-        });
-
-        onUpdated?.();
-
-        onClose();
-        printSaleBill({
-          id: formDirectSaleId,
-          withrate: "Y",
-        })
-      }
-
-    } catch (error) {
-      console.error("Submit error:", error);
+      return;
     }
+
+    const {
+      qty1, qtyrateval, discval, netval, beftaxval, taxableval, taxval, amtwithtaxval,
+      afttaxval, billamt, cgstval, sgstval, igstval, itemdtl
+    } = calculateTotals(data.itemdtl || []);
+
+    const payload: DirectSaleFormType = {
+      ...data,
+
+      compid: companyId,
+      branchid: toolbarBranchId,
+      finid: Number(finid),
+
+      qty1: Number(qty1),
+      qtyrateval: Number(qtyrateval),
+      discval: Number(discval),
+      netval: Number(netval),
+      beftaxval: Number(beftaxval),
+      taxableval: Number(taxableval),
+      taxval: Number(taxval),
+      amtwithtaxval: Number(amtwithtaxval),
+      afttaxval: Number(afttaxval),
+      billamt: Number(billamt),
+      cgstval: Number(cgstval),
+      sgstval: Number(sgstval),
+      igstval: Number(igstval),
+
+      itemdtl,
+    };
+
+    if (isAddMode) {
+
+      createMutation.mutate(payload, {
+        onSuccess: (data) => {
+          if (!data?.success) return;
+
+          reset({
+            ...directSaleFormDefaults,
+            qrcode: "",
+            itemdtl: [],
+          });
+
+          requestAnimationFrame(() => {
+            replace([]);
+          });
+          // onClose();
+
+          printSaleBill({
+            id: data.id || 0,
+            withrate: "Y",
+          })
+        },
+      });
+      return;
+    }
+
+    if (isEditMode) {
+      updateMutation.mutate(
+        {
+          id: formDirectSaleId, data: payload,
+        },
+        {
+          onSuccess: (data) => {
+            if (!data?.success) return;
+
+            onUpdated?.();
+
+            onClose();
+
+            printSaleBill({
+              id: formDirectSaleId,
+              withrate: "Y",
+            })
+
+          },
+        }
+      );
+    }
+
   };
 
 
