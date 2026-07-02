@@ -159,8 +159,10 @@ export function useDeleteSaleOrder() {
 
 export function usePrintTbill() {
   return useMutation({
-    mutationFn: async (id: number) => {
-      const blob = await saleOrderService.getTbillPrintById(id);
+    mutationFn: async (
+      { id, withrate, }: { id: number; withrate: string; }
+    ) => {
+      const blob = await saleOrderService.getTbillPrintById(id, withrate);
 
       const url = URL.createObjectURL(blob);
       const tab = window.open(url, "_blank");
@@ -173,7 +175,6 @@ export function usePrintTbill() {
             clearInterval(interval);
 
             tab.focus();
-            // tab.print();
 
             setTimeout(() => {
               URL.revokeObjectURL(url);

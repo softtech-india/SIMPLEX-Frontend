@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Popup } from "devextreme-react/popup";
 import { useQuery } from "@tanstack/react-query";
-import { useSaleOrderById, useCreateSaleOrder, useUpdateSaleOrder, useDeleteSaleOrder, useApproveSaleOrder } from "../hooks/useSaleOrder";
+import { useSaleOrderById, useCreateSaleOrder, useUpdateSaleOrder, useDeleteSaleOrder, useApproveSaleOrder, usePrintTbill } from "../hooks/useSaleOrder";
 import { SaleOrderFormType, OperationMode } from "../types/saleOrder.types";
 import { SaleOrderFormSchema } from "../schemas/saleOrder.schema";
 import { defaultItemDtl, saleOrderFormDefaults } from "../constants/saleOrderFormDefaults";
@@ -42,16 +42,18 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
     finid,
   } = useUserStore();
 
+  // Hooks
   const confirmDelete = useConfirm();
+  const { mutate: printTbill, isPending: isPrinting } = usePrintTbill();
 
+  // State
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
   const [godownModalOpen, setGodownModalOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const godownRef = useRef<HTMLInputElement>(null);
   const brandInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-
-
+  // Drive State
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
   const isDeleteMode = mode === "Delete";
@@ -394,16 +396,12 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
 
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
-        // Reset the form completely including items
         reset(saleOrderFormDefaults);
-        // IMPORTANT: Clear the items array
         replace([]);
-        // Force a re-render by updating the fields array
         requestAnimationFrame(() => {
           replace([]);
         });
-        // toast.success("T-Bill created successfully");
-        // onClose(); // Optionally close after successful creation
+        // onClose(); 
         return;
       }
 
@@ -414,6 +412,11 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
         });
         onUpdated?.(); // Make sure this is defined in props
         onClose();
+        // Print
+        printTbill({
+          id: formSaleOrderId,
+          withrate: "Y",
+        })
         return;
       }
 

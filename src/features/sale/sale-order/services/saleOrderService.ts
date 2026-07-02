@@ -177,7 +177,7 @@ class SaleOrderService {
     }
   }
 
-  async getTbillPrintById(id: number | undefined): Promise<Blob> {
+  async getTbillPrintById(id: number | undefined, withrate: string): Promise<Blob> {
     const token = localStorage.getItem("accessToken") || "";
     try {
       const response = await axios.get(
@@ -187,7 +187,7 @@ class SaleOrderService {
             userid: this.getUserId(),
             compid: this.getCompanyId(),
             id: id,
-            withrate: 'N',
+            withrate: withrate,
           },
           responseType: "blob",
           headers: {

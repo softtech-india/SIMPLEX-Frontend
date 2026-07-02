@@ -159,8 +159,10 @@ export function useDeleteDirectSale() {
 
 export function usePrintSaleBill() {
   return useMutation({
-    mutationFn: async (id: number) => {
-      const blob = await directSaleService.getSaleBillPrintById(id);
+    mutationFn: async (
+      { id, withrate, }: { id: number; withrate: string; }
+    ) => {
+      const blob = await directSaleService.getSaleBillPrintById(id, withrate);
 
       const url = URL.createObjectURL(blob);
       const tab = window.open(url, "_blank");
@@ -173,7 +175,6 @@ export function usePrintSaleBill() {
             clearInterval(interval);
 
             tab.focus();
-           // tab.print();
 
             setTimeout(() => {
               URL.revokeObjectURL(url);

@@ -99,12 +99,16 @@ export default function SaleOrderModule() {
     openForm('Add');
   }, [openForm]);
   const handleEditClick = useCallback(() => openForm('Edit'), [openForm]);
+
   const handleDeleteClick = useCallback(() => openForm('Delete'), [openForm]);
   const handleViewClick = useCallback(() => openForm('View'), [openForm]);
+  
   const handlePrintClick = useCallback(() => {
     if (!selectedRow) return;
-
-    printTbill(selectedRow.id);
+    printTbill({
+      id: selectedRow.id,
+      withrate: "N",
+    })
   }, [printTbill, selectedRow]);
 
   const handleApproveClick = useCallback(() => {

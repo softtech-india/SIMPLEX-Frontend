@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Popup } from "devextreme-react/popup";
 import { useQuery } from "@tanstack/react-query";
-import { useDirectSaleById, useCreateDirectSale, useUpdateDirectSale, useDeleteDirectSale, useApproveDirectSale } from "../hooks/useDirectSale";
+import { useDirectSaleById, useCreateDirectSale, useUpdateDirectSale, useDeleteDirectSale, useApproveDirectSale, usePrintSaleBill } from "../hooks/useDirectSale";
 import { DirectSaleFormType, OperationMode } from "../types/directSale.types";
 import { DirectSaleFormSchema } from "../schemas/directSale.schema";
 import { defaultItemDtl, directSaleFormDefaults } from "../constants/directSaleFormDefaults";
@@ -46,6 +46,7 @@ export function DirectSaleForm(
 ) {
 
   const { userId, companyId, branchId, finid } = useUserStore();
+  const { mutate: printSaleBill, isPending: isPrinting } = usePrintSaleBill();
 
   const { open } = useMasterModal();
 
@@ -720,6 +721,12 @@ export function DirectSaleForm(
           replace([]);
         });
         // onClose();
+
+        printSaleBill({
+          id: data.id || 0,
+          withrate: "Y",
+        })
+
         return;
       }
 
@@ -732,6 +739,10 @@ export function DirectSaleForm(
         onUpdated?.();
 
         onClose();
+        printSaleBill({
+          id: formDirectSaleId,
+          withrate: "Y",
+        })
       }
 
     } catch (error) {

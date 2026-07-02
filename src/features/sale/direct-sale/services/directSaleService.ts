@@ -177,7 +177,7 @@ class DirectSaleService {
     }
   }
 
-  async getSaleBillPrintById(id: number): Promise<Blob> {
+  async getSaleBillPrintById(id: number | undefined, withRate: string): Promise<Blob> {
     const token = localStorage.getItem("accessToken") || "";
     try {
       const response = await axios.get(
@@ -187,6 +187,7 @@ class DirectSaleService {
             userid: this.getUserId(),
             compid: this.getCompanyId(),
             billid: id,
+            withRate: withRate,
           },
           responseType: "blob",
           headers: {
