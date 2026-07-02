@@ -17,10 +17,10 @@ import { useWatch } from "react-hook-form";
 import { formatDateForInput } from "@/helpers/dateUtils";
 import SearchModal from "@/common/components/SearchModal";
 import { toast } from "sonner";
-import { LoadPanel } from "devextreme-react";
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { LOOKUP_KEYS } from "@/common/constants/lookupKeys";
 import { useLookupShortcuts } from "@/common/hooks/useLookupShortcuts";
+import Loader from "@/common/components/Loader";
 
 interface RequisitionFormProps {
   visible: boolean;
@@ -348,15 +348,15 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
         onSubmit={handleSubmit(handleFormSubmit, onError)}
         className="flex flex-col h-full"
       >
-        <div className="flex-1 overflow-y-auto p-2 space-y-2">
+        <div className="flex-1 overflow-y-auto p-1 space-y-1">
 
           {/* Requisition Info */}
-          <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
+          <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
             <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
               Requisition Information
             </h2>
 
-            <div className="flex flex-wrap gap-4 items-end">
+            <div className="flex flex-wrap gap-1 items-end">
               <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Series No.</label>
                 <FormSelect
@@ -412,12 +412,12 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
           </section>
 
           {/* Transfer Details */}
-          <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
+          <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
             <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
               Transfer Details
             </h2>
 
-            <div className="flex flex-wrap gap-4 items-end">
+            <div className="flex flex-wrap gap-1 items-end">
               <div className="w-98">
                 <label className="block text-gray-700 font-medium mb-1"> From Godown <span className="text-red-500"> * </span> </label>
                 <input
@@ -438,7 +438,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
                 {errors?.godownid && (<p className="text-xs text-red-500 mt-1">{errors.godownid.message}</p>)}
               </div>
 
-              <div className="w-102">
+              {/* <div className="w-102">
                 <label className="block text-gray-700 font-medium mb-1">  To Branch <span className="text-red-500"> * </span> </label>
                 <input
                   type="text"
@@ -456,6 +456,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
                 />
                 {errors?.tobranchid && (<p className="text-xs text-red-500 mt-1">{errors.tobranchid.message}</p>)}
               </div>
+              */}
 
               <div className="w-102">
                 <label className="block text-gray-700 font-medium mb-1"> To Godown <span className="text-red-500"> * </span> </label>
@@ -490,7 +491,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
           </section>
 
           {/* Item Details */}
-          <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
+          <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
             <div className="flex justify-between items-center">
               <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
                 Item Details
@@ -536,7 +537,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
               ))}
             </div>
 
-            <div className="flex flex-wrap gap-4 items-center border-t pt-3">
+            <div className="flex flex-wrap gap-1 items-center border-t-2 pt-1">
               <div className="w-96" />
               <div className="w-92" />
               <div className="w-28 relative">
@@ -554,17 +555,17 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
           </section>
 
           {/* Remarks */}
-          <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
+          <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
             <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
               Remarks
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
               <div>
                 <label className="block text-gray-700 font-medium mb-1">Remark 1</label>
                 <input
                   {...register("rem1")}
-                  placeholder="Remark 1"
+                  placeholder="Write remarks..."
                   disabled={isReadOnly}
                   className="inputField border-gray-400"
                 />
@@ -573,7 +574,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
                 <label className="block text-gray-700 font-medium mb-1">Remark 2</label>
                 <input
                   {...register("rem2")}
-                  placeholder="Remark 2"
+                  placeholder="Write remarks..."
                   disabled={isReadOnly}
                   className="inputField border-gray-400"
                 />
@@ -603,11 +604,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
           </button>
         </div>
 
-        <LoadPanel
-          shadingColor="rgba(0,0,0,0.4)"
-          visible={isSubmitting || isLoadingRequisition}
-          showIndicator
-        />
+        {isSubmitting || isLoadingRequisition && <Loader />}
 
         <SearchModal
           open={toBranchModalOpen}

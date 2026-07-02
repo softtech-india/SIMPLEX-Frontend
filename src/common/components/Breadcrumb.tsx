@@ -31,8 +31,8 @@ export default function Breadcrumb({
   if (isMobile) return null
 
   return (
-    <div className="bg-white border-b border-gray-200 px-3 py-2 transition-all duration-300">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+    <div className="bg-white border-b border-gray-200 px-3 py-1 transition-all duration-300">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
 
         {/* Left — Page Title */}
         <h1 className="text-sm md:text-md font-bold heading-primary">{title}</h1>

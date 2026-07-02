@@ -15,6 +15,7 @@ import { GodownTransferDataGrid } from './components/GodownTransferDataGrid';
 import { GodownTransferForm } from './components/GodownTransferForm';
 import { LoadPanel } from 'devextreme-react';
 import { useReactiveStorage } from '@/hooks/useReactiveStorage';
+import Loader from '@/common/components/Loader';
 
 
 export default function GodownTransferModule() {
@@ -215,11 +216,7 @@ export default function GodownTransferModule() {
           mode={formMode}
         />
 
-        <LoadPanel
-          shadingColor="rgba(0,0,0,0.4)"
-          visible={isLoading}
-          showIndicator
-        />
+        {isLoading && <Loader />}
 
       </div>
     </>

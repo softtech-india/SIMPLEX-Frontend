@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { PurchaseOrderDataGrid } from './components/PurchaseOrderDataGrid';
-import { PurchaseOrderForm } from './components/PurchaseOrderForm';
-import { usePurchaseOrderList } from './hooks/usePurchaseOrder';
-import { PurchaseOrder, OperationMode } from './types/purchaseOrder.types';
+import { PickListDataGrid } from './components/PickListDataGrid';
+import { PickListForm } from './components/PickListForm';
+import { usePickList } from './hooks/usePickList';
+import { PickList, OperationMode } from './types/pickList.types';
 import useIsMobile from "@/common/hooks/useIsMobile";
 import { TransactionToolbar } from '@/common/components/barmanager/TransactionToolbar';
 import { usePrivileges } from '@/common/hooks/usePrivileges';
@@ -17,7 +17,7 @@ import { useReactiveStorage } from '@/hooks/useReactiveStorage';
 import Loader from '@/common/components/Loader';
 
 
-export default function PurchaseOrderModule() {
+export default function PickListModule() {
 
   // Hooks
   const isMobile = useIsMobile()
@@ -25,20 +25,19 @@ export default function PurchaseOrderModule() {
   const { userId, companyId, branchId, finid, branchnm } = useUserStore();
 
   // State 
-  const [selectedRow, setselectedRow] = useState<PurchaseOrder | null>(null);
+  const [selectedRow, setselectedRow] = useState<PickList | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formMode, setFormMode] = useState<OperationMode>('Add');
-  const [formPurchaseOrderId, setFormPurchaseOrderId] = useState(0);
+  const [formPickListId, setFormPickListId] = useState(0);
   const [toolbarBranchId, setToolbarBranchId] = useState<string | null>(null);
   const [formSelectedBranch, setFormSelectedBranch] = useState<string | null>(null);
-  const [sidebarState, setSidebarState] = useReactiveStorage('sidebarCollapsed');
+
   const [fromDate, setFromDate] = useState<string | null>(currentDate);
   const [toDate, setToDate] = useState<string | null>(currentDate);
+  const [sidebarState, setSidebarState] = useReactiveStorage('sidebarCollapsed');
 
-  const isRowApproved = selectedRow?.aprvstatus === "A";
-
-  const { data: purchaseOrderList = [], isLoading, refetch } =
-    usePurchaseOrderList({
+  const { data: PickListList = [], isLoading, refetch } =
+    usePickList({
       userid: Number(userId),
       compid: Number(companyId),
       skip: 0,
@@ -48,12 +47,6 @@ export default function PurchaseOrderModule() {
       startdt: fromDate || "",
       enddt: toDate || "",
     });
-
-  // useEffect(() => {
-  //   console.log('branch :', toolbarBranchId);
-  //   console.log('fromDate :', fromDate);
-  //   console.log('toDate :', toDate);
-  // }, [toolbarBranchId, fromDate, toDate])
 
   // Fetch dropdown options
   const { data: BranchOrderOptions = [] } = useQuery({
@@ -82,10 +75,10 @@ export default function PurchaseOrderModule() {
     if (mode !== 'Add' && !selectedRow) return;
 
     if (mode === 'Add') {
-      setFormPurchaseOrderId(0);
+      setFormPickListId(0);
       setselectedRow(null);
     } else {
-      setFormPurchaseOrderId(selectedRow?.id ?? 0);
+      setFormPickListId(selectedRow?.id ?? 0);
     }
 
     setFormMode(mode);
@@ -94,7 +87,7 @@ export default function PurchaseOrderModule() {
 
   const handleFormClose = useCallback(() => {
     setIsFormOpen(false);
-    setFormPurchaseOrderId(0);
+    setFormPickListId(0);
   }, []);
 
   // Toolbar handlers
@@ -107,14 +100,10 @@ export default function PurchaseOrderModule() {
   const handleViewClick = useCallback(() => openForm('View'), [openForm]);
   const handlePrintClick = useCallback(() => openForm('Print'), [openForm]);
 
-  const handleApproveClick = useCallback(() => {
-    if (isRowApproved) return;
-    openForm("Approve");
-  }, [isRowApproved, openForm]);
 
   const handleRefresh = useCallback(() => {
     refetch();
-    setFormPurchaseOrderId(0);
+    setFormPickListId(0);
     setselectedRow(null);
     setToolbarBranchId(null);
     setFromDate(currentDate);
@@ -122,46 +111,41 @@ export default function PurchaseOrderModule() {
   }, [refetch]);
 
   const handleExport = useCallback(() => {
-    if (!purchaseOrderList || purchaseOrderList.length === 0) return;
+    if (!PickListList || PickListList.length === 0) return;
 
     // Generate columns dynamically from first row keys
-    const columns: ExcelColumn[] = Object.keys(purchaseOrderList[0]).map((key) => ({
+    const columns: ExcelColumn[] = Object.keys(PickListList[0]).map((key) => ({
       header: key.charAt(0).toUpperCase() + key.slice(1),
       key,
       width: 20,
     }));
 
     exportToExcel({
-      data: purchaseOrderList,
+      data: PickListList,
       columns,
-      fileName: "Purchase order List.xlsx",
-      sheetName: "Purchase order",
+      fileName: "Pick List List.xlsx",
+      sheetName: "Pick List",
     });
-  }, [purchaseOrderList]);
+  }, [PickListList]);
 
-  // useEffect(() => {
-  //   console.log("formSelectedBranch :", formSelectedBranch);
-  // }, [formSelectedBranch]);
 
   return (
     <>
-      <div className="purchase-order-module ">
+      <div className="Sale-order-module ">
 
         <div className="bg-white rounded-xl shadow-sm border mt-1">
 
           <TransactionToolbar
-            title="Purchse Orders"
+            title="Pick Lists"
             // periodTitle='Period: 2026-2027'
             permissions={permissions}
             onAdd={handleAddClick}
             onEdit={handleEditClick}
-            onApprove={handleApproveClick}
             onDelete={handleDeleteClick}
             onRefresh={handleRefresh}
             onView={handleViewClick}
             onPrint={handlePrintClick}
 
-            isRowApproved={isRowApproved}
 
             selectFromDate={{
               name: "fromDate",
@@ -206,8 +190,8 @@ export default function PurchaseOrderModule() {
           <div className={` ${sidebarState === '1' ? 'w-358' : 'w-294'} transition-all duration-300 ease-in-out 
            bg-white rounded-xl shadow-sm border border-gray-200 p-1 overflow-x-auto my-1 `}
           >
-            <PurchaseOrderDataGrid
-              dataSource={purchaseOrderList}
+            <PickListDataGrid
+              dataSource={PickListList}
               onSelectionChanged={handleSelectionChanged}
               showFilterRow
               showColumnChooser
@@ -219,14 +203,16 @@ export default function PurchaseOrderModule() {
         )}
 
 
-        <PurchaseOrderForm
-          visible={isFormOpen}
-          onClose={handleFormClose}
-          formPurchaseOrderId={formPurchaseOrderId}
-          formSelectedBranch={formSelectedBranch || branchnm}
-          toolbarBranchId={Number(toolbarBranchId) || Number(branchId)}
-          mode={formMode}
-        />
+        {isFormOpen && (
+          <PickListForm
+            visible={isFormOpen}
+            onClose={handleFormClose}
+            formPickListId={formPickListId}
+            formSelectedBranch={formSelectedBranch || branchnm}
+            toolbarBranchId={Number(toolbarBranchId) || Number(branchId)}
+            mode={formMode}
+          />
+        )}
 
         {isLoading && <Loader />}
 

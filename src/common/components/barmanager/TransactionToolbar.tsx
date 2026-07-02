@@ -169,10 +169,10 @@ export function TransactionToolbar({
 
   return (
     <div className="bg-blue-900 md:bg-white border md:border-gray-200 rounded-lg shadow-sm p-1">
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-1">
 
         {/* ACTIONS */}
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-1 flex-wrap">
           {canAdd && onAdd && (
             <button onClick={onAdd} className="secondary-btn">
               <Plus size={16} /> Add
@@ -287,7 +287,7 @@ export function TransactionToolbar({
         </div>
 
         {/* RIGHT SIDE  */}
-        <div className="flex items-center gap-3 ml-auto">
+        <div className="flex items-center gap-1 ml-auto">
 
           {periodTitle && (
             <span className="text-sm text-color">{periodTitle}</span>

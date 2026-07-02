@@ -1,10 +1,10 @@
 
 import { forwardRef } from 'react';
-import { DirectSale } from '../types/directSale.types';
+import { PickList } from '../types/pickList.types';
 import CustomDataGrid from '@/common/components/sharedComponents/CustomDataGrid';
 
-interface DirectSaleDataGridProps {
-  dataSource: DirectSale[];
+interface PickListDataGridProps {
+  dataSource: PickList[];
   onSelectionChanged: (e: any) => void;
   onExporting: (e: any) => void;
   showFilterRow?: boolean;
@@ -13,17 +13,16 @@ interface DirectSaleDataGridProps {
   height?: number | string;
 }
 
-export const DirectSaleDataGrid = forwardRef<any, DirectSaleDataGridProps>(
+export const PickListDataGrid = forwardRef<any, PickListDataGridProps>(
   ({ dataSource, onSelectionChanged, onExporting, height = 500 }, ref) => {
 
-    const columns = [
-      { dataField: "billno", caption: "Sale No.", width: 150, headerFilter: true },
-      { dataField: "billdt", caption: "Sale Date", dataType: "date", format: "dd-MM-yyyy", width: 120, },
-      { dataField: "customernm", caption: "Customer", width: 200, headerFilter: true },
-      { dataField: "qty1", caption: "Quantity", width: 80, headerFilter: true },
-      { dataField: "itemtval", caption: "Total Value", width: 100, headerFilter: true },
-      { dataField: "billamt", caption: "Sale Amount", width: 200, headerFilter: true },
-
+    const columns = [ // 
+      { dataField: "picklistno", caption: "Pick List No.", width: 150, headerFilter: true },
+      { dataField: "picklistdt", caption: "Pick List Date", dataType: "date", format: "dd-MM-yyyy", width: 120, },
+      { dataField: "transportername", caption: "Transporter", width: 200, headerFilter: true },
+      { dataField: "vehicleno", caption: "Vehicle No", width: 100, headerFilter: true },
+      { dataField: "qty", caption: "Quantity", width: 80, headerFilter: true },
+      { dataField: "narration", caption: "Narration", width: 200, headerFilter: true },
       { dataField: 'entryby', caption: 'Entry User', width: 120 },
       { dataField: 'entrydt', caption: 'Entry Date', width: 150, dataType: 'date' },
       { dataField: 'updateby', caption: 'Update User', width: 120 },
@@ -47,4 +46,4 @@ export const DirectSaleDataGrid = forwardRef<any, DirectSaleDataGridProps>(
   }
 );
 
-DirectSaleDataGrid.displayName = 'DirectSaleDataGrid';
+PickListDataGrid.displayName = 'PickListDataGrid';

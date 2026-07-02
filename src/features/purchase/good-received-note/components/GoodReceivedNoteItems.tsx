@@ -117,7 +117,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
   };
 
   return (
-    <div className="flex flex-wrap gap-4 items-end">
+    <div className="flex flex-wrap gap-1 items-end">
 
       <div className="w-60">
         <label className="block text-gray-700 text-sm font-medium mb-1">
@@ -241,7 +241,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
 
       {(mode !== 'Confirmed') && (
         <>
-          <div className="w-14">
+          <div className="w-20">
             <label className="block text-gray-700 text-sm font-medium mb-1">
               Bal. Qty.
             </label>

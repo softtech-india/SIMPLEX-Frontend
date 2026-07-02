@@ -19,7 +19,7 @@ export const RequisitionDataGrid = forwardRef<any, RequisitionDataGridProps>(
       { dataField: "reqno", caption: "Requisition No.", width: 150, headerFilter: true },
       { dataField: "reqdt", caption: "Date", dataType: "date", format: "dd-MM-yyyy", width: 100 },
 
-      { dataField: "tobranchnm", caption: "To Branch", width: 150, headerFilter: true },
+      // { dataField: "tobranchnm", caption: "To Branch", width: 150, headerFilter: true },
       { dataField: "togodownnm", caption: "To Godown", width: 120, headerFilter: true },
       { dataField: "totqty", caption: "Total Quantity", width: 100, headerFilter: true },
       { dataField: "reqstatusdesc", caption: "Status", width: 150, headerFilter: true },

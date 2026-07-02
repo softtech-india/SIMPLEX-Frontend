@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Popup } from "devextreme-react/popup";
-import LoadPanel from "devextreme-react/load-panel";
 import { useQuery } from "@tanstack/react-query";
 import { useDirectSaleById, useCreateDirectSale, useUpdateDirectSale, useDeleteDirectSale, useApproveDirectSale } from "../hooks/useDirectSale";
 import { DirectSaleFormType, OperationMode } from "../types/directSale.types";
@@ -29,6 +28,7 @@ import { useMasterModal } from "@/hooks/useMasterModal";
 import { getFormErrorMessage } from "@/helpers/formErrorMessage";
 import { useLookupShortcuts } from "@/common/hooks/useLookupShortcuts";
 import { LOOKUP_KEYS } from "@/common/constants/lookupKeys";
+import Loader from "@/common/components/Loader";
 
 interface DirectSaleFormProps {
   visible: boolean;
@@ -790,13 +790,13 @@ export function DirectSaleForm(
           onSubmit={handleSubmit(handleFormSubmit, onError)}
           className="flex flex-col h-full"
         >
-          <div className="flex-1 overflow-y-auto p-2 space-y-2">
+          <div className="flex-1 overflow-y-auto p-1 space-y-1">
 
-            <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
+            <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
 
               <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50"> Sale Information </h2>
 
-              <div className="flex flex-wrap gap-4 items-end">
+              <div className="flex flex-wrap gap-1 items-end">
 
                 <div className="w-48">
                   <label className="block text-gray-700 font-medium mb-1">Series No.</label>
@@ -818,7 +818,7 @@ export function DirectSaleForm(
                 </div>
 
                 <div className="w-48">
-                  <label className="block text-gray-700 font-medium mb-1">Bill Date</label>
+                  <label className="block text-gray-700 font-medium mb-1">Sale Date</label>
                   <input
                     type="date"
                     {...register("billdt")}
@@ -828,7 +828,7 @@ export function DirectSaleForm(
                 </div>
 
                 <div className="w-48">
-                  <label className="block text-gray-700 font-medium mb-1">Bill No</label>
+                  <label className="block text-gray-700 font-medium mb-1">Sale No</label>
                   <input
                     type="text"
                     {...register("billno")}
@@ -1247,7 +1247,7 @@ export function DirectSaleForm(
           </div>
 
           {/* Footer */}
-          <div className="border-t p-2 flex justify-end gap-4 bg-gray-50">
+          <div className="border-t p-1 flex justify-end gap-1 bg-gray-50">
             {(mode !== "View" && mode !== "Print") && (
               <button
                 type="submit"
@@ -1267,11 +1267,7 @@ export function DirectSaleForm(
             </button>
           </div>
 
-          <LoadPanel
-            shadingColor="rgba(0,0,0,0.4)"
-            visible={isSubmitting || isLoadingDirectSale}
-            showIndicator
-          />
+          {isSubmitting || isLoadingDirectSale && <Loader />}
 
         </form >
 

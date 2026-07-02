@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Popup } from "devextreme-react/popup";
-import LoadPanel from "devextreme-react/load-panel";
 import { useQuery } from "@tanstack/react-query";
 import { useSaleOrderById, useCreateSaleOrder, useUpdateSaleOrder, useDeleteSaleOrder, useApproveSaleOrder } from "../hooks/useSaleOrder";
 import { SaleOrderFormType, OperationMode } from "../types/saleOrder.types";
@@ -22,6 +21,7 @@ import { useConfirm } from "@/common/hooks/useConfirm";
 import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
 import { SHORTCUTS } from "@/common/constants/shortcuts";
 import { useSaleQrScanner } from "@/hooks/useSaleQrScanner";
+import Loader from "@/common/components/Loader";
 
 interface SaleOrderFormProps {
   visible: boolean;
@@ -363,8 +363,8 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
     try {
       if (isDeleteMode) {
         const ok = await confirmDelete({
-          title: "Delete Sale Order",
-          message: "Are you sure you want to delete this Sale Order?",
+          title: "Delete T-Bill",
+          message: "Are you sure you want to delete this T-Bill?",
         });
 
         if (!ok) return;
@@ -402,7 +402,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
         requestAnimationFrame(() => {
           replace([]);
         });
-        toast.success("Sale Order created successfully");
+        // toast.success("T-Bill created successfully");
         // onClose(); // Optionally close after successful creation
         return;
       }
@@ -464,7 +464,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
     <Popup
       visible={visible}
       onHiding={onClose}
-      title={`${mode} Sale Order`}
+      title={`${mode} T-Bill`}
       width="90vw"
       height="90vh"
       dragEnabled
@@ -480,7 +480,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
 
           <section className="border rounded-md p-1 shadow-sm bg-white space-y-3">
 
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50"> Sale Order Information </h2>
+            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50"> T-Bill Information </h2>
 
             <div className="flex flex-wrap gap-1 items-end">
 
@@ -504,7 +504,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Order Date</label>
+                <label className="block text-gray-700 font-medium mb-1">T-Bill Date</label>
                 <input
                   type="date"
                   {...register("orderdt")}
@@ -514,7 +514,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Order No</label>
+                <label className="block text-gray-700 font-medium mb-1">T-Bill No</label>
                 <input
                   type="text"
                   {...register("orderno")}
@@ -788,11 +788,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
           </button>
         </div>
 
-        <LoadPanel
-          shadingColor="rgba(0,0,0,0.4)"
-          visible={isSubmitting || isLoadingSaleOrder}
-          showIndicator
-        />
+        {isSubmitting || isLoadingSaleOrder && <Loader />}
 
       </form>
 
