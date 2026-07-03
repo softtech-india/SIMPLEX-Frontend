@@ -168,14 +168,29 @@ export function useDeleteSaleOrder() {
 export function usePrintTbill() {
   return useMutation({
     mutationFn: async (
-      { id, withrate, }: { id: string | number ; withrate: string; }
+      { id, withrate, }: { id: string | number; withrate: string; }
     ) => {
+
+
+      // Client-side validation
+      if (
+        id === undefined ||
+        id === null ||
+        id === "" ||
+        Number(id) === 0
+      ) {
+        throw new Error("Sale Order ID must be greater than 0.");
+      }
+
       const blob = await saleOrderService.getTbillPrintById(id, withrate);
 
       const url = URL.createObjectURL(blob);
       const tab = window.open(url, "_blank");
 
-      if (!tab) throw new Error("Popup blocked");
+      if (!tab) {
+        URL.revokeObjectURL(url);
+        throw new Error("Popup blocked. Please allow popups and try again.");
+      }
 
       const interval = setInterval(() => {
         try {

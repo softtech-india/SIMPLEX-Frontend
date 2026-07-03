@@ -81,12 +81,12 @@ export function useCreateRequisition() {
       requisitionService.createRequisition(data),
 
     onSuccess: (data) => {
-      if (data.success) {
-        queryClient.invalidateQueries({ queryKey: REQUISITION_KEYS.list() });
-        toast.success(data.message);
-      } else {
-        toast.error(data.message || "Failed to create requisition order");
+      if (!data.success) {
+        toast.error(data.message); return;
       }
+      toast.success(data.message);
+      queryClient.invalidateQueries({ queryKey: REQUISITION_KEYS.list() });
+
     },
 
     onError: (err: Error) => {
@@ -94,7 +94,6 @@ export function useCreateRequisition() {
     },
   });
 }
-
 
 export function useUpdateRequisition() {
   const queryClient = useQueryClient();
@@ -104,14 +103,13 @@ export function useUpdateRequisition() {
       requisitionService.updateRequisition(id, data),
 
     onSuccess: (data) => {
-      if (data.success) {
-        queryClient.invalidateQueries({ queryKey: REQUISITION_KEYS.list() });
-        queryClient.invalidateQueries({ queryKey: REQUISITION_KEYS.details() });
-
-        toast.success(data.message);
-      } else {
-        toast.error(data.message || "Failed to update requisition order");
+      if (!data.success) {
+        toast.error(data.message); return;
       }
+      toast.success(data.message);
+      queryClient.invalidateQueries({ queryKey: REQUISITION_KEYS.list() });
+      queryClient.invalidateQueries({ queryKey: REQUISITION_KEYS.details() });
+
     },
 
     onError: (err: Error) => {
@@ -120,18 +118,22 @@ export function useUpdateRequisition() {
   });
 }
 
-
 export const useDeleteRequisition = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => requisitionService.deleteRequisition(id),
+    mutationFn: (params: {
+      id: number;
+    }) => requisitionService.deleteRequisition(params),
 
     onSuccess: (data: any) => {
+
+      if (!data.success) {
+        toast.error(data.message || "Failed to update Delivery Challan"); return;
+      }
+      toast.success(data.message);
       queryClient.invalidateQueries({ queryKey: REQUISITION_KEYS.list() });
-      // Handle both response structures
-      const successMessage = data?.message || data?.data?.message || "Requisition deleted successfully";
-      toast.success(successMessage);
+
     },
 
     onError: (err: Error) => {
@@ -142,7 +144,15 @@ export const useDeleteRequisition = () => {
 
 export function usePrintRequisition() {
   return useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (id: string | number | undefined) => {
+
+      if (
+        id === undefined ||
+        id === null ||
+        Number(id) === 0
+      ) {
+        throw new Error("Sale Order ID must be greater than 0.");
+      }
       const blob = await requisitionService.getRequisitionPrintById(id);
 
       const url = URL.createObjectURL(blob);

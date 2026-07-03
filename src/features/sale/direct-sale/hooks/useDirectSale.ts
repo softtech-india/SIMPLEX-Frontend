@@ -170,6 +170,16 @@ export function usePrintSaleBill() {
     mutationFn: async (
       { id, withrate, }: { id: string | number; withrate: string; }
     ) => {
+
+      if (
+        id === undefined ||
+        id === null ||
+        id === "" ||
+        Number(id) === 0
+      ) {
+        throw new Error("Sale Order ID must be greater than 0.");
+      }
+
       const blob = await directSaleService.getSaleBillPrintById(id, withrate);
 
       const url = URL.createObjectURL(blob);

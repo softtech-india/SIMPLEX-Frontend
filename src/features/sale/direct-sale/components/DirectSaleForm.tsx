@@ -718,6 +718,7 @@ export function DirectSaleForm(
       createMutation.mutate(payload, {
         onSuccess: (data) => {
           if (!data?.success) return;
+          const saleId = Number(data.id);
 
           reset({
             ...directSaleFormDefaults,
@@ -730,10 +731,18 @@ export function DirectSaleForm(
           });
           // onClose();
 
-          printSaleBill({
-            id: data.id || 0,
-            withrate: "Y",
-          })
+          if (saleId > 0) {
+            printSaleBill({
+              id: saleId,
+              withrate: "Y",
+            });
+          } else {
+            toast.error("Invalid Sale Order ID. Unable to print.");
+          }
+          // printSaleBill({
+          //   id: data.id || 0,
+          //   withrate: "Y",
+          // })
         },
       });
       return;
@@ -747,15 +756,24 @@ export function DirectSaleForm(
         {
           onSuccess: (data) => {
             if (!data?.success) return;
-
+            const saleId = Number(formDirectSaleId);
             onUpdated?.();
 
             onClose();
 
-            printSaleBill({
-              id: formDirectSaleId,
-              withrate: "Y",
-            })
+            if (saleId > 0) {
+              printSaleBill({
+                id: saleId,
+                withrate: "Y",
+              });
+            } else {
+              toast.error("Invalid Sale Order ID. Unable to print.");
+            }
+
+            // printSaleBill({
+            //   id: formDirectSaleId,
+            //   withrate: "Y",
+            // })
 
           },
         }

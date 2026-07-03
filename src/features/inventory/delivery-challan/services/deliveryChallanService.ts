@@ -25,20 +25,18 @@ class DeliveryChallanService {
   private getUserId = (): string => this.getFromStorage("userId");
   private getCompanyId = (): string => this.getFromStorage("companyId");
 
-  private validateResponse(
-    response: DeliveryChallanApiResponse
-  ): DeliveryChallanApiResponse {
+  private validateResponse(response: DeliveryChallanApiResponse): DeliveryChallanApiResponse {
     if (!response) {
       return {
         success: false,
         message: "No response from server",
         data: [],
+        id: '',
       };
     }
 
     return response;
   }
-
 
   // SO Picked product list
   async fetchSoPickedProductList({
@@ -102,10 +100,7 @@ class DeliveryChallanService {
 
       return deliveryChallan;
     } catch (error: any) {
-      console.error(
-        `Error fetching Delivery Challan with id ${params.id}:`,
-        error
-      );
+      console.error(`Error fetching Delivery Challan with id ${params.id}:`, error);
       throw new Error(getErrorMessage(error));
     }
   }
@@ -148,10 +143,7 @@ class DeliveryChallanService {
 
       return this.validateResponse(response);
     } catch (error: any) {
-      console.error(
-        `Error updating Delivery Challan with id ${id}:`,
-        error
-      );
+      console.error(`Error updating Delivery Challan with id ${id}:`, error);
       throw new Error(getErrorMessage(error));
     }
   }
@@ -169,10 +161,7 @@ class DeliveryChallanService {
 
       return this.validateResponse(response);
     } catch (error: any) {
-      console.error(
-        `Error deleting Delivery Challan with id ${params.id}:`,
-        error
-      );
+      console.error(`Error deleting Delivery Challan with id ${params.id}:`, error);
       throw new Error(getErrorMessage(error));
     }
   }
@@ -180,6 +169,16 @@ class DeliveryChallanService {
   async getDeliveryChallanPrintById(id: number): Promise<Blob> {
     const token = localStorage.getItem("accessToken") || "";
     try {
+
+      if (
+        id === undefined ||
+        id === null ||
+        Number(id) === 0
+      ) {
+        throw new Error("Sale ID must be greater than 0.");
+      }
+
+
       const response = await axios.get(
         `${this.baseUrl}dc/print/pdf`,
         {

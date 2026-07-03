@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Popup } from "devextreme-react/popup";
 import { useQuery } from "@tanstack/react-query";
-import { useDeliveryChallanById, useCreateDeliveryChallan, useUpdateDeliveryChallan, useDeleteDeliveryChallan, useSoPackedProductList, } from "../hooks/useDeliveryChallan";
+import { useDeliveryChallanById, useCreateDeliveryChallan, useUpdateDeliveryChallan, useDeleteDeliveryChallan, useSoPackedProductList, usePrintDeliveryChallan, } from "../hooks/useDeliveryChallan";
 import { DeliveryChallanFormType, OperationMode, DeliveryChallanItem } from "../types/deliveryChallan.types";
 import { DeliveryChallanFormSchema } from "../schemas/deliveryChallan.schema";
 import { DeliveryChallanFormDefaults } from "../constants/deliveryChallanFormDefaults";
@@ -21,6 +21,7 @@ import { SHORTCUTS } from "@/common/constants/shortcuts";
 import MultipleSearchModal from "@/common/components/MultipleSearchModal";
 import SearchModal from "@/common/components/SearchModal";
 import Loader from "@/common/components/Loader";
+import { toast } from "sonner";
 
 interface DeliveryChallanFormProps {
   visible: boolean;
@@ -34,14 +35,15 @@ interface DeliveryChallanFormProps {
 
 export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, mode, formSelectedBranch, toolbarBranchId }: DeliveryChallanFormProps) {
 
+  // Hooks
   const {
     userId, companyId, branchId, finid,
   } = useUserStore();
 
   const confirmDelete = useConfirm();
+  const { mutate: printDeliveryChallan, isPending: isPrinting } = usePrintDeliveryChallan();
 
   const formRef = useRef<HTMLFormElement>(null);
-
   const [godownModalOpen, setGodownModalOpen] = useState(false);
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
   const [picklistModalOpen, setPicklistModalOpen] = useState(false);
@@ -106,11 +108,17 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
         dcdt: DeliveryChallan.dcdt ? formatDateForInput(DeliveryChallan.dcdt) : "",
         dcno: DeliveryChallan.dcno ?? "",
 
+        customerid: DeliveryChallan.customerid ?? 0,
+        customernm: DeliveryChallan.customernm ?? "",
+
         godownid: DeliveryChallan.godownid ?? 0,
         godownnm: DeliveryChallan.godownnm ?? "",
 
-        qty: Number(DeliveryChallan.qty ?? 0),
+        orderid: DeliveryChallan.orderid ?? 0,
+        picklistid: DeliveryChallan.picklistid ?? 0,
+        picklistno: DeliveryChallan.picklistno ?? "",
 
+        qty: Number(DeliveryChallan.qty ?? 0),
 
         itemdtl:
           DeliveryChallan.itemdtl?.map((item, index) => ({
@@ -120,6 +128,8 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
             productid: Number(item.productid ?? 0),
             productnm: item.productnm ?? "",
             qty: Number(item.qty ?? 0),
+            rate: Number(item.rate ?? 0),
+            value: Number(item.qty ?? 0),
             unit: item.unit ?? "",
           })) ?? [],
       });
@@ -232,11 +242,11 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
     console.log('Picklist Row :', row)
     setValue("orderid", row.id);
     setValue("picklistid", row.picklistid);
-    setValue("picklistnm", row.picklistno);
+    setValue("picklistno", row.picklistno);
     setPicklistModalOpen(false);
   };
 
-  const PicklistName = watch("picklistnm")
+  const PicklistName = watch("picklistno")
 
   // Query
   const { data: SoPackedProductData } = useSoPackedProductList({
@@ -354,11 +364,18 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
     };
 
     if (isAddMode) {
-      console.log("FINAL SUBMIT PAYLOAD:", JSON.stringify(payload, null, 2));
       createMutation.mutate(payload, {
         onSuccess: (data) => {
           if (!data?.success) return;
           reset(DeliveryChallanFormDefaults);
+
+          const dcId = Number(data.id);
+
+          if (dcId > 0) {
+            printDeliveryChallan(dcId);
+          } else {
+            toast.error("Invalid requisition ID. Unable to print.");
+          }
         },
       });
       return;
@@ -373,6 +390,13 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
           onSuccess: (data) => {
             if (!data?.success) return;
             onClose()
+            const dcId = Number(data.id);
+
+            if (dcId > 0) {
+              printDeliveryChallan(dcId);
+            } else {
+              toast.error("Invalid requisition ID. Unable to print.");
+            }
           },
         }
       );
@@ -507,7 +531,7 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
                 <label className="block text-gray-700 font-medium mb-1"> Customer <strong className="text-red-500"> * </strong> </label>
                 <input
                   type="text"
-                  value={customerName || ''}
+                  value={customerName}
                   disabled={isReadOnly}
                   readOnly
                   onKeyDown={(e) => handleKeyOpen(e, () => setCustomerModalOpen(true))}

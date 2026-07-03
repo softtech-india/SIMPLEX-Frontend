@@ -23,7 +23,6 @@ export default function DeliveryChallanModule() {
   const isMobile = useIsMobile()
   const permissions = usePrivileges();
   const { userId, companyId, branchId, finid, branchnm } = useUserStore();
-
   const { mutate: printDeliveryChallan, isPending: isPrinting } = usePrintDeliveryChallan();
 
   // State 

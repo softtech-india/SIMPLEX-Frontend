@@ -30,7 +30,7 @@ class SaleOrderService {
         success: false,
         message: "No response from server",
         data: [],
-        id: 0,
+        id: '',
       };
     }
     return response;
@@ -142,23 +142,20 @@ class SaleOrderService {
     }
   }
 
-  async approveSaleOrder(data: SaleOrderFormType): Promise<SaleOrderApiResponse> {
-    try {
-      const response = await apiCall.put<SaleOrderApiResponse>(
-        `${this.baseUrl}so/approve`,
-        data,
-        { userid: this.getUserId() }
-      );
+  async getTbillPrintById(
+    id: string | number | undefined, withrate: string
+  ): Promise<Blob> {
 
-      return this.validateResponse(response);
-
-    } catch (error: any) {
-      console.error("Error creating Sale Order:", error);
-      throw new Error(getErrorMessage(error));
+    if (
+      id === undefined ||
+      id === null ||
+      id === "" ||
+      Number(id) === 0
+    ) {
+      throw new Error("Sale ID must be greater than 0.");
     }
-  }
 
-  async getTbillPrintById(id: string | number | undefined, withrate: string): Promise<Blob> {
+
     const token = localStorage.getItem("accessToken") || "";
     try {
       const response = await axios.get(
@@ -180,7 +177,46 @@ class SaleOrderService {
       return response.data;
 
     } catch (error: any) {
-      console.error("Error fetching Delivery Challan print:", error);
+      console.error("Error fetching Sale Order print:", error);
+
+      // Handle backend validation/error response
+      if (error.response) {
+        if (error.response.data instanceof Blob) {
+          try {
+            const text = await error.response.data.text();
+            const json = JSON.parse(text);
+
+            throw new Error(
+              json.message ||
+              json.error ||
+              "Failed to generate Sale Order PDF."
+            );
+          } catch {
+            throw new Error("Failed to generate Sale Order PDF.");
+          }
+        }
+
+        throw new Error(
+          error.response.data?.message || "Failed to generate Sale Order PDF."
+        );
+      }
+
+      throw new Error(getErrorMessage(error));
+    }
+  }
+
+  async approveSaleOrder(data: SaleOrderFormType): Promise<SaleOrderApiResponse> {
+    try {
+      const response = await apiCall.put<SaleOrderApiResponse>(
+        `${this.baseUrl}so/approve`,
+        data,
+        { userid: this.getUserId() }
+      );
+
+      return this.validateResponse(response);
+
+    } catch (error: any) {
+      console.error("Error creating Sale Order:", error);
       throw new Error(getErrorMessage(error));
     }
   }

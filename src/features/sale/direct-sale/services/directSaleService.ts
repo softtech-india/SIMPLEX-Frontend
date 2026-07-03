@@ -165,6 +165,17 @@ class DirectSaleService {
   ): Promise<Blob> {
     const token = localStorage.getItem("accessToken") || "";
     try {
+
+      if (
+        id === undefined ||
+        id === null ||
+        id === "" ||
+        Number(id) === 0
+      ) {
+        throw new Error("Sale ID must be greater than 0.");
+      }
+
+
       const response = await axios.get(
         `${this.baseUrl}sale/print/pdf`,
         {

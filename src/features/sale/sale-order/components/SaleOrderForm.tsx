@@ -21,6 +21,7 @@ import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
 import { SHORTCUTS } from "@/common/constants/shortcuts";
 import { useSaleQrScanner } from "@/hooks/useSaleQrScanner";
 import Loader from "@/common/components/Loader";
+import { toast } from "sonner";
 
 interface SaleOrderFormProps {
   visible: boolean;
@@ -411,12 +412,22 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
           requestAnimationFrame(() => {
             replace([]);
           });
-         // onClose();
+          // onClose();
 
-          printTbill({
-            id: data.id || 0,
-            withrate: "Y",
-          })
+          const saleOrderId = Number(data.id);
+
+          if (saleOrderId > 0) {
+            printTbill({
+              id: saleOrderId,
+              withrate: "Y",
+            });
+          } else {
+            toast.error("Invalid Sale Order ID. Unable to print.");
+          }
+          // printTbill({
+          //   id: data.id || 0,
+          //   withrate: "Y",
+          // })
         },
       });
       return;
@@ -430,15 +441,20 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
         {
           onSuccess: (data) => {
             if (!data?.success) return;
+            const saleOrderId = Number(formSaleOrderId);
 
             onUpdated?.();
 
             onClose();
 
-            printTbill({
-              id: formSaleOrderId,
-              withrate: "Y",
-            })
+            if (saleOrderId > 0) {
+              printTbill({
+                id: saleOrderId,
+                withrate: "Y",
+              });
+            } else {
+              toast.error("Invalid Sale Order ID. Unable to print.");
+            }
 
           },
         }

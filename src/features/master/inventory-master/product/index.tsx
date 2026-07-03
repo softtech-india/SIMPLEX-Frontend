@@ -110,10 +110,10 @@ export default function ProductModule() {
     pdf.rect(6, 6, 90, 68);
 
     // Font
-    pdf.setFontSize(10);
+    pdf.setFontSize(16);
 
     const labelX = 10;
-    const valueX = 25;
+    const valueX = 30;
 
     // Labels
     pdf.setFont("helvetica", "bold");
@@ -121,13 +121,13 @@ export default function ProductModule() {
     pdf.text("Brand :", labelX, 18);
     pdf.text("Code :", labelX, 24);
 
-    // Values categorynm
+    // Values 
     pdf.setFont("helvetica", "normal");
-    pdf.text(row.productname || "-", valueX, 12);
-    pdf.text(row.categorynm || "-", valueX, 18);
-    pdf.text(row.productcode || "-", valueX, 24);
+    pdf.text(`${row.productname }`|| "-", valueX, 12);
+    pdf.text(`${row.categorynm }` || "-", valueX, 18);
+    pdf.text(`${row.productcode }`|| "-", valueX, 24);
 
-    // QR Code (centered)
+    // QR Code (cente` ${row.productname }` red)
     pdf.addImage(
       base64,
       "PNG",
