@@ -1,7 +1,8 @@
 import { apiCall } from "@/utils/apiClient";
 import { Requisition, RequisitionFormType, RequisitionApiResponse } from '../types/requisition.types';
-import { toast } from "sonner";
 import { storageService } from "@/common/utility/storageService";
+import axios from "axios";
+import { getErrorMessage } from "@/helpers/getErrorMessage";
 
 export interface GetRequisitionParams {
   userid: number;
@@ -15,7 +16,9 @@ export interface GetRequisitionParams {
 }
 
 class RequisitionService {
+
   private readonly baseUrl = process.env.NEXT_PUBLIC_PROJECT_API_ENDPOINT;
+
   private getFromStorage = (key: string): string => {
     return storageService.getItem(key) || "";
   };
@@ -23,21 +26,17 @@ class RequisitionService {
   private getUserId = (): string => this.getFromStorage("userId");
   private getCompanyId = (): string => this.getFromStorage("companyId");
 
-  private handleError(response: RequisitionApiResponse): boolean {
+  private validateResponse(response: RequisitionApiResponse): RequisitionApiResponse {
     if (!response) {
-      toast.error("No response from server");
-      return false;
+      return {
+        success: false,
+        message: "No response from server",
+        data: [],
+        id: '',
+      };
     }
 
-    if (!response.success) {
-      const message = response.message || "Something went wrong";
-
-      toast.error(message);
-
-      return false;
-    }
-
-    return true;
+    return response;
   }
 
   async getAllGodowns(branchId: number): Promise<any[]> {
@@ -49,8 +48,7 @@ class RequisitionService {
       return response || [];
     } catch (error: any) {
       console.error("Error fetching godown:", error);
-      toast.error(error.message || "Failed to fetch godown");
-      throw error;
+      throw new Error(getErrorMessage(error));
     }
   }
 
@@ -63,26 +61,21 @@ class RequisitionService {
       return response || [];
     } catch (error: any) {
       console.error("Error fetching branches:", error);
-      toast.error(error.message || "Failed to fetch branches");
-      throw error;
+      throw new Error(getErrorMessage(error));
     }
   }
 
-  async getAllRequisitions(
-    params: GetRequisitionParams
-  ): Promise<Requisition[]> {
+  async getAllRequisitions(params: GetRequisitionParams): Promise<Requisition[]> {
     try {
       const response = await apiCall.get<RequisitionApiResponse>(
         `${this.baseUrl}requisition`,
         params
       );
 
-      //   this.handleError(response);
       return response.data || [];
     } catch (error: any) {
       console.error("Error fetching purchase orders:", error);
-      toast.error(error.message || "Failed to fetch purchase orders");
-      throw error;
+      throw new Error(getErrorMessage(error));
     }
   }
 
@@ -102,19 +95,25 @@ class RequisitionService {
         params
       );
 
-      this.handleError(response);
+      const handledResponse = this.validateResponse(response);
 
-      const purchaseOrder = response.data?.[0];
-      if (!purchaseOrder) throw new Error("Purchase order not found");
+      if (!handledResponse.success) {
+        throw new Error(
+          handledResponse.message || "Failed to fetch requisition"
+        );
+      }
 
-      return purchaseOrder;
+      const requisition = handledResponse.data?.[0];
+
+      if (!requisition) {
+        throw new Error("requisition not found");
+      }
+
+      return requisition;
 
     } catch (error: any) {
-      const message =
-        error instanceof Error ? error.message : String(error);
-
-      toast.error(`Error fetching purchase order: ${message}`);
-      throw new Error(message);
+      console.error(`Error fetching requisition with id ${params.id}:`, error);
+      throw new Error(getErrorMessage(error));
     }
   }
 
@@ -126,14 +125,11 @@ class RequisitionService {
         { userid: this.getUserId() }
       );
 
-      this.handleError(response);
-
-      return response;
+      return this.validateResponse(response);
 
     } catch (error: any) {
-      console.error("Error creating purchaseOrder:", error);
-      toast.error(error.message || "Failed to create purchaseOrder");
-      throw error;
+      console.error("Error creating requisition:", error);
+      throw new Error(getErrorMessage(error));
     }
   }
 
@@ -145,35 +141,81 @@ class RequisitionService {
         { userid: this.getUserId(), compid: this.getCompanyId() }
       );
 
-      this.handleError(response);
-
-      if (!response) throw new Error("response not found at updatepurchaseOrder");
-
-      return response;
+      return this.validateResponse(response);
 
     } catch (error: any) {
-      console.error(`Error updating purchaseOrder with id ${id}:`, error);
-      toast.error(error.message || "Failed to update purchaseOrder");
-      throw error;
+      console.error(`Error updating requisition with id ${id}:`, error);
+      throw new Error(getErrorMessage(error));;
     }
   }
 
-  async deleteRequisition(id: number): Promise<void> {
+  // async deleteRequisition(id: number): Promise<RequisitionApiResponse> {
+  //   try {
+  //     const response = await apiCall.delete<RequisitionApiResponse>(
+  //       `${this.baseUrl}requisition`,
+  //       { userid: this.getUserId(), compid: this.getCompanyId(), id }
+  //     );
+
+  //     return this.validateResponse(response);
+
+  //   } catch (error: any) {
+  //     console.error(`Error deleting requisition with id ${id}:`, error);
+  //     throw new Error(getErrorMessage(error));
+  //   }
+  // }
+
+  async deleteRequisition(params: {
+    id: number;
+  }): Promise<RequisitionApiResponse> {
     try {
       const response = await apiCall.delete<RequisitionApiResponse>(
         `${this.baseUrl}requisition`,
-        { userid: this.getUserId(), compid: this.getCompanyId(), id }
+        params
       );
 
-      this.handleError(response);
-
+      return this.validateResponse(response);
     } catch (error: any) {
-      console.error(`Error deleting purchaseOrder with id ${id}:`, error);
-      toast.error(error.message || "Failed to delete purchaseOrder");
-      throw error;
+      console.error(
+        `Error deleting requisition with id ${params.id}:`,
+        error
+      );
+      throw new Error(getErrorMessage(error));
     }
   }
 
+  async getRequisitionPrintById(id: string | number ): Promise<Blob> {
+    const token = localStorage.getItem("accessToken") || "";
+    try {
+
+      if (
+        id === undefined ||
+        id === null ||
+        Number(id) === 0
+      ) {
+        throw new Error("Sale Order ID must be greater than 0.");
+      }
+      const response = await axios.get(
+        `${this.baseUrl}requisition/print/pdf`,
+        {
+          params: {
+            userid: this.getUserId(),
+            compid: this.getCompanyId(),
+            id: id,
+          },
+          responseType: "blob",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+
+    } catch (error: any) {
+      console.error("Error fetching requisition print:", error);
+      throw new Error(getErrorMessage(error));
+    }
+  }
 
 
 }

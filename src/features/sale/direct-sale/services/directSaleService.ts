@@ -1,8 +1,8 @@
 import { apiCall } from "@/utils/apiClient";
-import { DirectSale, DirectSaleFormType, DirectSaleApiResponse } from '../types/directSale.types';
-import { toast } from "sonner";
-import { storageService } from "@/common/utility/storageService";
 import axios from "axios";
+import { DirectSale, DirectSaleFormType, DirectSaleApiResponse } from '../types/directSale.types';
+import { storageService } from "@/common/utility/storageService";
+import { getErrorMessage } from "@/helpers/getErrorMessage";
 
 export interface GetDirectSaleParams {
   userid: number;
@@ -16,7 +16,9 @@ export interface GetDirectSaleParams {
 }
 
 class DirectSaleService {
+
   private readonly baseUrl = process.env.NEXT_PUBLIC_PROJECT_API_ENDPOINT;
+
   private getFromStorage = (key: string): string => {
     return storageService.getItem(key) || "";
   };
@@ -24,22 +26,18 @@ class DirectSaleService {
   private getUserId = (): string => this.getFromStorage("userId");
   private getCompanyId = (): string => this.getFromStorage("companyId");
 
-  private handleError(response: DirectSaleApiResponse): boolean {
+  private validateResponse(response: DirectSaleApiResponse): DirectSaleApiResponse {
     if (!response) {
-      toast.error("No response from server");
-      return false;
+      return {
+        success: false,
+        message: "No response from server",
+        data: [],
+        id: 0,
+      };
     }
-
-    if (!response.success) {
-      const message = response.message || "Something went wrong";
-
-      toast.error(message);
-
-      return false;
-    }
-
-    return true;
+    return response;
   }
+
 
   async getAllDirectSales(
     params: GetDirectSaleParams
@@ -50,12 +48,10 @@ class DirectSaleService {
         params
       );
 
-      //   this.handleError(response);
       return response.data || [];
     } catch (error: any) {
       console.error("Error fetching Direct Sales:", error);
-      toast.error(error.message || "Failed to fetch Direct Sales");
-      throw error;
+      throw new Error(getErrorMessage(error));
     }
   }
 
@@ -75,19 +71,20 @@ class DirectSaleService {
         params
       );
 
-      this.handleError(response);
+      const handledResponse = this.validateResponse(response);
 
-      const DirectSale = response.data?.[0];
-      if (!DirectSale) throw new Error("Direct Sale not found");
+      if (!handledResponse.success) {
+        throw new Error(handledResponse.message || "Failed to fetch entry");
+      }
+
+      const DirectSale = handledResponse.data?.[0];
+      if (!DirectSale) throw new Error("DirectSale not found");
 
       return DirectSale;
 
     } catch (error: any) {
-      const message =
-        error instanceof Error ? error.message : String(error);
-
-      toast.error(`Error fetching Direct Sale: ${message}`);
-      throw new Error(message);
+      console.log(`Error fetching sale list with id ${params.id} : ${error}`);
+      throw new Error(getErrorMessage(error));
     }
   }
 
@@ -99,14 +96,11 @@ class DirectSaleService {
         { userid: this.getUserId() }
       );
 
-      this.handleError(response);
-
-      return response;
+      return this.validateResponse(response);
 
     } catch (error: any) {
       console.error("Error creating Direct Sale:", error);
-      toast.error(error.message || "Failed to create Direct Sale");
-      throw error;
+      throw new Error(getErrorMessage(error));
     }
   }
 
@@ -118,16 +112,11 @@ class DirectSaleService {
         { userid: this.getUserId(), compid: this.getCompanyId() }
       );
 
-      this.handleError(response);
-
-      if (!response) throw new Error("response not found at update Direct Sale");
-
-      return response;
+      return this.validateResponse(response);
 
     } catch (error: any) {
       console.error(`Error updating Direct Sale with id ${id}:`, error);
-      toast.error(error.message || "Failed to update Direct Sale");
-      throw error;
+      throw new Error(getErrorMessage(error));
     }
   }
 
@@ -137,24 +126,20 @@ class DirectSaleService {
       compid: number;
       id: number;
     }
-  ): Promise<void> {
+  ): Promise<DirectSaleApiResponse> {
     try {
       const { id, userid, compid } = params;
+
       const response = await apiCall.delete<DirectSaleApiResponse>(
         `${this.baseUrl}sale`,
-        {
-          userid,
-          compid,
-          id,
-        }
+        { userid, compid, id, }
       );
 
-      this.handleError(response);
+      return this.validateResponse(response);
 
     } catch (error: any) {
       console.error(`Error deleting Direct Sale with id ${params.id}:`, error);
-      toast.error(error.message || "Failed to delete Direct Sale");
-      throw error;
+      throw new Error(getErrorMessage(error));
     }
   }
 
@@ -166,20 +151,31 @@ class DirectSaleService {
         { userid: this.getUserId() }
       );
 
-      this.handleError(response);
-
-      return response;
+      return this.validateResponse(response);
 
     } catch (error: any) {
       console.error("Error creating Direct Sale:", error);
-      toast.error(error.message || "Failed to create Direct Sale");
-      throw error;
+      throw new Error(getErrorMessage(error));
     }
   }
 
-  async getSaleBillPrintById(id: number): Promise<Blob> {
+  async getSaleBillPrintById(
+    id: string | number | undefined,
+    withRate: string
+  ): Promise<Blob> {
     const token = localStorage.getItem("accessToken") || "";
     try {
+
+      if (
+        id === undefined ||
+        id === null ||
+        id === "" ||
+        Number(id) === 0
+      ) {
+        throw new Error("Sale ID must be greater than 0.");
+      }
+
+
       const response = await axios.get(
         `${this.baseUrl}sale/print/pdf`,
         {
@@ -187,6 +183,7 @@ class DirectSaleService {
             userid: this.getUserId(),
             compid: this.getCompanyId(),
             billid: id,
+            withRate: withRate,
           },
           responseType: "blob",
           headers: {
@@ -198,8 +195,7 @@ class DirectSaleService {
       return response.data;
 
     } catch (error: any) {
-      console.error("Error fetching Sale bill print:", error);
-      throw error;
+      throw new Error(getErrorMessage(error));
     }
   }
 

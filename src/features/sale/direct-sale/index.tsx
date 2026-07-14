@@ -114,8 +114,10 @@ export default function DirectSaleModule() {
 
   const handlePrintClick = useCallback(() => {
     if (!selectedRow) return;
-
-    printSaleBill(selectedRow.id);
+    printSaleBill({
+      id: selectedRow.id,
+      withrate: "N",
+    })
   }, [printSaleBill, selectedRow]);
 
   const handleApproveClick = useCallback(() => {

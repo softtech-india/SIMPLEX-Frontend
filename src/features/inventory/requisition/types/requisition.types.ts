@@ -47,6 +47,7 @@ export interface RequisitionApiResponse {
   success: boolean;
   message: string;
   data: Requisition[];
+  id: string | number;
 }
 
 export type OperationMode = "Add" | "Edit" | "Delete" | "View" | "Print";

@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { SaleOrderDataGrid } from './components/SaleOrderDataGrid';
 import { SaleOrderForm } from './components/SaleOrderForm';
-import { useSaleOrderList } from './hooks/useSaleOrder';
+import { usePrintTbill, useSaleOrderList } from './hooks/useSaleOrder';
 import { SaleOrder, OperationMode } from './types/saleOrder.types';
 import useIsMobile from "@/common/hooks/useIsMobile";
 import { TransactionToolbar } from '@/common/components/barmanager/TransactionToolbar';
@@ -23,6 +23,7 @@ export default function SaleOrderModule() {
   const isMobile = useIsMobile()
   const permissions = usePrivileges();
   const { userId, companyId, branchId, finid, branchnm } = useUserStore();
+  const { mutate: printTbill, isPending: isPrinting } = usePrintTbill();
 
   // State 
   const [selectedRow, setselectedRow] = useState<SaleOrder | null>(null);
@@ -49,12 +50,6 @@ export default function SaleOrderModule() {
       startdt: fromDate || "",
       enddt: toDate || "",
     });
-
-  // useEffect(() => {
-  //   console.log('branch :', toolbarBranchId);
-  //   console.log('fromDate :', fromDate);
-  //   console.log('toDate :', toDate);
-  // }, [toolbarBranchId, fromDate, toDate])
 
   // Fetch dropdown options
   const { data: BranchOrderOptions = [] } = useQuery({
@@ -104,9 +99,17 @@ export default function SaleOrderModule() {
     openForm('Add');
   }, [openForm]);
   const handleEditClick = useCallback(() => openForm('Edit'), [openForm]);
+
   const handleDeleteClick = useCallback(() => openForm('Delete'), [openForm]);
   const handleViewClick = useCallback(() => openForm('View'), [openForm]);
-  const handlePrintClick = useCallback(() => openForm('Print'), [openForm]);
+  
+  const handlePrintClick = useCallback(() => {
+    if (!selectedRow) return;
+    printTbill({
+      id: selectedRow.id,
+      withrate: "N",
+    })
+  }, [printTbill, selectedRow]);
 
   const handleApproveClick = useCallback(() => {
     if (isRowApproved) return;
@@ -140,10 +143,6 @@ export default function SaleOrderModule() {
     });
   }, [SaleOrderList]);
 
-  // useEffect(() => {
-  //   console.log("formSelectedBranch :", formSelectedBranch);
-  // }, [formSelectedBranch]);
-
   return (
     <>
       <div className="Sale-order-module ">
@@ -161,7 +160,7 @@ export default function SaleOrderModule() {
             onRefresh={handleRefresh}
             onView={handleViewClick}
             onPrint={handlePrintClick}
-
+            isPrinting={isPrinting}
             // isRowApproved={isRowApproved}
 
             selectFromDate={{
@@ -204,14 +203,8 @@ export default function SaleOrderModule() {
         </div>
 
         {!isMobile && (
-          <div
-            className={`
-      ${sidebarState === '1' ? 'w-358' : 'w-294'}
-      transition-all duration-300 ease-in-out
-      px-1 bg-white 
-      rounded-xl shadow-sm border border-gray-200
-      p-1 overflow-x-auto my-1
-    `}
+          <div className={` ${sidebarState === '1' ? 'w-358' : 'w-294'} transition-all duration-300 ease-in-out 
+           bg-white rounded-xl shadow-sm border border-gray-200 p-1 overflow-x-auto my-1 `}
           >
             <SaleOrderDataGrid
               dataSource={SaleOrderList}

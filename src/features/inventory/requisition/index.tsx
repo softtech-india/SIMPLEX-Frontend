@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { useRequisitionList } from './hooks/useRequisition';
+import { usePrintRequisition, useRequisitionList } from './hooks/useRequisition';
 import { Requisition, OperationMode } from './types/requisition.types';
 import useIsMobile from "@/common/hooks/useIsMobile";
 import { TransactionToolbar } from '@/common/components/barmanager/TransactionToolbar';
@@ -24,6 +24,7 @@ export default function RequisitionModule() {
   const isMobile = useIsMobile()
   const permissions = usePrivileges();
   const { userId, companyId, branchId, finid, branchnm } = useUserStore();
+  const { mutate: printRequisition, isPending: isPrinting } = usePrintRequisition();
 
   // State 
   const [selectedRow, setselectedRow] = useState<Requisition | null>(null);
@@ -101,7 +102,12 @@ export default function RequisitionModule() {
   const handleEditClick = useCallback(() => openForm('Edit'), [openForm]);
   const handleDeleteClick = useCallback(() => openForm('Delete'), [openForm]);
   const handleViewClick = useCallback(() => openForm('View'), [openForm]);
-  const handlePrintClick = useCallback(() => openForm('Print'), [openForm]);
+
+  const handlePrintClick = useCallback(() => {
+    if (!selectedRow) return;
+
+    printRequisition(selectedRow.id);
+  }, [printRequisition, selectedRow]);
 
   const handleRefresh = useCallback(() => {
     refetch();
@@ -146,6 +152,7 @@ export default function RequisitionModule() {
             onRefresh={handleRefresh}
             onView={handleViewClick}
             onPrint={handlePrintClick}
+            isPrinting={isPrinting}
 
             selectFromDate={{
               name: "fromDate",

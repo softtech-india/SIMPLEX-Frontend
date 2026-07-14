@@ -32,7 +32,7 @@ export interface DeliveryChallan {
 
   orderid: number;
   picklistid: number;
-  picklistnm: string;
+  picklistno: string;
 
   transportername?: string;
   vehicleno?: string;
@@ -61,12 +61,14 @@ export interface DeliveryChallanApiResponse {
   success: boolean;
   message: string;
   data: DeliveryChallan[];
+  id: string | number;
 }
 
 export interface DeliveryChallanItemApiResponse {
   success: boolean;
   message: string;
   data: DeliveryChallanItem[];
+  id: string | number
 }
 
 export type OperationMode = "Add" | "Edit" | "Delete" | "View" | "Print" | "Approve";

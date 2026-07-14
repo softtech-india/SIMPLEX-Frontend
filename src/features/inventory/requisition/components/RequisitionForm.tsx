@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Popup } from "devextreme-react/popup";
 import { useQuery } from "@tanstack/react-query";
-import { useRequisitionById, useCreateRequisition, useUpdateRequisition, useDeleteRequisition } from "../hooks/useRequisition";
+import { useRequisitionById, useCreateRequisition, useUpdateRequisition, useDeleteRequisition, usePrintRequisition } from "../hooks/useRequisition";
 import { RequisitionFormType, OperationMode } from "../types/requisition.types";
 import { RequisitionFormSchema } from "../schemas/requisition.schema";
 import { requisitionFormDefaults } from "../constants/requisitionFormDefaults";
@@ -41,6 +41,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
   } = useUserStore();
 
   const confirmDelete = useConfirm();
+  const { mutate: printRequisition, isPending: isPrinting } = usePrintRequisition();
 
   const [toBranchModalOpen, setToBranchModalOpen] = useState(false);
   const [godownModalOpen, setGodownModalOpen] = useState(false);
@@ -122,11 +123,11 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
         reqno: Requisition.reqno ?? "",
         totqty: Number(Requisition.totqty ?? 0),
         godownid: Number(Requisition.godownid ?? 0),
-        godownName: Requisition.godownnm ?? '',  // Changed: map godownnm to godownName
+        godownName: Requisition.godownnm ?? '',
         tobranchid: Number(Requisition.tobranchid ?? 0),
-        toBranchName: Requisition.tobranchnm ?? '',  // Changed: map tobranchnm to toBranchName
+        toBranchName: Requisition.tobranchnm ?? '',
         togodownid: Number(Requisition.togodownid ?? 0),
-        togodownName: Requisition.togodownnm ?? '',  // Changed: map togodownnm to togodownName
+        togodownName: Requisition.togodownnm ?? '',
         rem1: Requisition.rem1 ?? "",
         rem2: Requisition.rem2 ?? "",
         itemdtl:
@@ -135,8 +136,8 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
             dtlid: item.dtlid ?? index + 1,
             productid: item.productid,
             qty: Number(item.qty ?? 0),
-            productnm: item.productnm ?? "", // ADD THIS - map product name
-            pcategoryid: item.pcategoryid, // ADD THIS - map brand/category ID
+            productnm: item.productnm ?? "",
+            pcategoryid: item.pcategoryid,
             pcategorynm: item.pcategorynm ?? "",
           })) ?? [],
       });
@@ -264,51 +265,82 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
   const bindLookup = useLookupShortcuts(isReadOnly, lookupMap);
 
   const handleFormSubmit = async (data: RequisitionFormSchema) => {
-    try {
 
-      if (isDeleteMode) {
-        const ok = await confirmDelete({
-          title: "Delete Requisition",
-          message: "Are you sure you want to delete this Requisition?",
-        });
+    if (isDeleteMode) {
 
-        if (!ok) return;
+      const ok = await confirmDelete({
+        title: "Delete Delivery Challan ",
+        message: "Are you sure you want to delete this Delivery Challan ?",
+      });
 
-        await deleteMutation.mutateAsync(formRequisitionId);
-        onClose();
-        return;
-      }
+      if (!ok) return;
 
-      const { totqty, itemdtl } = calculateTotals(data.itemdtl || []);
-
-      const payload: RequisitionFormType = {
-        ...data,
-        compid: companyId,
-        branchid: toolbarBranchId,
-        finid: Number(finid),
-        totqty: Number(totqty),
-        itemdtl,
-      };
-
-      if (isAddMode) {
-        await createMutation.mutateAsync(payload);
-        reset(requisitionFormDefaults);
-        // onClose();
-        return;
-      }
-
-      if (isEditMode) {
-        await updateMutation.mutateAsync({
+      deleteMutation.mutate(
+        {
           id: formRequisitionId,
-          data: payload,
-        });
-        onClose();
-        return;
-      }
+        },
+        {
+          onSuccess: (data) => {
+            if (!data?.success) return;
+            onClose();
+          },
+        }
+      );
 
-    } catch (error) {
-      console.error("Submit error:", error);
+      return;
     }
+
+    const { totqty, itemdtl } = calculateTotals(data.itemdtl || []);
+
+    const payload: RequisitionFormType = {
+      ...data,
+      compid: companyId,
+      branchid: toolbarBranchId,
+      finid: Number(finid),
+      totqty: Number(totqty),
+      itemdtl,
+    };
+
+    if (isAddMode) {
+      createMutation.mutate(payload, {
+        onSuccess: (data) => {
+          if (!data?.success) return;
+          reset(requisitionFormDefaults);
+          // onClose();
+          const requisitionId = Number(data.id);
+
+          if (requisitionId > 0) {
+            printRequisition(requisitionId);
+          } else {
+            toast.error("Invalid requisition ID. Unable to print.");
+          }
+        },
+      });
+      return;
+    }
+
+    if (isEditMode) {
+      updateMutation.mutate(
+        {
+          id: formRequisitionId, data: payload,
+        },
+        {
+          onSuccess: (data) => {
+            if (!data?.success) return;
+            onClose()
+            const requisitionId = Number(data.id);
+
+            if (requisitionId > 0) {
+              printRequisition(requisitionId);
+            } else {
+              toast.error("Invalid requisition ID. Unable to print.");
+            }
+          },
+        }
+      );
+    }
+
+
   };
 
 

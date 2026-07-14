@@ -121,6 +121,7 @@ export interface DirectSaleApiResponse {
     success: boolean;
     message: string;
     data: DirectSale[];
+    id: string | number;
 }
 
 export type OperationMode = "Add" | "Edit" | "Delete" | "View" | "Print" | "Approve";

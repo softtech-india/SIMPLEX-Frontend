@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Popup } from "devextreme-react/popup";
 import { useQuery } from "@tanstack/react-query";
-import { useSaleOrderById, useCreateSaleOrder, useUpdateSaleOrder, useDeleteSaleOrder, useApproveSaleOrder } from "../hooks/useSaleOrder";
+import { useSaleOrderById, useCreateSaleOrder, useUpdateSaleOrder, useDeleteSaleOrder, useApproveSaleOrder, usePrintTbill } from "../hooks/useSaleOrder";
 import { SaleOrderFormType, OperationMode } from "../types/saleOrder.types";
 import { SaleOrderFormSchema } from "../schemas/saleOrder.schema";
 import { defaultItemDtl, saleOrderFormDefaults } from "../constants/saleOrderFormDefaults";
@@ -16,12 +16,12 @@ import { SaleOrderItems } from "./SaleOrderItems";
 import { useWatch } from "react-hook-form";
 import { formatDateForInput } from "@/helpers/dateUtils";
 import SearchModal from "@/common/components/SearchModal";
-import { toast } from "sonner";
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
 import { SHORTCUTS } from "@/common/constants/shortcuts";
 import { useSaleQrScanner } from "@/hooks/useSaleQrScanner";
 import Loader from "@/common/components/Loader";
+import { toast } from "sonner";
 
 interface SaleOrderFormProps {
   visible: boolean;
@@ -42,16 +42,18 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
     finid,
   } = useUserStore();
 
+  // Hooks
   const confirmDelete = useConfirm();
+  const { mutate: printTbill, isPending: isPrinting } = usePrintTbill();
 
+  // State
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
   const [godownModalOpen, setGodownModalOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const godownRef = useRef<HTMLInputElement>(null);
   const brandInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-
-
+  // Drive State
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
   const isDeleteMode = mode === "Delete";
@@ -360,89 +362,127 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
   };
 
   const handleFormSubmit = async (data: SaleOrderFormSchema) => {
-    try {
-      if (isDeleteMode) {
-        const ok = await confirmDelete({
-          title: "Delete T-Bill",
-          message: "Are you sure you want to delete this T-Bill?",
-        });
 
-        if (!ok) return;
+    if (isDeleteMode) {
 
-        await deleteMutation.mutateAsync({
-          id: formSaleOrderId,
-          userid: Number(userId),
-          compid: Number(companyId),
-        });
-        onClose();
-        return;
-      }
+      const ok = await confirmDelete({
+        title: "Delete T-Bill? ",
+        message: "Are you sure you want to delete this T-Bill? ?",
+      });
 
-      const { qty1, totprodval, itemdtl } = calculateTotals(data.itemdtl || []);
+      if (!ok) return;
 
-      const payload: SaleOrderFormType = {
+      deleteMutation.mutate(
+        {
+          id: formSaleOrderId, userid: Number(userId), compid: Number(companyId),
+        },
+        {
+          onSuccess: (data) => {
+            if (!data?.success) return;
+            onClose();
+          },
+        }
+      );
+
+      return;
+    }
+
+    const { qty1, totprodval, itemdtl } = calculateTotals(data.itemdtl || []);
+
+    const payload: SaleOrderFormType = {
+      ...data,
+      compid: companyId,
+      branchid: toolbarBranchId,
+      qty1: Number(qty1),
+      qty2: Number(qty1),
+      totprodval: totprodval,
+      afttax: 0,
+      ordamt: totprodval,
+      itemdtl,
+    };
+
+    if (isAddMode) {
+
+      createMutation.mutate(payload, {
+        onSuccess: (data) => {
+          if (!data?.success) return;
+
+          reset(saleOrderFormDefaults);
+          replace([]);
+          requestAnimationFrame(() => {
+            replace([]);
+          });
+          // onClose();
+
+          const saleOrderId = Number(data.id);
+
+          if (saleOrderId > 0) {
+            printTbill({
+              id: saleOrderId,
+              withrate: "Y",
+            });
+          } else {
+            toast.error("Invalid Sale Order ID. Unable to print.");
+          }
+          // printTbill({
+          //   id: data.id || 0,
+          //   withrate: "Y",
+          // })
+        },
+      });
+      return;
+    }
+
+    if (isEditMode) {
+      updateMutation.mutate(
+        {
+          id: formSaleOrderId, data: payload,
+        },
+        {
+          onSuccess: (data) => {
+            if (!data?.success) return;
+            const saleOrderId = Number(formSaleOrderId);
+
+            onUpdated?.();
+
+            onClose();
+
+            if (saleOrderId > 0) {
+              printTbill({
+                id: saleOrderId,
+                withrate: "Y",
+              });
+            } else {
+              toast.error("Invalid Sale Order ID. Unable to print.");
+            }
+
+          },
+        }
+      );
+    }
+
+    if (isApproveMode) {
+      const approvePayload: SaleOrderFormType = {
         ...data,
+        id: formSaleOrderId,
         compid: companyId,
         branchid: toolbarBranchId,
         qty1: Number(qty1),
         qty2: Number(qty1),
         totprodval: totprodval,
+        finid: Number(finid),
         afttax: 0,
         ordamt: totprodval,
         itemdtl,
       };
 
-      if (isAddMode) {
-        await createMutation.mutateAsync(payload);
-        // Reset the form completely including items
-        reset(saleOrderFormDefaults);
-        // IMPORTANT: Clear the items array
-        replace([]);
-        // Force a re-render by updating the fields array
-        requestAnimationFrame(() => {
-          replace([]);
-        });
-        // toast.success("T-Bill created successfully");
-        // onClose(); // Optionally close after successful creation
-        return;
-      }
-
-      if (isEditMode) {
-        await updateMutation.mutateAsync({
-          id: formSaleOrderId,
-          data: payload,
-        });
-        onUpdated?.(); // Make sure this is defined in props
-        onClose();
-        return;
-      }
-
-      if (isApproveMode) {
-        const approvePayload: SaleOrderFormType = {
-          ...data,
-          id: formSaleOrderId,
-          compid: companyId,
-          branchid: toolbarBranchId,
-          qty1: Number(qty1),
-          qty2: Number(qty1),
-          totprodval: totprodval,
-          finid: Number(finid),
-          afttax: 0,
-          ordamt: totprodval,
-          itemdtl,
-        };
-
-        await approveMutation.mutateAsync(approvePayload);
-        reset(saleOrderFormDefaults);
-        replace([]);
-        onClose();
-        return;
-      }
-
-    } catch (error) {
-      console.error("Submit error:", error);
-      toast.error("An error occurred while saving");
+      await approveMutation.mutateAsync(approvePayload);
+      reset(saleOrderFormDefaults);
+      replace([]);
+      onClose();
+      return;
     }
+
   };
 
 

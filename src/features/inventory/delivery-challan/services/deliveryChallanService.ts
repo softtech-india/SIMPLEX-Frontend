@@ -2,6 +2,7 @@ import { apiCall } from "@/utils/apiClient";
 import { DeliveryChallan, DeliveryChallanApiResponse, DeliveryChallanFormType, DeliveryChallanItem, DeliveryChallanItemApiResponse, } from "../types/deliveryChallan.types";
 import { storageService } from "@/common/utility/storageService";
 import { getErrorMessage } from "@/helpers/getErrorMessage";
+import axios from "axios";
 
 export interface GetDeliveryChallanParams {
   userid: number;
@@ -24,20 +25,18 @@ class DeliveryChallanService {
   private getUserId = (): string => this.getFromStorage("userId");
   private getCompanyId = (): string => this.getFromStorage("companyId");
 
-  private validateResponse(
-    response: DeliveryChallanApiResponse
-  ): DeliveryChallanApiResponse {
+  private validateResponse(response: DeliveryChallanApiResponse): DeliveryChallanApiResponse {
     if (!response) {
       return {
         success: false,
         message: "No response from server",
         data: [],
+        id: '',
       };
     }
 
     return response;
   }
-
 
   // SO Picked product list
   async fetchSoPickedProductList({
@@ -63,7 +62,7 @@ class DeliveryChallanService {
         params
       );
 
-     // const handledResponse = this.validateResponse(response);
+      // const handledResponse = this.validateResponse(response);
 
       return response.data || [];
     } catch (error: any) {
@@ -101,10 +100,7 @@ class DeliveryChallanService {
 
       return deliveryChallan;
     } catch (error: any) {
-      console.error(
-        `Error fetching Delivery Challan with id ${params.id}:`,
-        error
-      );
+      console.error(`Error fetching Delivery Challan with id ${params.id}:`, error);
       throw new Error(getErrorMessage(error));
     }
   }
@@ -147,10 +143,7 @@ class DeliveryChallanService {
 
       return this.validateResponse(response);
     } catch (error: any) {
-      console.error(
-        `Error updating Delivery Challan with id ${id}:`,
-        error
-      );
+      console.error(`Error updating Delivery Challan with id ${id}:`, error);
       throw new Error(getErrorMessage(error));
     }
   }
@@ -168,14 +161,46 @@ class DeliveryChallanService {
 
       return this.validateResponse(response);
     } catch (error: any) {
-      console.error(
-        `Error deleting Delivery Challan with id ${params.id}:`,
-        error
-      );
+      console.error(`Error deleting Delivery Challan with id ${params.id}:`, error);
       throw new Error(getErrorMessage(error));
     }
   }
 
+  async getDeliveryChallanPrintById(id: number): Promise<Blob> {
+    const token = localStorage.getItem("accessToken") || "";
+    try {
+
+      if (
+        id === undefined ||
+        id === null ||
+        Number(id) === 0
+      ) {
+        throw new Error("Sale ID must be greater than 0.");
+      }
+
+
+      const response = await axios.get(
+        `${this.baseUrl}dc/print/pdf`,
+        {
+          params: {
+            userid: this.getUserId(),
+            compid: this.getCompanyId(),
+            id: id,
+          },
+          responseType: "blob",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+
+    } catch (error: any) {
+      console.error("Error fetching Delivery Challan print:", error);
+      throw error;
+    }
+  }
 
 }
 

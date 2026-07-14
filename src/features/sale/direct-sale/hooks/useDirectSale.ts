@@ -76,12 +76,13 @@ export function useCreateDirectSale() {
       directSaleService.createDirectSale(data),
 
     onSuccess: (data) => {
-      if (data.success) {
-        queryClient.invalidateQueries({ queryKey: DIRECT_SALE_KEYS.list() });
-        toast.success(data.message);
-      } else {
-        toast.error(data.message || "Failed to create direct sale");
+
+      if (!data.success) {
+        toast.error(data.message); return;
       }
+      toast.success(data.message);
+      queryClient.invalidateQueries({ queryKey: DIRECT_SALE_KEYS.list() });
+
     },
 
     onError: (err: Error) => {
@@ -97,12 +98,13 @@ export function useApproveDirectSale() {
     mutationFn: (data: DirectSaleFormType) => directSaleService.approveDirectSale(data),
 
     onSuccess: (data) => {
-      if (data.success) {
-        queryClient.invalidateQueries({ queryKey: DIRECT_SALE_KEYS.list() });
-        toast.success(data.message);
-      } else {
-        toast.error(data.message || "Failed to approve direct sale");
+
+      if (!data?.success) {
+        toast.error(data?.message || "Failed to create");
+        return;
       }
+      toast.success(data.message);
+      queryClient.invalidateQueries({ queryKey: DIRECT_SALE_KEYS.list() });
     },
 
     onError: (err: Error) => {
@@ -120,14 +122,14 @@ export function useUpdateDirectSale() {
       directSaleService.updateDirectSale(id, data),
 
     onSuccess: (data) => {
-      if (data.success) {
-        queryClient.invalidateQueries({ queryKey: DIRECT_SALE_KEYS.list() });
-        queryClient.invalidateQueries({ queryKey: DIRECT_SALE_KEYS.details() });
 
-        toast.success(data.message);
-      } else {
-        toast.error(data.message || "Failed to update direct sale");
+      if (!data.success) {
+        toast.error(data.message); return;
       }
+      toast.success(data.message);
+      queryClient.invalidateQueries({ queryKey: DIRECT_SALE_KEYS.list() });
+      queryClient.invalidateQueries({ queryKey: DIRECT_SALE_KEYS.details() });
+
     },
 
     onError: (err: Error) => {
@@ -147,8 +149,14 @@ export function useDeleteDirectSale() {
     }) => directSaleService.deleteDirectSale(params),
 
     onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: DIRECT_SALE_KEYS.list() });
+
+      if (!data?.success) {
+        toast.error(data?.message || "Failed to Delete");
+        return;
+      }
       toast.success(data?.message || "Deleted successfully");
+      queryClient.invalidateQueries({ queryKey: DIRECT_SALE_KEYS.list() });
+
     },
 
     onError: (err: any) => {
@@ -159,8 +167,20 @@ export function useDeleteDirectSale() {
 
 export function usePrintSaleBill() {
   return useMutation({
-    mutationFn: async (id: number) => {
-      const blob = await directSaleService.getSaleBillPrintById(id);
+    mutationFn: async (
+      { id, withrate, }: { id: string | number; withrate: string; }
+    ) => {
+
+      if (
+        id === undefined ||
+        id === null ||
+        id === "" ||
+        Number(id) === 0
+      ) {
+        throw new Error("Sale Order ID must be greater than 0.");
+      }
+
+      const blob = await directSaleService.getSaleBillPrintById(id, withrate);
 
       const url = URL.createObjectURL(blob);
       const tab = window.open(url, "_blank");
@@ -173,7 +193,6 @@ export function usePrintSaleBill() {
             clearInterval(interval);
 
             tab.focus();
-           // tab.print();
 
             setTimeout(() => {
               URL.revokeObjectURL(url);

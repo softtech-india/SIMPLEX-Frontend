@@ -57,7 +57,7 @@ export function useSaleOrderById(params: UseSaleOrderByIdParams) {
         finid: params.finid,
       }),
 
-    enabled: !!params.id, // only run when id exists
+    enabled: !!params.id,
 
     staleTime: 0,
     gcTime: 0,
@@ -76,12 +76,13 @@ export function useCreateSaleOrder() {
       saleOrderService.createSaleOrder(data),
 
     onSuccess: (data) => {
-      if (data.success) {
-        queryClient.invalidateQueries({ queryKey: SALE_ORDER_KEYS.list() });
-        toast.success(data.message);
-      } else {
-        toast.error(data.message || "Failed to create sale order");
+
+      if (!data.success) {
+        toast.error(data.message); return;
       }
+      toast.success(data.message);
+      queryClient.invalidateQueries({ queryKey: SALE_ORDER_KEYS.list() });
+
     },
 
     onError: (err: Error) => {
@@ -97,12 +98,14 @@ export function useApproveSaleOrder() {
     mutationFn: (data: SaleOrderFormType) => saleOrderService.approveSaleOrder(data),
 
     onSuccess: (data) => {
-      if (data.success) {
-        queryClient.invalidateQueries({ queryKey: SALE_ORDER_KEYS.list() });
-        toast.success(data.message);
-      } else {
-        toast.error(data.message || "Failed to approve sale order");
+
+      if (!data?.success) {
+        toast.error(data?.message || "Failed to create");
+        return;
       }
+      toast.success(data.message);
+      queryClient.invalidateQueries({ queryKey: SALE_ORDER_KEYS.list() });
+
     },
 
     onError: (err: Error) => {
@@ -120,14 +123,14 @@ export function useUpdateSaleOrder() {
       saleOrderService.updateSaleOrder(id, data),
 
     onSuccess: (data) => {
-      if (data.success) {
-        queryClient.invalidateQueries({ queryKey: SALE_ORDER_KEYS.list() });
-        queryClient.invalidateQueries({ queryKey: SALE_ORDER_KEYS.details() });
 
-        toast.success(data.message);
-      } else {
-        toast.error(data.message || "Failed to update sale order");
+      if (!data.success) {
+        toast.error(data.message); return;
       }
+      toast.success(data.message);
+      queryClient.invalidateQueries({ queryKey: SALE_ORDER_KEYS.list() });
+      queryClient.invalidateQueries({ queryKey: SALE_ORDER_KEYS.details() });
+
     },
 
     onError: (err: Error) => {
@@ -147,12 +150,67 @@ export function useDeleteSaleOrder() {
     }) => saleOrderService.deleteSaleOrder(params),
 
     onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: SALE_ORDER_KEYS.list() });
+
+      if (!data?.success) {
+        toast.error(data?.message || "Failed to Delete");
+        return;
+      }
       toast.success(data?.message || "Deleted successfully");
+      queryClient.invalidateQueries({ queryKey: SALE_ORDER_KEYS.list() });
     },
 
     onError: (err: any) => {
       toast.error(err.message || "Failed to delete sale order");
+    },
+  });
+}
+
+export function usePrintTbill() {
+  return useMutation({
+    mutationFn: async (
+      { id, withrate, }: { id: string | number; withrate: string; }
+    ) => {
+
+
+      // Client-side validation
+      if (
+        id === undefined ||
+        id === null ||
+        id === "" ||
+        Number(id) === 0
+      ) {
+        throw new Error("Sale Order ID must be greater than 0.");
+      }
+
+      const blob = await saleOrderService.getTbillPrintById(id, withrate);
+
+      const url = URL.createObjectURL(blob);
+      const tab = window.open(url, "_blank");
+
+      if (!tab) {
+        URL.revokeObjectURL(url);
+        throw new Error("Popup blocked. Please allow popups and try again.");
+      }
+
+      const interval = setInterval(() => {
+        try {
+          if (tab.document?.readyState === "complete") {
+            clearInterval(interval);
+
+            tab.focus();
+
+            setTimeout(() => {
+              URL.revokeObjectURL(url);
+            }, 2000);
+          }
+        } catch {
+          console.warn("Waiting for PDF to load...");
+        }
+      }, 300);
+    },
+
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to print PDF");
     },
   });
 }
