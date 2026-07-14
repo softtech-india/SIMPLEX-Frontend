@@ -698,10 +698,12 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
                   isReadOnly={isReadOnly}
                   fieldsLength={fields.length}
                   excludeIds={selectedProductIds}
+                  handleKeyOpen={handleKeyOpen}
                   currentId={watchedItems?.[index]?.productid}
                   brandInputRef={(el) => {
                     brandInputRefs.current[index] = el;
                   }}
+                  setFocus={setFocus}
                 />
               ))}
             </div>

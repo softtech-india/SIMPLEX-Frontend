@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Popup } from "devextreme-react/popup";
 import { useQuery } from "@tanstack/react-query";
 import { useFieldArray, useWatch } from "react-hook-form";
@@ -45,6 +45,11 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
   const [toGodownModalOpen, setToGodownModalOpen] = useState(false);
   const [toBranchModalOpen, setToBranchModalOpen] = useState(false);
   const [pendingReqModalOpen, setPendingReqModalOpen] = useState(false);
+  const toGodownRef = useRef<HTMLInputElement>(null);
+  const pendingReqRef = useRef<HTMLInputElement>(null);
+  const brandInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+
 
   // Derived States
   const isEditMode = mode === "Edit";
@@ -283,6 +288,9 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
     setValue("togodownid", 0);
     setValue("togodownName", '');
     setValue("togodownnm", '');
+    requestAnimationFrame(() => {
+      toGodownRef.current?.focus();
+    });
   };
   const fromGodownId = watch("godownid");
   const fromGodownName = watch("godownName");
@@ -293,6 +301,9 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
     setValue("togodownName", row.name);
     setValue("togodownnm", row.name);
     setToGodownModalOpen(false);
+    requestAnimationFrame(() => {
+      pendingReqRef.current?.focus();
+    });
   };
 
   const togodownName = watch("togodownName");
@@ -432,6 +443,13 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
     return "Save";
   };
 
+  const handleKeyOpen = (e: React.KeyboardEvent, openFn: () => void) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openFn();
+    }
+  };
+
   // Debug validation issues 
   const onError = (err: any) => {
     console.error("Validation errors:", err);
@@ -525,6 +543,8 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
                   value={fromGodownName || ''}
                   disabled={isReadOnly}
                   readOnly
+                  onKeyDown={(e) => handleKeyOpen(e, () => setGodownModalOpen(true))}
+
                   onClick={() => { setGodownModalOpen(true); }}
                   className={`inputField w-full cursor-pointer 
                     ${errors?.godownid ? "border-red-500" : "border-gray-400"} 
@@ -560,6 +580,11 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
                   value={togodownName}
                   disabled={isReadOnly}
                   readOnly
+                  ref={(e) => {
+                    toGodownRef.current = e;
+                  }}
+                  onKeyDown={(e) => handleKeyOpen(e, () => setToGodownModalOpen(true))}
+
                   onClick={() => {
                     const toBranchIdValue = watch("tobranchid");
                     if (!toBranchIdValue || toBranchIdValue === 0) {
@@ -584,6 +609,10 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
                   value={reqName || ''}
                   disabled={isReadOnly}
                   readOnly
+                  ref={(e) => {
+                    pendingReqRef.current = e;
+                  }}
+                  onKeyDown={(e) => handleKeyOpen(e, () => handleOpenPendingReq())}
                   onClick={() => { handleOpenPendingReq(); }}
                   className={`inputField w-full cursor-pointer
                      ${errors?.reqno ? "border-red-500" : "border-gray-400"} 
@@ -607,17 +636,23 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
                 <button
                   type="button"
                   className="primary-btn text-xs px-3 py-1"
-                  onClick={() =>
+                  onClick={() => {
+                    const newIndex = fields.length;
+
                     append({
                       tag: "I",
-                      dtlid: fields.length + 1,
+                      dtlid: newIndex + 1,
                       productid: 0,
                       qty: 0,
                       rate: 0,
                       value: 0,
                       reqdtlid: 0,
-                    })
-                  }
+                    });
+
+                    setTimeout(() => {
+                      brandInputRefs.current[newIndex]?.focus();
+                    }, 100);
+                  }}
                 >
                   + Add Item
                 </button>
@@ -646,6 +681,9 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
                   fieldsLength={fields.length}
                   excludeIds={selectedProductIds}
                   currentId={watchedItems?.[index]?.productid}
+                  brandInputRef={(el) => {
+                    brandInputRefs.current[index] = el;
+                  }}
                 />
               ))}
             </div>
