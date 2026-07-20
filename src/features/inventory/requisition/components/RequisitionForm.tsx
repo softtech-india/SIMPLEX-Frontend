@@ -223,9 +223,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
     setValue("togodownid", 0);
     setValue("togodownName", '');
     requestAnimationFrame(() => {
-
       toGodownRef.current?.focus();
-
     });
   };
   const fromGodownId = watch("godownid");
@@ -457,7 +455,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
                   value={fromGodownName || ''}
                   disabled={isReadOnly}
                   readOnly
-                  {...bindLookup(LOOKUP_KEYS.customer)}
+                  {...bindLookup(LOOKUP_KEYS.godownid)}
                   onKeyDown={(e) => handleKeyOpen(e, () => setGodownModalOpen(true))}
 
                   onClick={() => { setGodownModalOpen(true); }}
@@ -499,7 +497,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
                   readOnly
 
                   ref={(e) => {
-                    register("tobranchid").ref(e);
+                    register("togodownid").ref(e);
                     toGodownRef.current = e;
                   }}
                   onKeyDown={(e) => handleKeyOpen(e, () => setToGodownModalOpen(true))}

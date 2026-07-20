@@ -21,6 +21,8 @@ import { SHORTCUTS } from "@/common/constants/shortcuts";
 import MultipleSearchModal from "@/common/components/MultipleSearchModal";
 import SearchModal from "@/common/components/SearchModal";
 import Loader from "@/common/components/Loader";
+import { useLookupShortcuts } from "@/common/hooks/useLookupShortcuts";
+import { LOOKUP_KEYS } from "@/common/constants/lookupKeys";
 
 interface PickListFormProps {
   visible: boolean;
@@ -45,6 +47,8 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
   const [tbillModalOpen, setTbillModalOpen] = useState(false);
   const [selectedTbills, setSelectedTbills] = useState<any[]>([]);
   const [godownModalOpen, setGodownModalOpen] = useState(false);
+  const tBillRef = useRef<HTMLInputElement>(null);
+
 
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
@@ -82,15 +86,14 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
 
   useEffect(() => {
     if (!visible) return;
-
-    const timer = setTimeout(() => {
+    setTimeout(() => {
       setFocus("picklistdt");
-    }, 300);
+    }, 1000);
 
     if (isAddMode) {
       reset(PickListFormDefaults);
       setSelectedTbills([]);
-      return () => clearTimeout(timer);
+      // return () => clearTimeout(timer);
     }
 
     if (PickList) {
@@ -102,7 +105,6 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
           orderno: item.orderno ?? "",
         })) ?? [];
 
-      // ✅ derive tbillid from orderdtl (IMPORTANT)
       const tbillid = orderdtl.map((o) => o.orderid);
 
       reset({
@@ -150,7 +152,7 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
       );
     }
 
-    return () => clearTimeout(timer);
+    // return () => clearTimeout(timer);
   }, [PickList, isAddMode, visible, reset, setFocus]);
 
   const numMethodOptions = [
@@ -174,11 +176,10 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
           value: s.id,
           label: s.name,
           manualallow: s.manualallow,
-        })) || [];
+        }));
 
-      // auto-set first option safely
       setTimeout(() => {
-        if (options.length > 0) {
+        if (options.length > 0 && !watch("vnumid")) {
           setValue("vnumid", options[0].value);
         }
       }, 0);
@@ -209,6 +210,9 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
   const handleGodownSelect = (row: any) => {
     setValue("godownid", row.id);
     setValue("godownnm", row.name);
+    requestAnimationFrame(() => {
+      tBillRef.current?.focus();
+    });
   };
   const GodownName = watch("godownnm")
 
@@ -316,10 +320,15 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
   };
 
 
+  const lookupMap = {
+    godownid: () => setGodownModalOpen(true),
+  };
+
+  const bindLookup = useLookupShortcuts(isReadOnly, lookupMap);
+
+
   const handleFormSubmit = async (data: PickListFormSchema) => {
-
     if (isDeleteMode) {
-
       const ok = await confirmDelete({
         title: "Delete pick list ",
         message: "Are you sure you want to delete this pick list ?",
@@ -338,7 +347,6 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
           },
         }
       );
-
       return;
     }
 
@@ -368,6 +376,7 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
         onSuccess: (data) => {
           if (!data?.success) return;
           reset(PickListFormDefaults);
+          setSelectedTbills([])
         },
       });
       return;
@@ -507,6 +516,7 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
                 <label className="block text-gray-700 font-medium mb-1">Branch </label>
                 <input
                   type="text"
+                  tabIndex={-1}
                   value={formSelectedBranch}
                   readOnly
                   className={`inputField border-gray-400 bg-gray-100 cursor-not-allowed `}
@@ -521,6 +531,8 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
                   disabled={isReadOnly}
                   readOnly
                   onClick={() => setGodownModalOpen(true)}
+                  {...bindLookup(LOOKUP_KEYS.godownid)}
+                  onKeyDown={(e) => handleKeyOpen(e, () => setGodownModalOpen(true))}
                   className={`inputField w-full border border-gray-300 
                     ${errors.godownid && !GodownName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`
@@ -538,6 +550,10 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
                   disabled={isReadOnly}
                   value={tbillid.length === 0 ? "" : `${tbillid.length} Tbill(s) Selected`}
                   placeholder="Select Tbill(s)"
+                  ref={(e) => {
+                    register("tbillid").ref(e);
+                    tBillRef.current = e;
+                  }}
                   onKeyDown={(e) => handleKeyOpen(e, () => setTbillModalOpen(true))}
                   onClick={() => !isReadOnly && setTbillModalOpen(true)}
                   className={`inputField w-full

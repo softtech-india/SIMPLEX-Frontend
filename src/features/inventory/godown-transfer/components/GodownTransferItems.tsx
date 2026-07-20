@@ -23,6 +23,8 @@ type GodownTransferItemsProps = {
   fieldsLength: number;
   excludeIds?: number[];
   currentId?: number;
+  brandInputRef?: (el: HTMLInputElement | null) => void;
+
 };
 
 export const GodownTransferItems: React.FC<GodownTransferItemsProps> = ({
@@ -44,6 +46,7 @@ export const GodownTransferItems: React.FC<GodownTransferItemsProps> = ({
   fieldsLength,
   excludeIds,
   currentId,
+  brandInputRef,
 }) => {
   const item = watchedItems?.[index];
   const qty = Number(item?.qty) || 0;
@@ -102,7 +105,7 @@ export const GodownTransferItems: React.FC<GodownTransferItemsProps> = ({
 
   return (
     <div className="flex flex-wrap gap-1 items-end">
-      
+
       <div className="w-60">
         <label className="block text-gray-700 text-sm font-medium mb-1">
           Brand
@@ -111,6 +114,7 @@ export const GodownTransferItems: React.FC<GodownTransferItemsProps> = ({
           type="text"
           value={item?.pcategorynm || ""}
           readOnly
+          ref={brandInputRef}
           onClick={() => {
             if (!isReadOnly && reqid && reqid !== 0) {
               setProductModalOpen(true);

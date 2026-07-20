@@ -47,6 +47,9 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
   const [godownModalOpen, setGodownModalOpen] = useState(false);
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
   const [picklistModalOpen, setPicklistModalOpen] = useState(false);
+  const godownRef = useRef<HTMLInputElement>(null);
+  const pickListRef = useRef<HTMLInputElement>(null);
+
 
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
@@ -85,13 +88,12 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
   useEffect(() => {
     if (!visible) return;
 
-    const timer = setTimeout(() => {
+    setTimeout(() => {
       setFocus("dcdt");
-    }, 300);
+    }, 1000);
 
     if (isAddMode) {
       reset(DeliveryChallanFormDefaults);
-      return () => clearTimeout(timer);
     }
 
     if (DeliveryChallan) {
@@ -137,7 +139,6 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
 
     }
 
-    return () => clearTimeout(timer);
   }, [DeliveryChallan, isAddMode, visible, reset, setFocus]);
 
   const numMethodOptions = [
@@ -196,6 +197,9 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
   const handleGodownSelect = (row: any) => {
     setValue("godownid", row.id);
     setValue("godownnm", row.name);
+    requestAnimationFrame(() => {
+      pickListRef.current?.focus();
+    });
   };
   const GodownName = watch("godownnm")
 
@@ -217,6 +221,9 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
     setValue("customerid", row.id);
     setValue("customernm", row.name);
     setCustomerModalOpen(false);
+    requestAnimationFrame(() => {
+      godownRef.current?.focus();
+    });
   };
   const customerName = watch("customernm")
 
@@ -535,7 +542,6 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
                   disabled={isReadOnly}
                   readOnly
                   onKeyDown={(e) => handleKeyOpen(e, () => setCustomerModalOpen(true))}
-
                   onClick={() => setCustomerModalOpen(true)}
                   className={`inputField w-full border border-gray-300 
                     ${errors.customerid && !customerName ? "border-red-500" : "border-gray-400"}
@@ -552,6 +558,12 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
                   value={GodownName || ''}
                   disabled={isReadOnly}
                   readOnly
+                  ref={(e) => {
+                    register("godownid").ref(e);
+                    godownRef.current = e;
+                  }}
+                  onKeyDown={(e) => handleKeyOpen(e, () => setGodownModalOpen(true))}
+
                   onClick={() => setGodownModalOpen(true)}
                   className={`inputField w-full border border-gray-300 
                     ${errors.godownid && !GodownName ? "border-red-500" : "border-gray-400"}
@@ -569,7 +581,10 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
                   disabled={isReadOnly}
                   readOnly
                   onKeyDown={(e) => handleKeyOpen(e, () => setPicklistModalOpen(true))}
-
+                  ref={(e) => {
+                    register("picklistid").ref(e);
+                    pickListRef.current = e;
+                  }}
                   onClick={() => setPicklistModalOpen(true)}
                   className={`inputField w-full border border-gray-300 
                     ${errors.picklistid && !PicklistName ? "border-red-500" : "border-gray-400"}
