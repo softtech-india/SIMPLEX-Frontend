@@ -35,14 +35,9 @@ interface SaleOrderFormProps {
 
 export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSelectedBranch, toolbarBranchId, onUpdated }: SaleOrderFormProps) {
 
-  const {
-    userId,
-    companyId,
-    branchId,
-    finid,
-  } = useUserStore();
-
   // Hooks
+  const { userId, companyId, branchId, finid, } = useUserStore();
+
   const confirmDelete = useConfirm();
   const { mutate: printTbill, isPending: isPrinting } = usePrintTbill();
 
@@ -86,16 +81,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
   const isSubmitting = createMutation.isPending || approveMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   const {
-    control,
-    register,
-    handleSubmit,
-    setFocus,
-    reset,
-    watch,
-    setValue,
-    getValues,
-    trigger,
-    formState: { errors },
+    control, register, handleSubmit, setFocus, reset, watch, setValue, getValues, trigger, formState: { errors },
   } = useSaleOrderForm(isApproveMode);
 
   const { fields, append, remove, replace } = useFieldArray({
@@ -393,6 +379,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
       ...data,
       compid: companyId,
       branchid: toolbarBranchId,
+      finid: Number(finid),
       qty1: Number(qty1),
       qty2: Number(qty1),
       totprodval: totprodval,

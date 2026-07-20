@@ -364,6 +364,7 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
       ...data,
       compid: Number(companyId),
       branchid: toolbarBranchId,
+      finid: Number(finid),
       qty: Number(totalqty),
       orderdtl,
       itemdtl,
@@ -371,7 +372,7 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
 
 
     if (isAddMode) {
-      console.log("FINAL SUBMIT PAYLOAD:", JSON.stringify(payload, null, 2));
+
       createMutation.mutate(payload, {
         onSuccess: (data) => {
           if (!data?.success) return;
