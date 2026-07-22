@@ -36,9 +36,7 @@ interface DeliveryChallanFormProps {
 export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, mode, formSelectedBranch, toolbarBranchId }: DeliveryChallanFormProps) {
 
   // Hooks
-  const {
-    userId, companyId, branchId, finid,
-  } = useUserStore();
+  const { userId, companyId, branchId, finid, } = useUserStore();
 
   const confirmDelete = useConfirm();
   const { mutate: printDeliveryChallan, isPending: isPrinting } = usePrintDeliveryChallan();
@@ -246,7 +244,6 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
   ];
 
   const handlePicklistSelect = (row: any) => {
-    console.log('Picklist Row :', row)
     setValue("orderid", row.id);
     setValue("picklistid", row.picklistid);
     setValue("picklistno", row.picklistno);
@@ -365,6 +362,7 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
       ...data,
       compid: Number(companyId),
       branchid: toolbarBranchId,
+      finid: Number(finid),
       qty: Number(totalqty),
       amt: Number(totprodval),
       itemdtl,
