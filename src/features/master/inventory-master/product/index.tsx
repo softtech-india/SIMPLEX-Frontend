@@ -85,6 +85,65 @@ export default function ProductModule() {
     }
   }
 
+  // const handlePrintClick = useCallback(async () => {
+  //   const row = selectedRow;
+  //   if (!row) return;
+
+  //   const blob = await getQR(row.id);
+  //   if (!blob) return;
+
+  //   const base64 = await new Promise<string>((resolve) => {
+  //     const reader = new FileReader();
+  //     reader.onloadend = () => resolve(reader.result as string);
+  //     reader.readAsDataURL(blob);
+  //   });
+
+  //   const pdf = new jsPDF({
+  //     orientation: "landscape",
+  //     unit: "mm",
+  //     format: [75, 100], // Height = 75mm, Width = 100mm
+  //   });
+
+  //   // Border
+  //   pdf.setDrawColor(0);
+  //   pdf.setLineWidth(0.5);
+  //   pdf.rect(6, 6, 90, 68);
+
+  //   // Font
+  //   pdf.setFontSize(16);
+
+  //   const labelX = 10;
+  //   const valueX = 30;
+
+  //   // Labels
+  //   pdf.setFont("helvetica", "bold");
+  //   pdf.text("Name :", labelX, 12);
+  //   pdf.text("Brand :", labelX, 18);
+  //   pdf.text("Code :", labelX, 24);
+
+  //   // Values 
+  //   pdf.setFont("helvetica", "normal");
+  //   pdf.text(`${row.productname }`|| "-", valueX, 12);
+  //   pdf.text(`${row.categorynm }` || "-", valueX, 18);
+  //   pdf.text(`${row.productcode }`|| "-", valueX, 24);
+
+  //   // QR Code (cente` ${row.productname }` red)
+  //   pdf.addImage(
+  //     base64,
+  //     "PNG",
+  //     50, // x
+  //     28, // y
+  //     42, // width
+  //     42  // height
+  //   );
+
+  //   const pdfBlob = pdf.output("blob");
+  //   const url = URL.createObjectURL(pdfBlob);
+
+  //   window.open(url, "_blank");
+  // }, [selectedRow, getQR]);
+
+
   const handlePrintClick = useCallback(async () => {
     const row = selectedRow;
     if (!row) return;
@@ -98,49 +157,168 @@ export default function ProductModule() {
       reader.readAsDataURL(blob);
     });
 
-    const pdf = new jsPDF({
-      orientation: "landscape",
-      unit: "mm",
-      format: [75, 100], // Height = 75mm, Width = 100mm
-    });
+    // Create a clean HTML page designed for printing
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Print Label</title>
+          <style>
+            @page {
+              size: 100mm 75mm landscape;
+              margin: 0;
+            }
+            
+            @media print {
+              html, body {
+                margin: 0;
+                padding: 0;
+                width: 100mm;
+                height: 75mm;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+            }
+            
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            
+            html, body {
+              width: 100mm;
+              height: 75mm;
+              font-family: Helvetica, Arial, sans-serif;
+              background: white;
+              overflow: hidden;
+            }
+            
+            .container {
+              border: 1px solid #000;
+              width: 88mm;
+              height: 63mm;
+              margin: 6mm;
+              padding: 4mm;
+              display: flex;
+              flex-direction: column;
+            }
+            
+            .content-area {
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+              min-height: 0;
+            }
+            
+            .info-row {
+              display: flex;
+              margin-bottom: 1.5mm;
+              font-size: 12px;
+              line-height: 1.2;
+              align-items: flex-start;
+              min-height: 0;
+            }
+            
+            .label {
+              font-weight: bold;
+              white-space: nowrap;
+              min-width: 45px;
+              flex-shrink: 0;
+              padding-right: 1mm;
+            }
+            
+            .value {
+              word-break: break-word;
+              overflow-wrap: break-word;
+              flex: 1;
+              line-height: 1.2;
+              max-height: 2.4em;
+              overflow: hidden;
+              display: -webkit-box;
+              -webkit-line-clamp: 2;
+              -webkit-box-orient: vertical;
+            }
+            
+            .qr-section {
+              flex: 1;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 0;
+              margin-top: 1mm;
+            }
+            
+            .qr-image {
+              width: 30mm;
+              height: 30mm;
+              object-fit: contain;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="content-area">
+              <div class="info-row">
+                <span class="label">Name:</span>
+                <span class="value">${(row.productname || "-").replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Brand:</span>
+                <span class="value">${(row.categorynm || "-").replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Code:</span>
+                <span class="value">${(row.productcode || "-").replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')}</span>
+              </div>
+              <div class="qr-section">
+                <img src="${base64}" alt="QR Code" class="qr-image" />
+              </div>
+            </div>
+          </div>
+          <script>
+            // Auto-print and close window after printing
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+              }, 250);
+            };
+            
+            // Close window after print dialog is closed
+            window.onafterprint = function() {
+              window.close();
+            };
+            
+            // Fallback for browsers that don't support onafterprint
+            window.matchMedia('print').addEventListener('change', function(e) {
+              if (!e.matches) {
+                setTimeout(function() {
+                  window.close();
+                }, 500);
+              }
+            });
+          </script>
+        </body>
+      </html>
+    `;
 
-    // Border
-    pdf.setDrawColor(0);
-    pdf.setLineWidth(0.5);
-    pdf.rect(6, 6, 90, 68);
+    // Open in new window and trigger print
+    const blob1 = new Blob([printContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob1);
+    // const printWindow = window.open(url, "_blank", "width=400,height=300");
+    const printWindow = window.open(url, "_blank");
 
-    // Font
-    pdf.setFontSize(16);
-
-    const labelX = 10;
-    const valueX = 30;
-
-    // Labels
-    pdf.setFont("helvetica", "bold");
-    pdf.text("Name :", labelX, 12);
-    pdf.text("Brand :", labelX, 18);
-    pdf.text("Code :", labelX, 24);
-
-    // Values 
-    pdf.setFont("helvetica", "normal");
-    pdf.text(`${row.productname }`|| "-", valueX, 12);
-    pdf.text(`${row.categorynm }` || "-", valueX, 18);
-    pdf.text(`${row.productcode }`|| "-", valueX, 24);
-
-    // QR Code (cente` ${row.productname }` red)
-    pdf.addImage(
-      base64,
-      "PNG",
-      50, // x
-      28, // y
-      42, // width
-      42  // height
-    );
-
-    const pdfBlob = pdf.output("blob");
-    const url = URL.createObjectURL(pdfBlob);
-
-    window.open(url, "_blank");
+    // Clean up the object URL after the window loads
+    if (printWindow) {
+      printWindow.onload = () => {
+        URL.revokeObjectURL(url);
+      };
+    } else {
+      // Fallback if popup is blocked
+      URL.revokeObjectURL(url);
+      alert("Please allow popups for this website to print labels");
+    }
   }, [selectedRow, getQR]);
 
   const handleRefresh = useCallback(() => {

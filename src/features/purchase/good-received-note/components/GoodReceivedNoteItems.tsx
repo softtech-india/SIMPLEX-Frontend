@@ -56,14 +56,20 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
   const qty = Number(item?.qty1) || 0;
   const rate = Number(item?.rate) || 0;
   const value = qty * rate;
+  const isQtyScanned = item?.isScanned
 
   const actualValue =
     mode === 'Confirmed' ? Number(item.scanqty) * rate : 0;
 
+  if (mode === 'Confirmed' && isQtyScanned) {
+    setValue(`itemdtl.${index}.scanqty`, qty);
+  }
+
+
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const productRef = useRef<HTMLInputElement>(null);
   const qtyRef = useRef<HTMLInputElement>(null);
-  const isScanned = item?.productid && item?.productid > 0;
+
 
   // Model Search Brand Modal Handlers
   const baseCategoryParams = {
@@ -145,16 +151,12 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
           type="text"
           value={item?.productnm || ""}
           readOnly
-          className={`
-            inputField w-full 
+          className={`  inputField w-full 
             ${errors?.itemdtl?.[index]?.productid ? "border-red-500" : "border-gray-300"}
             ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : " cursor-pointer "}
           `}
           placeholder="Select Product"
         />
-        {errors?.itemdtl?.[index]?.productid && (
-          <p className="text-xs text-red-500 mt-1"> {errors.itemdtl[index].productid.message} </p>
-        )}
       </div>
 
       <div className="w-20">
@@ -251,15 +253,12 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
               {...register(`itemdtl.${index}.balanceqty1`)}
               tabIndex={-1}
               readOnly
-              className={`
-                inputField  bg-gray-100 cursor-not-allowed"
-                ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-300"}
-              `}
+              className={`inputField bg-gray-100 cursor-not-allowed border-gray-300 `}
             />
           </div>
         </>
       )}
-
+      {/* ${errors?.itemdtl?.[index]?.qty1 ? "border-red-500" : "border-gray-300"} */}
       {isRowConfirmed && (
         <div className="w-24">
           <label className="block text-gray-700 text-sm font-medium mb-1">
@@ -281,28 +280,23 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
 
       {(mode === 'Confirmed') && (
         <>
-          {/* Scanned */}
+
           <div className="w-16">
             <label className="block text-gray-700 text-sm font-medium mb-1">
               Scanned
             </label>
 
             <div
-              className={`inputField flex items-center justify-center h-10.5 border rounded-md font-medium ${item?.isScanned
-                ? "bg-green-50 border-green-300 text-green-600"
-                : "bg-red-50 border-red-300 text-red-600"
-                }`}
+              className={`inputField flex items-center justify-center h-10.5 border rounded-md font-medium
+                 ${item?.isScanned ? "bg-green-50 border-green-300 text-green-600" : "bg-red-50 border-red-300 text-red-600"}
+              `}
             >
               {item?.isScanned ? "✓ Done" : "✗ No"}
             </div>
           </div>
 
-          {/* Scan Qty */}
           <div className="w-16">
-            <label className="block text-gray-700 text-sm font-medium mb-1">
-              Scan Qty.
-            </label>
-
+            <label className="block text-gray-700 text-sm font-medium mb-1"> Scan Qty.</label>
             <input
               type="number"
               min={0}
@@ -314,15 +308,9 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
                   if (scanQty < 0) scanQty = 0;
 
                   const orderQty = Number(item?.qty1) || 0;
+                  const shortQty = scanQty < orderQty ? orderQty - scanQty : 0;
+                  const excessQty = scanQty > orderQty ? scanQty - orderQty : 0;
 
-                  // Calculate short and excess
-                  const shortQty =
-                    scanQty < orderQty ? orderQty - scanQty : 0;
-
-                  const excessQty =
-                    scanQty > orderQty ? scanQty - orderQty : 0;
-
-                  // Update form values
                   setValue(`itemdtl.${index}.scanqty`, scanQty);
                   setValue(`itemdtl.${index}.shortqty`, shortQty);
                   setValue(`itemdtl.${index}.excessqty`, excessQty);
@@ -336,12 +324,8 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
             />
           </div>
 
-          {/* Short */}
           <div className="w-16">
-            <label className="block text-gray-700 text-sm font-medium mb-1">
-              Short
-            </label>
-
+            <label className="block text-gray-700 text-sm font-medium mb-1"> Short </label>
             <input
               type="number"
               min={0}
@@ -351,12 +335,8 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
             />
           </div>
 
-          {/* Excess */}
           <div className="w-16">
-            <label className="block text-gray-700 text-sm font-medium mb-1">
-              Excess
-            </label>
-
+            <label className="block text-gray-700 text-sm font-medium mb-1">  Excess </label>
             <input
               type="number"
               min={0}
@@ -366,12 +346,8 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
             />
           </div>
 
-          {/* Actual Value */}
           <div className="w-20">
-            <label className="block text-gray-700 text-sm font-medium mb-1">
-              Actual Value
-            </label>
-
+            <label className="block text-gray-700 text-sm font-medium mb-1"> Actual Value </label>
             <input
               type="number"
               min={0}

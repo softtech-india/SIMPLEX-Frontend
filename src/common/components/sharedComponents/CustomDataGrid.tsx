@@ -17,6 +17,7 @@ import {
   Export,
   GroupPanel,
   Grouping,
+  SearchPanel,
 } from "devextreme-react/data-grid";
 
 import CustomStore from "devextreme/data/custom_store";
@@ -40,6 +41,7 @@ export interface GridColumn {
   searchEnabled?: boolean;
   cellRender?: (cellData: any) => React.ReactNode;
   [key: string]: any;
+
 }
 
 export interface GridSummaryItem {
@@ -92,6 +94,12 @@ interface CustomDataGridProps {
   enableExport?: boolean;
   exportFormats?: ("xlsx" | "pdf")[];
   exportFileName?: string;
+
+  // Search-related props
+  showSearchPanel?: boolean;
+  searchPlaceholder?: string;
+  searchExpr?: string | string[];
+
 }
 
 const CustomDataGrid: React.FC<CustomDataGridProps> = ({
@@ -134,6 +142,12 @@ const CustomDataGrid: React.FC<CustomDataGridProps> = ({
   enableExport = true,
   exportFormats = ["xlsx"],
   exportFileName = "DataGrid",
+
+  // Search defaults
+  showSearchPanel = true,
+  searchPlaceholder = "Search...",
+  searchExpr,
+
 }) => {
 
   const handleExporting = async (e: any) => {
@@ -476,6 +490,16 @@ const CustomDataGrid: React.FC<CustomDataGridProps> = ({
       {/* Scrolling */}
       <Scrolling mode={scrollingMode} />
 
+      {/* Search Panel - only with valid props */}
+      {showSearchPanel && (
+        <SearchPanel
+          visible={true}
+          width={250}
+          placeholder={searchPlaceholder}
+          highlightSearchText={true}
+        />
+      )}
+
       {/* Paging */}
       <Paging defaultPageSize={50} />
 
@@ -507,6 +531,7 @@ const CustomDataGrid: React.FC<CustomDataGridProps> = ({
           dataType={col.dataType as any}
           format={col.format}
           cellRender={col.cellRender}
+
         />
       ))}
 

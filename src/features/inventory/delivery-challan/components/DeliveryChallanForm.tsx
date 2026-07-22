@@ -18,10 +18,11 @@ import { formatDateForInput } from "@/helpers/dateUtils";
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
 import { SHORTCUTS } from "@/common/constants/shortcuts";
-import MultipleSearchModal from "@/common/components/MultipleSearchModal";
 import SearchModal from "@/common/components/SearchModal";
 import Loader from "@/common/components/Loader";
 import { toast } from "sonner";
+import { useLookupShortcuts } from "@/common/hooks/useLookupShortcuts";
+import { LOOKUP_KEYS } from "@/common/constants/lookupKeys";
 
 interface DeliveryChallanFormProps {
   visible: boolean;
@@ -45,6 +46,9 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
   const [godownModalOpen, setGodownModalOpen] = useState(false);
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
   const [picklistModalOpen, setPicklistModalOpen] = useState(false);
+  const [transporterModalOpen, setTransporterModalOpen] = useState(false);
+
+  const transportRef = useRef<HTMLInputElement>(null);
   const godownRef = useRef<HTMLInputElement>(null);
   const pickListRef = useRef<HTMLInputElement>(null);
 
@@ -117,6 +121,8 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
         orderid: DeliveryChallan.orderid ?? 0,
         picklistid: DeliveryChallan.picklistid ?? 0,
         picklistno: DeliveryChallan.picklistno ?? "",
+        
+        transportername: DeliveryChallan.transportername ?? "",
 
         qty: Number(DeliveryChallan.qty ?? 0),
 
@@ -128,7 +134,8 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
             productid: Number(item.productid ?? 0),
             productnm: item.productnm ?? "",
             qty: Number(item.qty ?? 0),
-            rate: Number(item.rate ?? 0),
+           // rate: Number(item.rate ?? 0),
+            rate: 0,
             value: Number(item.qty ?? 0),
             unit: item.unit ?? "",
           })) ?? [],
@@ -138,6 +145,16 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
     }
 
   }, [DeliveryChallan, isAddMode, visible, reset, setFocus]);
+
+  // On Space button Open Search Model
+  const lookupMap = {
+    customer: () => setCustomerModalOpen(true),
+    godownid: () => setGodownModalOpen(true),
+    transporter: () => setTransporterModalOpen(true),
+
+  };
+
+  const bindLookup = useLookupShortcuts(isReadOnly, lookupMap);
 
   const numMethodOptions = [
     { label: "Auto", value: "A" },
@@ -176,6 +193,31 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
   const selectedSeries = seriesNoOptions.find(
     (s: any) => s.value === watch("vnumid")
   );
+
+  // Model Search Transporter Modal Handlers
+  const baseTransporterParams = {
+    userid: userId,
+    compid: companyId,
+  };
+
+  const searchTransporterColumns = [
+    { key: "name", label: "name." },
+  ];
+
+  const searchTransporterFields = [
+    { value: "name", label: "Ledger Name" },
+  ];
+
+  const handleTransporterSelect = (row: any) => {
+    // setValue("transporterid", row.id);
+    setValue("transportername", row.name);
+    setTransporterModalOpen(false);
+    requestAnimationFrame(() => {
+      setFocus("vehicleno");
+    });
+  };
+
+  const transporterName = watch("transportername")
 
   // Model Search Godown Modal Handlers
   const baseGodownParams = {
@@ -490,6 +532,25 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
               </div>
 
               <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">Transporter <strong className="text-red-500 text-sm"> * </strong></label>
+                <input
+                  type="text"
+                  value={transporterName || ''}
+                  disabled={isReadOnly}
+                  readOnly
+                  ref={(e) => {
+                    register("transportername").ref(e);
+                    transportRef.current = e;
+                  }}
+                  {...bindLookup(LOOKUP_KEYS.transporter)}
+                  onClick={() => setTransporterModalOpen(true)}
+                  className={`inputField w-full border border-gray-300 
+                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}
+                  `}
+                  placeholder="Select transporter "
+                />
+              </div>
+              {/* <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Transporter Name</label>
                 <input
                   type="text"
@@ -498,7 +559,7 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
                   className={` inputField  ${errors.transportername ? "" : "border-gray-400"}  `}
                   placeholder="Enter transporter"
                 />
-              </div>
+              </div> */}
 
               <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Vehicle No</label>
@@ -644,6 +705,16 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
 
       </form>
 
+
+      <SearchModal
+        open={transporterModalOpen}
+        onClose={() => setTransporterModalOpen(false)}
+        endpoint="transporter"
+        baseParams={baseTransporterParams}
+        columns={searchTransporterColumns}
+        searchFields={searchTransporterFields}
+        onSelect={handleTransporterSelect}
+      />
 
       <SearchModal
         open={customerModalOpen}

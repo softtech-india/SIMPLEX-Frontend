@@ -653,8 +653,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   type="text"
                   {...register("grnno")}
                   disabled={isReadOnly || selectedSeries?.manualallow === "N"}
-                  className={`
-                    inputField 
+                  className={`  inputField 
                     ${errors.grnno ? "border-red-500" : "border-gray-300"} 
                     ${selectedSeries?.manualallow === "N" ? "bg-gray-100 cursor-not-allowed" : ""}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}
@@ -679,7 +678,6 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   `}
                   placeholder="Select Vendor"
                 />
-                {errors.vendorid && !vendorName && <p className="text-red-500 mt-1 text-xs">{errors.vendorid.message}</p>}
               </div>
 
               <div className="w-68">
@@ -701,7 +699,6 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
                   placeholder="Select PO No. & Date"
                 />
-                {errors.orderno && <p className="text-red-500 mt-1 text-xs">{errors.orderno.message}</p>}
               </div>
 
               <div className="w-48">
@@ -726,7 +723,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
               </div>
 
               <div className="w-80">
-                <label className="block text-gray-700 font-medium mb-1"> Godown <span className="text-red-500">*</span> </label>
+                <label className="block text-gray-700 font-medium mb-1"> Godown <span className="text-red-500"> *</span> </label>
                 <input
                   type="text"
                   value={godownName || ''}
@@ -735,7 +732,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                   {...bindLookup(LOOKUP_KEYS.godownid)}
                   onKeyDown={(e) => handleKeyOpen(e, () => setGodownModalOpen(true))}
                   onClick={() => setGodownModalOpen(true)}
-                  className={`inputField w-full border border-gray-300 ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
+                  className={`inputField w-full  ${errors.godownid ? "border-red-500" : "border-gray-400"} ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
                   placeholder="Select Godown"
                 />
               </div>
@@ -866,7 +863,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                 />
               </div>
 
-              {(mode === 'Confirmed') && (
+              {/* {(mode === 'Confirmed') && (
                 <>
                   <div className="w-20 relative">
                     <input
@@ -887,7 +884,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                     />
                   </div>
                 </>
-              )}
+              )} */}
 
               <div className="w-12" />
 

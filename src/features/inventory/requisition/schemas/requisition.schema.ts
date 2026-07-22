@@ -3,10 +3,8 @@ import { z } from "zod";
 export const RequisitionItemSchema = z.object({
   tag: z.string().optional(),
   dtlid: z.coerce.number().optional(),
-  productid: z.coerce.number().min(1, "Please select a productid"),
-  qty: z.coerce
-    .number()
-    .min(1, "Quantity should be greater than 0"),
+  productid: z.number().min(1, "Please select a productid"),
+  qty: z.coerce.number().min(1, "Quantity should be greater than 0"),
 });
 
 export const RequisitionSchema = z.object({
@@ -42,6 +40,8 @@ export const RequisitionSchema = z.object({
   rem2: z.string().optional(),
 
   totqty: z.coerce.number().optional(),
+
+  qrcode: z.string().optional(),
 
   itemdtl: z
     .array(RequisitionItemSchema)
