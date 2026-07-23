@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { PickListDataGrid } from './components/PickListDataGrid';
 import { PickListForm } from './components/PickListForm';
-import { usePickList } from './hooks/usePickList';
+import { usePickList, usePrintPicklist } from './hooks/usePickList';
 import { PickList, OperationMode } from './types/pickList.types';
 import useIsMobile from "@/common/hooks/useIsMobile";
 import { TransactionToolbar } from '@/common/components/barmanager/TransactionToolbar';
@@ -23,6 +23,7 @@ export default function PickListModule() {
   const isMobile = useIsMobile()
   const permissions = usePrivileges();
   const { userId, companyId, branchId, finid, branchnm } = useUserStore();
+  const { mutate: printPicklist, isPending: isPrinting } = usePrintPicklist();
 
   // State 
   const [selectedRow, setselectedRow] = useState<PickList | null>(null);
@@ -98,7 +99,12 @@ export default function PickListModule() {
   const handleEditClick = useCallback(() => openForm('Edit'), [openForm]);
   const handleDeleteClick = useCallback(() => openForm('Delete'), [openForm]);
   const handleViewClick = useCallback(() => openForm('View'), [openForm]);
-  const handlePrintClick = useCallback(() => openForm('Print'), [openForm]);
+
+  const handlePrintClick = useCallback(() => {
+    if (!selectedRow) return;
+
+    printPicklist(selectedRow.id || 0);
+  }, [printPicklist, selectedRow]);
 
 
   const handleRefresh = useCallback(() => {
@@ -123,7 +129,7 @@ export default function PickListModule() {
     exportToExcel({
       data: PickListList,
       columns,
-      fileName: "Pick List List.xlsx",
+      fileName: "Pick List.xlsx",
       sheetName: "Pick List",
     });
   }, [PickListList]);
@@ -145,6 +151,7 @@ export default function PickListModule() {
             onRefresh={handleRefresh}
             onView={handleViewClick}
             onPrint={handlePrintClick}
+            isPrinting={isPrinting}
 
 
             selectFromDate={{
