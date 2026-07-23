@@ -20,12 +20,12 @@ export const requisitionFormDefaults: RequisitionFormSchema = {
   rem2: '',
   totqty: 0,
 
-  itemdtl: [
-    {
-      tag: "I",
-      dtlid: 1,
-      productid: 0,
-      qty: 0
-    },
-  ],
+  itemdtl: [],
 };
+
+// {
+//     tag: "I",
+//     dtlid: 1,
+//     productid: 0,
+//     qty: 0
+//   },

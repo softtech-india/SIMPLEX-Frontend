@@ -166,7 +166,8 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
             productnm: item.productnm,
             qty1: Number(item.qty1 ?? 0),
             qty2: Number(item.qty2 ?? 0),
-            rate: Number(item.rate ?? 0),
+            // rate: Number(item.rate ?? 0),
+            rate: 0,
             value: Number(item.value ?? 0),
             altunimethod: item.altunimethod ?? "A",
             altunitfactor: Number(item.altunitfactor ?? 1),
@@ -623,6 +624,8 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
                   placeholder="Select Godown"
                 />
               </div>
+
+              
               <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1"> Scan QR Code <span className="text-red-500"> *</span> </label>
 

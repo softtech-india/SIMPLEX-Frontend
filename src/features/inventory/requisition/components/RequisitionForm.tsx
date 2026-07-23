@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Popup } from "devextreme-react/popup";
 import { useQuery } from "@tanstack/react-query";
 import { useRequisitionById, useCreateRequisition, useUpdateRequisition, useDeleteRequisition, usePrintRequisition } from "../hooks/useRequisition";
-import { RequisitionFormType, OperationMode } from "../types/requisition.types";
+import { RequisitionFormType, OperationMode, RequisitionItem } from "../types/requisition.types";
 import { RequisitionFormSchema } from "../schemas/requisition.schema";
 import { requisitionFormDefaults } from "../constants/requisitionFormDefaults";
 import { useRequisitionForm } from "../hooks/useRequisitionForm";
@@ -21,6 +21,8 @@ import { useConfirm } from "@/common/hooks/useConfirm";
 import { LOOKUP_KEYS } from "@/common/constants/lookupKeys";
 import { useLookupShortcuts } from "@/common/hooks/useLookupShortcuts";
 import Loader from "@/common/components/Loader";
+import { useSaleQrScanner } from "@/hooks/useSaleQrScanner";
+import { useRequisitionQrScanner } from "@/hooks/useRequisitionQrScanner";
 
 interface RequisitionFormProps {
   visible: boolean;
@@ -70,17 +72,10 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
   const isSubmitting = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   const {
-    control,
-    register,
-    handleSubmit,
-    setFocus,
-    reset,
-    watch,
-    setValue,
-    formState: { errors },
+    control, register, handleSubmit, setFocus, reset, watch, setValue, getValues, trigger, formState: { errors },
   } = useRequisitionForm();
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control,
     name: "itemdtl",
   });
@@ -95,6 +90,16 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
     return sum + (Number(item?.qty) || 0);
   }, 0) || 0;
 
+const { scanInputRef, handleScan } = useRequisitionQrScanner({
+  setValue,
+  onUpdateItems: (updater) => {
+    const currentItems = getValues("itemdtl") || [];
+    const updatedItems = updater(currentItems as RequisitionItem[]);
+    
+    replace(updatedItems);
+    trigger("itemdtl");
+  },
+});
 
   // Reset form 
   useEffect(() => {
@@ -382,9 +387,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
 
           {/* Requisition Info */}
           <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
-              Requisition Information
-            </h2>
+            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50"> Requisition Information  </h2>
 
             <div className="flex flex-wrap gap-1 items-end">
               <div className="w-48">
@@ -438,6 +441,25 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
                   className={`inputField border-gray-400 bg-gray-100 cursor-not-allowed `}
                 />
               </div>
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1"> Scan QR Code <span className="text-red-500"> *</span> </label>
+
+                <input
+                  type="text"
+                  {...register("qrcode")}
+                  ref={(el) => {
+                    scanInputRef.current = el;
+                    register("qrcode").ref(el);
+                  }}
+                  className="inputField border-gray-300"
+                  onKeyDown={(e: any) => {
+                    if (e.key !== "Enter") return;
+                    e.preventDefault();
+                    handleScan(e.target.value);
+                  }}
+                />
+              </div>
+
             </div>
           </section>
 

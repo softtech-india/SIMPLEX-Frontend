@@ -2,6 +2,7 @@ import { apiCall } from "@/utils/apiClient";
 import { PickList, PickListFormType, PickListApiResponse, PickListItem, SoProductListApiResponse } from '../types/pickList.types';
 import { storageService } from "@/common/utility/storageService";
 import { getErrorMessage } from "@/helpers/getErrorMessage";
+import axios from "axios";
 
 export interface GetPickListParams {
   userid: number;
@@ -172,6 +173,42 @@ class PickListService {
     } catch (error: any) {
       console.error("Error creating Pick List:", error);
       throw new Error(getErrorMessage(error));
+    }
+  }
+
+  async getPicklistPrintById(id: number): Promise<Blob> {
+    const token = localStorage.getItem("accessToken") || "";
+    try {
+
+      if (
+        id === undefined ||
+        id === null ||
+        Number(id) === 0
+      ) {
+        throw new Error("ID must be greater than 0.");
+      }
+
+
+      const response = await axios.get(
+        `${this.baseUrl}picklist/print/pdf`,
+        {
+          params: {
+            userid: this.getUserId(),
+            compid: this.getCompanyId(),
+            id: id,
+          },
+          responseType: "blob",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+
+    } catch (error: any) {
+      console.error("Error fetching Pick list print:", error);
+      throw error;
     }
   }
 

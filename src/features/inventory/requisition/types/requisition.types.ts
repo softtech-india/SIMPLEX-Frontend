@@ -3,9 +3,9 @@ export interface RequisitionItem {
   dtlid?: number;
   pcategoryid?: number;
   pcategorynm?: string;
-  productid?: number;
+  productid: number;
   productnm?: string;
-  qty?: number;
+  qty: number;
   rate?: number;
   value?: number;
   altunimethod?: string;
@@ -24,15 +24,17 @@ export interface Requisition {
   reqdt?: string;
   reqno?: string;
   godownid: number;
-  godownnm?: string;  // Changed from godownName to match API
+  godownnm?: string; 
   tobranchid: number;
-  tobranchnm?: string;  // Changed from toBranchName to match API
+  tobranchnm?: string;  
   togodownid: number;
-  togodownnm?: string;  // Changed from togodownName to match API
+  togodownnm?: string;  
   rem1?: string;
   rem2?: string;
   totqty?: number;
+  qrcode?: string;
   itemdtl?: RequisitionItem[];
+
   entryby?: number;
   entrydt?: string;
   updateby?: number;

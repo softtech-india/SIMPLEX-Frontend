@@ -53,6 +53,10 @@ export const ProductDataGrid = forwardRef<any, ProductDataGridProps>(
         onExporting={onExporting}
         selectionMode="single"
         height={height}
+        // Search configuration
+        showSearchPanel={true}
+        searchPlaceholder="Search products..."
+        searchExpr={["productName", "productCode"]} 
       />
     );
   }
