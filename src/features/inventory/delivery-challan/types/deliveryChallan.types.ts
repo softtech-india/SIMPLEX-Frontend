@@ -34,7 +34,7 @@ export interface DeliveryChallan {
   picklistid: number;
   picklistno: string;
 
-  transporterid?: number;
+  transporterid: number;
   transportername?: string;
   vehicleno?: string;
   narration?: string;

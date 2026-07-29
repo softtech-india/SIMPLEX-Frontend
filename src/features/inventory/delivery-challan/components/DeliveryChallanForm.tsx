@@ -121,8 +121,11 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
         orderid: DeliveryChallan.orderid ?? 0,
         picklistid: DeliveryChallan.picklistid ?? 0,
         picklistno: DeliveryChallan.picklistno ?? "",
-        
+
+        transporterid: DeliveryChallan.transporterid ?? 0,
         transportername: DeliveryChallan.transportername ?? "",
+        
+        vehicleno: DeliveryChallan.vehicleno ?? "",
 
         qty: Number(DeliveryChallan.qty ?? 0),
 
@@ -134,7 +137,7 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
             productid: Number(item.productid ?? 0),
             productnm: item.productnm ?? "",
             qty: Number(item.qty ?? 0),
-           // rate: Number(item.rate ?? 0),
+            // rate: Number(item.rate ?? 0),
             rate: 0,
             value: Number(item.qty ?? 0),
             unit: item.unit ?? "",
@@ -209,7 +212,8 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
   ];
 
   const handleTransporterSelect = (row: any) => {
-    // setValue("transporterid", row.id);
+    console.log('transportername :', row)
+    setValue("transporterid", row.id);
     setValue("transportername", row.name);
     setTransporterModalOpen(false);
     requestAnimationFrame(() => {
@@ -219,7 +223,7 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
 
   const transporterName = watch("transportername")
 
-  // Model Search Godown Modal Handlers
+  // Model Search Godown Modal Handlers  
   const baseGodownParams = {
     userid: userId,
     compid: companyId,
@@ -539,12 +543,13 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
                   disabled={isReadOnly}
                   readOnly
                   ref={(e) => {
-                    register("transportername").ref(e);
+                    register("transporterid").ref(e);
                     transportRef.current = e;
                   }}
                   {...bindLookup(LOOKUP_KEYS.transporter)}
                   onClick={() => setTransporterModalOpen(true)}
-                  className={`inputField w-full border border-gray-300 
+                  className={`inputField w-full border
+                    ${errors.transporterid && !transporterName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}
                   `}
                   placeholder="Select transporter "

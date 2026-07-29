@@ -35,7 +35,7 @@ export const DeliveryChallanFormDefaults: DeliveryChallanFormSchema = {
   picklistid: 0,
   picklistno: "",
 
-  transportername: "",
+  transporterid: 0,
   vehicleno: "",
   narration: "",
 

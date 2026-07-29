@@ -35,7 +35,7 @@ export const DeliveryChallanBaseSchema = z.object({
   picklistid: z.number().min(1, "Please select a pick list"),
   picklistno: z.string().optional(),
 
-  transporterid: z.number().optional(),
+  transporterid: z.number().min(1, "Please select a transporter"),
   transportername: z.string().optional(),
   vehicleno: z.string().optional(),
   narration: z.string().optional(),
