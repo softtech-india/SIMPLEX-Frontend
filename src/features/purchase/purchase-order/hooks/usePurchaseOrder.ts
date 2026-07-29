@@ -163,3 +163,48 @@ export function useDeletePurchaseOrder() {
     },
   });
 }
+
+export function usePrintPurchaseOrder() {
+  return useMutation({
+    mutationFn: async (
+      { id }: { id: string | number }
+    ) => {
+
+      if (
+        id === undefined ||
+        id === null ||
+        id === "" ||
+        Number(id) === 0
+      ) {
+        throw new Error("Purchase Order ID must be greater than 0.");
+      }
+
+      const blob = await purchaseOrderService.getPurchaseOrderPrintById(id);
+
+      const url = URL.createObjectURL(blob);
+      const tab = window.open(url, "_blank");
+
+      if (!tab) throw new Error("Popup blocked");
+
+      const interval = setInterval(() => {
+        try {
+          if (tab.document?.readyState === "complete") {
+            clearInterval(interval);
+
+            tab.focus();
+
+            setTimeout(() => {
+              URL.revokeObjectURL(url);
+            }, 2000);
+          }
+        } catch {
+          console.warn("Waiting for PDF to load...");
+        }
+      }, 300);
+    },
+
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to print PDF");
+    },
+  });
+}

@@ -79,6 +79,7 @@ export interface PurchaseOrderApiResponse {
   success: boolean;
   message: string;
   data: PurchaseOrder[];
+  id: string | number;
 }
 
 export type OperationMode = "Add" | "Edit" | "Delete" | "View" | "Print" | "Approve";

@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { PurchaseOrderDataGrid } from './components/PurchaseOrderDataGrid';
 import { PurchaseOrderForm } from './components/PurchaseOrderForm';
-import { usePurchaseOrderList } from './hooks/usePurchaseOrder';
+import { usePurchaseOrderList, usePrintPurchaseOrder } from './hooks/usePurchaseOrder';
 import { PurchaseOrder, OperationMode } from './types/purchaseOrder.types';
 import useIsMobile from "@/common/hooks/useIsMobile";
 import { TransactionToolbar } from '@/common/components/barmanager/TransactionToolbar';
@@ -23,6 +23,7 @@ export default function PurchaseOrderModule() {
   const isMobile = useIsMobile()
   const permissions = usePrivileges();
   const { userId, companyId, branchId, finid, branchnm } = useUserStore();
+  const { mutate: printPurchaseOrder, isPending: isPrinting } = usePrintPurchaseOrder();
 
   // State 
   const [selectedRow, setselectedRow] = useState<PurchaseOrder | null>(null);
@@ -48,12 +49,6 @@ export default function PurchaseOrderModule() {
       startdt: fromDate || "",
       enddt: toDate || "",
     });
-
-  // useEffect(() => {
-  //   console.log('branch :', toolbarBranchId);
-  //   console.log('fromDate :', fromDate);
-  //   console.log('toDate :', toDate);
-  // }, [toolbarBranchId, fromDate, toDate])
 
   // Fetch dropdown options
   const { data: BranchOrderOptions = [] } = useQuery({
@@ -105,7 +100,13 @@ export default function PurchaseOrderModule() {
   const handleEditClick = useCallback(() => openForm('Edit'), [openForm]);
   const handleDeleteClick = useCallback(() => openForm('Delete'), [openForm]);
   const handleViewClick = useCallback(() => openForm('View'), [openForm]);
-  const handlePrintClick = useCallback(() => openForm('Print'), [openForm]);
+
+  const handlePrintClick = useCallback(() => {
+    if (!selectedRow) return;
+    printPurchaseOrder({
+      id: selectedRow.id,
+    });
+  }, [printPurchaseOrder, selectedRow]);
 
   const handleApproveClick = useCallback(() => {
     if (isRowApproved) return;
@@ -139,10 +140,6 @@ export default function PurchaseOrderModule() {
     });
   }, [purchaseOrderList]);
 
-  // useEffect(() => {
-  //   console.log("formSelectedBranch :", formSelectedBranch);
-  // }, [formSelectedBranch]);
-
   return (
     <>
       <div className="purchase-order-module ">
@@ -151,7 +148,6 @@ export default function PurchaseOrderModule() {
 
           <TransactionToolbar
             title="Purchse Orders"
-            // periodTitle='Period: 2026-2027'
             permissions={permissions}
             onAdd={handleAddClick}
             onEdit={handleEditClick}
@@ -160,6 +156,7 @@ export default function PurchaseOrderModule() {
             onRefresh={handleRefresh}
             onView={handleViewClick}
             onPrint={handlePrintClick}
+            isPrinting={isPrinting}
 
             isRowApproved={isRowApproved}
 
@@ -218,15 +215,16 @@ export default function PurchaseOrderModule() {
           </div>
         )}
 
-
-        <PurchaseOrderForm
-          visible={isFormOpen}
-          onClose={handleFormClose}
-          formPurchaseOrderId={formPurchaseOrderId}
-          formSelectedBranch={formSelectedBranch || branchnm}
-          toolbarBranchId={Number(toolbarBranchId) || Number(branchId)}
-          mode={formMode}
-        />
+        {isFormOpen && (
+          <PurchaseOrderForm
+            visible={isFormOpen}
+            onClose={handleFormClose}
+            formPurchaseOrderId={formPurchaseOrderId}
+            formSelectedBranch={formSelectedBranch || branchnm}
+            toolbarBranchId={Number(toolbarBranchId) || Number(branchId)}
+            mode={formMode}
+          />
+        )}
 
         {isLoading && <Loader />}
 
