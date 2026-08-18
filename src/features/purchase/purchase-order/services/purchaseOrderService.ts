@@ -1,6 +1,7 @@
 import { apiCall } from "@/utils/apiClient";
 import { PurchaseOrder, PurchaseOrderFormType, PurchaseOrderApiResponse } from '../types/purchaseOrder.types';
 import { toast } from "sonner";
+import axios from "axios";
 import { storageService } from "@/common/utility/storageService";
 
 export interface GetPurchaseOrderParams {
@@ -169,6 +170,45 @@ class PurchaseOrderService {
       console.error("Error creating purchaseOrder:", error);
       toast.error(error.message || "Failed to create purchaseOrder");
       throw error;
+    }
+  }
+
+  async getPurchaseOrderPrintById(
+    id: string | number | undefined
+  ): Promise<Blob> {
+    const token = localStorage.getItem("accessToken") || "";
+    try {
+
+      if (
+        id === undefined ||
+        id === null ||
+        id === "" ||
+        Number(id) === 0
+      ) {
+        throw new Error("Purchase Order ID must be greater than 0.");
+      }
+
+      const response = await axios.get(
+        `${this.baseUrl}po/qr`,
+        {
+          params: {
+            userid: this.getUserId(),
+            compid: this.getCompanyId(),
+            id: id,
+          },
+          responseType: "blob",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+
+    } catch (error: any) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error(`Error printing purchase order: ${message}`);
+      throw new Error(message);
     }
   }
 

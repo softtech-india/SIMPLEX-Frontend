@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Popup } from "devextreme-react/popup";
 import { useQuery } from "@tanstack/react-query";
-import { usePurchaseOrderById, useCreatePurchaseOrder, useUpdatePurchaseOrder, useDeletePurchaseOrder, useApprovePurchaseOrder } from "../hooks/usePurchaseOrder";
+import { usePurchaseOrderById, useCreatePurchaseOrder, useUpdatePurchaseOrder, useDeletePurchaseOrder, useApprovePurchaseOrder, usePrintPurchaseOrder } from "../hooks/usePurchaseOrder";
 import { PurchaseOrderFormType, OperationMode } from "../types/purchaseOrder.types";
 import { PurchaseOrderFormSchema } from "../schemas/purchaseOrder.schema";
 import { defaultItemDtl, pruchaseOrderFormDefaults } from "../constants/pruchaseOrderFormDefaults";
@@ -50,6 +50,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
   const proFormaRef = useRef<HTMLInputElement>(null);
   const brandInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+  const { mutate: printPurchaseOrder, isPending: isPrinting } = usePrintPurchaseOrder();
 
   const handleSortcutCreate = async () => {
     await open("vendor");
@@ -340,11 +341,19 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
       };
 
       if (isAddMode) {
-        await createMutation.mutateAsync(payload);
+        const response = await createMutation.mutateAsync(payload);
+
         reset(pruchaseOrderFormDefaults);
         setTimeout(() => {
           setFocus("orderdt");
         }, 1000);
+
+        const newId = Number(response?.id);
+        if (newId > 0) {
+          printPurchaseOrder({ id: newId });
+        } else {
+          toast.error("Invalid Purchase Order ID. Unable to print.");
+        }
         return;
       }
 
@@ -354,6 +363,12 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
           data: payload,
         });
         onClose();
+
+        if (formPurchaseOrderId > 0) {
+          printPurchaseOrder({ id: formPurchaseOrderId });
+        } else {
+          toast.error("Invalid Purchase Order ID. Unable to print.");
+        }
       }
 
       const approvePayload: PurchaseOrderFormType = {
@@ -508,11 +523,6 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                     ${selectedSeries?.manualallow === "N" ? "bg-gray-100 cursor-not-allowed" : ""}
                   `}
                   />
-                  {/* {selectedSeries?.manualallow === "N" && (
-                  <p className="text-xs text-gray-400 ">
-                    Order number is system generated 
-                  </p>
-                )} */}
                 </div>
 
                 <div className="w-110">
@@ -533,27 +543,6 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                   />
                   {errors.vendorid && !vendorName && <p className="text-red-500 mt-1 text-sm">{errors.vendorid.message}</p>}
                 </div>
-
-                {/* <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Enquiry No</label>
-                <input
-                  type="text"
-                  {...register("enqno")}
-                  disabled={isReadOnly}
-                  placeholder="Enter enquiry no."
-                  className={`inputField ${errors.enqno ? "" : "border-gray-400"}`}
-                />
-              </div> */}
-
-                {/* <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Enquiry Date</label>
-                <input
-                  type="date"
-                  {...register("enqdt")}
-                  disabled={isReadOnly}
-                  className={`inputField ${errors.enqdt ? "" : "border-gray-400"}`}
-                />
-              </div> */}
 
                 <div className="w-48">
                   <label className="block text-gray-700 font-medium mb-1">Proforma invoice no.</label>
@@ -593,71 +582,6 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
 
               </div>
             </section>
-
-            {/* Delivery & Payment */}
-            {/* <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
-              Delivery & Payment Details
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Delivery Place</label>
-                <input
-                  type="text"
-                  placeholder="Delivery Place"
-                  {...register("delvplace")}
-                  disabled={isReadOnly}
-                  className={`inputField ${errors.delvplace ? "" : "border-gray-400"}`}
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Transport Mode </label>
-                <input
-                  type="text"
-                  placeholder="Transport Mode"
-                  {...register("transportmode")}
-                  disabled={isReadOnly}
-                  className={`inputField ${errors.transportmode ? "" : "border-gray-400"}`}
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Delivery Days </label>
-                <input
-                  type="text"
-                  placeholder="Delivery Days"
-                  {...register("delvdays")}
-                  disabled={isReadOnly}
-                  className={`inputField ${errors.delvdays ? "" : "border-gray-400"}`}
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Payment Term </label>
-                <input
-                  type="text"
-                  placeholder="Payment Terms"
-                  {...register("paymentterms")}
-                  disabled={isReadOnly}
-                  className={`inputField ${errors.paymentterms ? "" : "border-gray-400"}`}
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Payment Mode </label>
-                <input
-                  type="text"
-                  placeholder="Payment Mode"
-                  {...register("paymentmode")}
-                  disabled={isReadOnly}
-                  className={`inputField ${errors.paymentmode ? "" : "border-gray-400"}`}
-                />
-              </div>
-
-            </div>
-          </section> */}
 
             {/* Item Details */}
             <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
@@ -804,7 +728,6 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
                         control={control}
                         options={approveOptions}
                       />
-                      {/* {errors.aprvstatus && <p className="text-red-500 mt-1 text-sm">{errors.aprvstatus.message}</p>} */}
                     </div>
                     <div>
                       <label className="block text-gray-700 font-medium mb-1">Approve Remark <strong className="text-red-500"> * </strong> </label>
@@ -844,7 +767,7 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
             </button>
           </div>
 
-          {isSubmitting || isLoadingPurchaseOrder && <Loader />}
+          {(isSubmitting || isLoadingPurchaseOrder || isPrinting) && <Loader />}
 
           <SearchModal
             open={vendorFormOpen}
