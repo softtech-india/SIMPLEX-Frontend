@@ -168,9 +168,8 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
   };
 
   const searchProductFields = [
-    { value: "productname", label: "Name" },
-    { value: "pclsname", label: "Class" },
-    { value: "group", label: "Group" },
+    { value: "name", label: "Name" },
+    { value: "code", label: "Code" },
   ];
 
   const searchProductColumns = [

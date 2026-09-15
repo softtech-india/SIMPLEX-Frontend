@@ -233,7 +233,7 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
   ];
 
   const searchTbillFields = [
-    { value: "orderno", label: "Name" },
+    { value: "number", label: "Name" },
   ];
 
   const handleTbillSelect = (rows: any[]) => {

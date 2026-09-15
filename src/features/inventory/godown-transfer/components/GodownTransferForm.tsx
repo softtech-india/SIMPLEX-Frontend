@@ -808,7 +808,7 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
             { key: "reqdt", label: "Requisition Date" },
           ]}
           searchFields={[
-            { value: "reqno", label: "Requisition No" },
+            { value: "number", label: "Requisition No" },
           ]}
           onSelect={handlePendingReqSelect}
         />

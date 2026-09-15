@@ -71,8 +71,8 @@ export const GodownTransferItems: React.FC<GodownTransferItemsProps> = ({
   ];
 
   const searchProductFields = [
-    { value: "productnm", label: "Product Name" },
-    { value: "pcategorynm", label: "Category" },
+    { value: "name", label: "Name" },
+    { value: "code", label: "Code" },
   ];
 
   const handleProductSelect = (row: any) => {
