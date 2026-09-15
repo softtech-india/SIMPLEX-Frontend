@@ -142,9 +142,8 @@ export const DirectSaleItems: React.FC<DirectSaleItemsProps> = ({
   };
 
   const searchProductFields = [
-    { value: "productname", label: "Name" },
-    { value: "pclsname", label: "Class" },
-    { value: "group", label: "Group" },
+    { value: "name", label: "Name" },
+    { value: "code", label: "Code" },
   ];
 
   const searchProductColumns = [

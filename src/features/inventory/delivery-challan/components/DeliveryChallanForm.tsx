@@ -124,7 +124,7 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
 
         transporterid: DeliveryChallan.transporterid ?? 0,
         transportername: DeliveryChallan.transportername ?? "",
-        
+
         vehicleno: DeliveryChallan.vehicleno ?? "",
 
         qty: Number(DeliveryChallan.qty ?? 0),
@@ -286,7 +286,7 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
   ];
 
   const searchPicklistFields = [
-    { value: "picklistno", label: "Name" },
+    { value: "number", label: "Name" },
   ];
 
   const handlePicklistSelect = (row: any) => {
