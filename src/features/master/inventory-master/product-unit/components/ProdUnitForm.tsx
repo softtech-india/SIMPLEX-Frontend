@@ -87,7 +87,7 @@ export function ProdUnitForm({ visible, onClose, ProdUnitId, mode }: ProdUnitFor
     if (prodUnitlist) {
       reset({
         ...prodUnitlist,
-        
+
       });
     }
 
@@ -103,6 +103,8 @@ export function ProdUnitForm({ visible, onClose, ProdUnitId, mode }: ProdUnitFor
         const ok = await confirm({
           title: "Delete product unit",
           message: "Are you sure you want to delete this product unit?",
+          confirmText: "Delete",
+          variant: "danger",
         });
 
         if (!ok) return;

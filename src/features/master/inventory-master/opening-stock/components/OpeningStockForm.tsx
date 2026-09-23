@@ -35,7 +35,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
     finid,
   } = useUserStore();
 
-  const confirmDelete = useConfirm();
+  const confirm = useConfirm();
 
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
@@ -255,9 +255,11 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
     try {
 
       if (isDeleteMode) {
-        const ok = await confirmDelete({
+        const ok = await confirm({
           title: "Delete Opening Stock",
           message: "Are you sure you want to delete this Opening Stock?",
+          confirmText: "Delete",
+          variant: "danger",
         });
 
         if (!ok) return;
@@ -272,6 +274,15 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
         onClose();
         return;
       }
+
+      const action = isAddMode ? "Save" : "Update";
+      const ok = await confirm({
+        title: `${action} Opening Stock `,
+        message: `Are you sure you want to ${action.toLowerCase()} this Opening Stock ?`,
+        confirmText: action,
+        variant: "success",
+      });
+      if (!ok) return;
 
       const { qty1, totprodval, avgRate, itemdtl } = calculateTotals(data.itemdtl || []);
 

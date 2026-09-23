@@ -143,6 +143,8 @@ export function VoucherNumberingForm({ visible, onClose, VoucherNumberingId, mod
         const ok = await confirm({
           title: "Delete product group",
           message: "Are you sure you want to delete this VoucherNumbering?",
+          confirmText: "Delete",
+          variant: "danger",
         });
 
         if (!ok) return;
@@ -162,7 +164,7 @@ export function VoucherNumberingForm({ visible, onClose, VoucherNumberingId, mod
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(VoucherNumberingDefaultValues);
-       // onClose();
+        // onClose();
         defaultFocusRef.current?.focus();
         return;
       }
@@ -236,7 +238,7 @@ export function VoucherNumberingForm({ visible, onClose, VoucherNumberingId, mod
               </div>
 
               <div className="flex gap-4">
-            <div className="w-1/3">
+                <div className="w-1/3">
                   <label className="block text-gray-700 font-medium mb-1">Voucher</label>
                   <FormSelect<VoucherNumberingFormSchema>
                     name="voucherid"
@@ -330,7 +332,7 @@ export function VoucherNumberingForm({ visible, onClose, VoucherNumberingId, mod
                     isDisabled={isReadOnly}
                   />
                 </div>
-    
+
 
 
               </div>

@@ -109,6 +109,8 @@ export function TransporterForm({
         const ok = await confirm({
           title: "Delete Transporter",
           message: "Are you sure you want to delete this Transporter?",
+          confirmText: "Delete",
+          variant: "danger",
         });
         if (!ok) return;
         await deleteMutation.mutateAsync(transporterId);

@@ -38,8 +38,8 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
 
   // Hooks
   const { userId, companyId, branchId, finid, } = useUserStore();
+  const confirm = useConfirm();
 
-  const confirmDelete = useConfirm();
   const { mutate: printDeliveryChallan, isPending: isPrinting } = usePrintDeliveryChallan();
 
   const formRef = useRef<HTMLFormElement>(null);
@@ -380,9 +380,11 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
 
     if (isDeleteMode) {
 
-      const ok = await confirmDelete({
+      const ok = await confirm({
         title: "Delete Delivery Challan ",
         message: "Are you sure you want to delete this Delivery Challan ?",
+        confirmText: "Delete",
+        variant: "danger",
       });
 
       if (!ok) return;
@@ -401,6 +403,15 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
 
       return;
     }
+
+    const action = isAddMode ? "Save" : "Update";
+    const ok = await confirm({
+      title: `${action} Delivery Challan `,
+      message: `Are you sure you want to ${action.toLowerCase()} this Delivery Challan ?`,
+      confirmText: action,
+      variant: "success",
+    });
+    if (!ok) return;
 
     const { totalqty, totprodval, itemdtl } = calculateTotals(data.itemdtl || []);
 

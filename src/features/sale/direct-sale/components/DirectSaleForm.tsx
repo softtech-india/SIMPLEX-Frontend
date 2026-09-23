@@ -54,7 +54,7 @@ export function DirectSaleForm(
     await open("customer");
   };
 
-  const confirmDelete = useConfirm();
+  const confirm = useConfirm();
   const pathname = usePathname();
   const isOrderBasedSale = pathname?.includes("saleagnstorder");
 
@@ -662,9 +662,11 @@ export function DirectSaleForm(
 
     if (isDeleteMode) {
 
-      const ok = await confirmDelete({
+      const ok = await confirm({
         title: "Delete Sale ",
         message: "Are you sure you want to delete this Sale ?",
+        confirmText: "Delete",
+        variant: "danger",
       });
 
       if (!ok) return;
@@ -683,6 +685,16 @@ export function DirectSaleForm(
 
       return;
     }
+
+    const action = isAddMode ? "Save" : "Update";
+    const ok = await confirm({
+      title: `${action} Sale `,
+      message: `Are you sure you want to ${action.toLowerCase()} this Sale ?`,
+      confirmText: action,
+      variant: "success",
+    });
+    if (!ok) return;
+
 
     const {
       qty1, qtyrateval, discval, netval, beftaxval, taxableval, taxval, amtwithtaxval,

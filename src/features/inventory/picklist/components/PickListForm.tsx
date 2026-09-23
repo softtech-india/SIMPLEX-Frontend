@@ -40,7 +40,7 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
     userId, companyId, branchId, finid,
   } = useUserStore();
 
-  const confirmDelete = useConfirm();
+  const confirm = useConfirm();
 
   const formRef = useRef<HTMLFormElement>(null);
   const brandInputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -329,9 +329,11 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
 
   const handleFormSubmit = async (data: PickListFormSchema) => {
     if (isDeleteMode) {
-      const ok = await confirmDelete({
-        title: "Delete pick list ",
-        message: "Are you sure you want to delete this pick list ?",
+      const ok = await confirm({
+        title: "Delete Pick list ",
+        message: "Are you sure you want to delete this Pick list ?",
+        confirmText: "Delete",
+        variant: "danger",
       });
 
       if (!ok) return;
@@ -349,6 +351,15 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
       );
       return;
     }
+
+    const action = isAddMode ? "Save" : "Update";
+    const ok = await confirm({
+      title: `${action} Pick list `,
+      message: `Are you sure you want to ${action.toLowerCase()} this Pick list ?`,
+      confirmText: action,
+      variant: "success",
+    });
+    if (!ok) return;
 
     const { totalqty, totprodval, itemdtl } = calculateTotals(data.itemdtl || []);
 

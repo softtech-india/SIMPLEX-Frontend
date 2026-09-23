@@ -104,7 +104,7 @@ export function UserForm({ visible, onClose, formUserId, mode }: UserFormProps) 
     []
   );
 
-    const statusOptions: Option[] = useMemo(
+  const statusOptions: Option[] = useMemo(
     () => Statustype.map((s) => ({ value: s.id, label: s.name })),
     []
   );
@@ -127,6 +127,8 @@ export function UserForm({ visible, onClose, formUserId, mode }: UserFormProps) 
         const ok = await confirm({
           title: "Delete User ",
           message: "Are you sure you want to delete this user ?",
+          confirmText: "Delete",
+          variant: "danger",
         });
 
         if (!ok) return;
@@ -145,7 +147,7 @@ export function UserForm({ visible, onClose, formUserId, mode }: UserFormProps) 
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset({});
-       // onClose();
+        // onClose();
         defaultFocusRef.current?.focus();
         return;
       }
@@ -332,7 +334,7 @@ export function UserForm({ visible, onClose, formUserId, mode }: UserFormProps) 
                   isDisabled={isReadOnly}
                 />
                 {errors.status && <p className="text-red-500 mt-1 text-sm">{errors.status.message}</p>}
-              </div>              
+              </div>
 
 
             </div>

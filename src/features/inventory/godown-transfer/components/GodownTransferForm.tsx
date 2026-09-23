@@ -37,7 +37,7 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
 
   // Hooks
   const { userId, companyId, branchId, finid, } = useUserStore();
-  const confirmDelete = useConfirm();
+  const confirm = useConfirm();
 
   // States
   const [branchModalOpen, setBranchModalOpen] = useState(false);
@@ -48,8 +48,6 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
   const toGodownRef = useRef<HTMLInputElement>(null);
   const pendingReqRef = useRef<HTMLInputElement>(null);
   const brandInputRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-
 
   // Derived States
   const isEditMode = mode === "Edit";
@@ -367,9 +365,11 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
     try {
 
       if (isDeleteMode) {
-        const ok = await confirmDelete({
+        const ok = await confirm({
           title: "Delete Godown Transfer",
           message: "Are you sure you want to delete this Godown Transfer?",
+          confirmText: "Delete",
+          variant: "danger",
         });
 
         if (!ok) return;
@@ -391,6 +391,15 @@ export function GodownTransferForm({ visible, onClose, formGodownTransferId, mod
         toast.error("Please add at least one valid item");
         return;
       }
+
+      const action = isAddMode ? "Save" : "Update";
+      const ok = await confirm({
+        title: `${action} Godown Transfer `,
+        message: `Are you sure you want to ${action.toLowerCase()} this Godown Transfer ?`,
+        confirmText: action,
+        variant: "success",
+      });
+      if (!ok) return;
 
       const { totqty, totval, itemdtl } = calculateTotals(items);
 

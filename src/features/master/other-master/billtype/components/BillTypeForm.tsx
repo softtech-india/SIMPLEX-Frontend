@@ -164,6 +164,8 @@ export function BillTypeForm({ visible, onClose, BillTypeId, mode }: BillTypeFor
         const ok = await confirm({
           title: "Delete product group",
           message: "Are you sure you want to delete this Bill type?",
+          confirmText: "Delete",
+          variant: "danger",
         });
 
         if (!ok) return;
@@ -190,7 +192,7 @@ export function BillTypeForm({ visible, onClose, BillTypeId, mode }: BillTypeFor
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(BillTypeDefaultValues);
-       // onClose();
+        // onClose();
         defaultFocusRef.current?.focus();
         return;
       }

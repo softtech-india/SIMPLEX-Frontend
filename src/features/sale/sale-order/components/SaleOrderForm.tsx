@@ -38,7 +38,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
   // Hooks
   const { userId, companyId, branchId, finid, } = useUserStore();
 
-  const confirmDelete = useConfirm();
+  const confirm = useConfirm();
   const { mutate: printTbill, isPending: isPrinting } = usePrintTbill();
 
   // State
@@ -352,9 +352,11 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
 
     if (isDeleteMode) {
 
-      const ok = await confirmDelete({
-        title: "Delete T-Bill? ",
-        message: "Are you sure you want to delete this T-Bill? ?",
+      const ok = await confirm({
+        title: "Delete T-Bill ",
+        message: "Are you sure you want to delete this T-Bill ?",
+        confirmText: "Delete",
+        variant: "danger",
       });
 
       if (!ok) return;
@@ -374,6 +376,14 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
       return;
     }
 
+    const action = isAddMode ? "Save" : "Update";
+    const ok = await confirm({
+      title: `${action} T-Bill `,
+      message: `Are you sure you want to ${action.toLowerCase()} this T-Bill ?`,
+      confirmText: action,
+      variant: "success",
+    });
+    if (!ok) return;
     const { qty1, totprodval, itemdtl } = calculateTotals(data.itemdtl || []);
 
     const payload: SaleOrderFormType = {
@@ -625,7 +635,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
                 />
               </div>
 
-              
+
               <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1"> Scan QR Code <span className="text-red-500"> *</span> </label>
 

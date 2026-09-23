@@ -82,6 +82,8 @@ export function FinyearForm({ visible, onClose, FinyearId, mode }: FinyearFormPr
         const ok = await confirm({
           title: "Delete Finyear",
           message: "Are you sure you want to delete this Finyear?",
+          confirmText: "Delete",
+          variant: "danger",
         });
 
         if (!ok) return;
@@ -98,7 +100,7 @@ export function FinyearForm({ visible, onClose, FinyearId, mode }: FinyearFormPr
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset({});
-       // onClose();
+        // onClose();
         defaultFocusRef.current?.focus();
         return;
       }

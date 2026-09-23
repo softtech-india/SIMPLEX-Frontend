@@ -108,6 +108,8 @@ export function HSNForm({ visible, onClose, HSNId, mode, returnAfterSave, onSucc
         const ok = await confirm({
           title: "Delete product group",
           message: "Are you sure you want to delete this HSN?",
+          confirmText: "Delete",
+          variant: "danger",
         });
 
         if (!ok) return;

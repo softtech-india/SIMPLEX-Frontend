@@ -80,6 +80,8 @@ export function ProdCategoryForm({ visible, onClose, ProdCategoryId, mode, retur
         const ok = await confirm({
           title: "Delete product category",
           message: "Are you sure you want to delete this product category?",
+          confirmText: "Delete",
+          variant: "danger",
         });
 
         if (!ok) return;

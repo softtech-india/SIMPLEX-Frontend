@@ -57,29 +57,29 @@ export function UserBranchMappingForm({ visible, onClose, formDataId, mode, sele
   const isSubmitting = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   useEffect(() => {
-  if (!visible) return;
+    if (!visible) return;
 
-  if (mode === 'Add') {
-    reset({
-      ...userBranchMappingFormDefaults,
-      mapuserid: Number(selectedUserId) || 0,
-    });
-    return;
-  }
+    if (mode === 'Add') {
+      reset({
+        ...userBranchMappingFormDefaults,
+        mapuserid: Number(selectedUserId) || 0,
+      });
+      return;
+    }
 
-  if ( userBranchMappingList) {
-    const record = Array.isArray(userBranchMappingList)
-      ? userBranchMappingList[0]
-      : userBranchMappingList;
+    if (userBranchMappingList) {
+      const record = Array.isArray(userBranchMappingList)
+        ? userBranchMappingList[0]
+        : userBranchMappingList;
 
-    reset({
-      ...record,
-      mapuserid: record.mapuserid ?? selectedUserId ?? 0,
-      brnchid: record.brnchid ?? 0,
-    });
-  }
+      reset({
+        ...record,
+        mapuserid: record.mapuserid ?? selectedUserId ?? 0,
+        brnchid: record.brnchid ?? 0,
+      });
+    }
 
-}, [userBranchMappingList, mode, visible, reset, selectedUserId]);
+  }, [userBranchMappingList, mode, visible, reset, selectedUserId]);
 
 
   const { data: companyList = [] } = useQuery({
@@ -138,6 +138,8 @@ export function UserBranchMappingForm({ visible, onClose, formDataId, mode, sele
         const ok = await confirm({
           title: "Delete User ",
           message: "Are you sure you want to delete this user ?",
+          confirmText: "Delete",
+          variant: "danger",
         });
 
         if (!ok) return;
@@ -160,7 +162,7 @@ export function UserBranchMappingForm({ visible, onClose, formDataId, mode, sele
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset({});
-       // onClose();
+        // onClose();
         defaultFocusRef.current?.focus();
         return;
       }

@@ -99,17 +99,13 @@ export function BranchForm({ visible, onClose, BranchId, mode }: BranchFormProps
   const handleFormSubmit = async (data: BranchFormSchema) => {
     try {
 
-      // if (isDeleteMode) {
-      //   if (!window.confirm("Delete this branch?")) return;
-      //   await deleteMutation.mutateAsync(BranchId);
-      //   onClose();
-      //   return;
-      // }
 
       if (isDeleteMode) {
         const ok = await confirm({
           title: "Delete Branch",
           message: "Are you sure you want to delete this branch?",
+          confirmText: "Delete",
+          variant: "danger",
         });
 
         if (!ok) return;
@@ -128,7 +124,7 @@ export function BranchForm({ visible, onClose, BranchId, mode }: BranchFormProps
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset({});
-       // onClose();
+        // onClose();
         defaultFocusRef.current?.focus();
         return;
       }

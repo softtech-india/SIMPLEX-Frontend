@@ -42,7 +42,7 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
     finid,
   } = useUserStore();
 
-  const confirmDelete = useConfirm();
+  const confirm = useConfirm();
   const { mutate: printRequisition, isPending: isPrinting } = usePrintRequisition();
 
   const [toBranchModalOpen, setToBranchModalOpen] = useState(false);
@@ -90,16 +90,16 @@ export function RequisitionForm({ visible, onClose, formRequisitionId, mode, for
     return sum + (Number(item?.qty) || 0);
   }, 0) || 0;
 
-const { scanInputRef, handleScan } = useRequisitionQrScanner({
-  setValue,
-  onUpdateItems: (updater) => {
-    const currentItems = getValues("itemdtl") || [];
-    const updatedItems = updater(currentItems as RequisitionItem[]);
-    
-    replace(updatedItems);
-    trigger("itemdtl");
-  },
-});
+  const { scanInputRef, handleScan } = useRequisitionQrScanner({
+    setValue,
+    onUpdateItems: (updater) => {
+      const currentItems = getValues("itemdtl") || [];
+      const updatedItems = updater(currentItems as RequisitionItem[]);
+
+      replace(updatedItems);
+      trigger("itemdtl");
+    },
+  });
 
   // Reset form 
   useEffect(() => {
@@ -271,9 +271,11 @@ const { scanInputRef, handleScan } = useRequisitionQrScanner({
 
     if (isDeleteMode) {
 
-      const ok = await confirmDelete({
-        title: "Delete Delivery Challan ",
-        message: "Are you sure you want to delete this Delivery Challan ?",
+      const ok = await confirm({
+        title: "Delete Requisition ",
+        message: "Are you sure you want to delete this Requisition ?",
+        confirmText: "Delete",
+        variant: "danger",
       });
 
       if (!ok) return;
@@ -292,6 +294,15 @@ const { scanInputRef, handleScan } = useRequisitionQrScanner({
 
       return;
     }
+
+    const action = isAddMode ? "Save" : "Update";
+    const ok = await confirm({
+      title: `${action} Requisition `,
+      message: `Are you sure you want to ${action.toLowerCase()} this Requisition ?`,
+      confirmText: action,
+      variant: "success",
+    });
+    if (!ok) return;
 
     const { totqty, itemdtl } = calculateTotals(data.itemdtl || []);
 

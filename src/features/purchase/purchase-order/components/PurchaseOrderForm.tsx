@@ -36,15 +36,12 @@ interface PurchaseOrderFormProps {
 
 export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode, formSelectedBranch, toolbarBranchId }: PurchaseOrderFormProps) {
 
-  const {
-    userId,
-    companyId,
-    branchId,
-    finid,
-  } = useUserStore();
-
+  // Hooks
+  const { userId, companyId, branchId, finid, } = useUserStore();
   const { open } = useMasterModal();
-  const confirmDelete = useConfirm();
+  const confirm = useConfirm();
+
+  // State
   const formRef = useRef<HTMLFormElement>(null);
   const [vendorFormOpen, setVendorFormOpen] = useState(false);
   const proFormaRef = useRef<HTMLInputElement>(null);
@@ -308,9 +305,11 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
     try {
 
       if (isDeleteMode) {
-        const ok = await confirmDelete({
+        const ok = await confirm({
           title: "Delete Purchase Order",
           message: "Are you sure you want to delete this Purchase Order?",
+          confirmText: "Delete",
+          variant: "danger",
         });
 
         if (!ok) return;
@@ -323,6 +322,15 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
         onClose();
         return;
       }
+
+      const action = isAddMode ? "Save" : "Update";
+      const ok = await confirm({
+        title: `${action} Purchase Order`,
+        message: `Are you sure you want to ${action.toLowerCase()} this Purchase Order?`,
+        confirmText: action,
+        variant: "success",
+      });
+      if (!ok) return;
 
       const { qty1, totprodval, itemdtl } = calculateTotals(data.itemdtl || []);
 

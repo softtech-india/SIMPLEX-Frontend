@@ -225,6 +225,8 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode, returnAft
         const ok = await confirm({
           title: "Delete Customer",
           message: "Are you sure you want to delete this Customer?",
+          confirmText: "Delete",
+          variant: "danger",
         });
 
         if (!ok) return;

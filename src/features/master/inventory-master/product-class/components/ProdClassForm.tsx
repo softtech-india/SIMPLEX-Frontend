@@ -79,6 +79,8 @@ export function ProdClassForm({ visible, onClose, ProdClassId, mode, returnAfter
         const ok = await confirm({
           title: "Delete product class",
           message: "Are you sure you want to delete this product class?",
+          confirmText: "Delete",
+          variant: "danger",
         });
 
         if (!ok) return;

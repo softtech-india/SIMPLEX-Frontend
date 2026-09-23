@@ -112,6 +112,8 @@ export function SalesManForm({
         const ok = await confirm({
           title: "Delete SalesMan",
           message: "Are you sure you want to delete this salesman?",
+          confirmText: "Delete",
+          variant: "danger",
         });
         if (!ok) return;
         await deleteMutation.mutateAsync(SalesManId);

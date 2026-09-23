@@ -309,6 +309,8 @@ export function VendorForm({ visible, onClose, formVendorId, mode, returnAfterSa
         const ok = await confirm({
           title: "Delete Vendor",
           message: "Are you sure you want to delete this vendor?",
+          confirmText: "Delete",
+          variant: "danger",
         });
 
         if (!ok) return;

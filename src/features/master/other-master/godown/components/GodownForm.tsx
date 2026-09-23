@@ -162,6 +162,8 @@ export function GodownForm({ visible, onClose, GodownId, mode }: GodownFormProps
         const ok = await confirm({
           title: "Delete product group",
           message: "Are you sure you want to delete this godown?",
+          confirmText: "Delete",
+          variant: "danger",
         });
 
         if (!ok) return;
@@ -180,7 +182,7 @@ export function GodownForm({ visible, onClose, GodownId, mode }: GodownFormProps
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset(GodownDefaultValues);
-       // onClose();
+        // onClose();
         defaultFocusRef.current?.focus();
         return;
       }

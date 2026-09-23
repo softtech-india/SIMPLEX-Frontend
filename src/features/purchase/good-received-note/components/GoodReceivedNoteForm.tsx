@@ -53,7 +53,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
     finid,
   } = useUserStore();
 
-  const confirmDelete = useConfirm();
+  const confirm = useConfirm();
   const formRef = useRef<HTMLFormElement>(null);
 
   const isEditMode = mode === "Edit";
@@ -505,9 +505,11 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
     try {
 
       if (isDeleteMode) {
-        const ok = await confirmDelete({
+        const ok = await confirm({
           title: "Delete Good Received Note",
           message: "Are you sure you want to delete this GRN?",
+          confirmText: "Delete",
+          variant: "danger",
         });
 
         if (!ok) return;
@@ -522,6 +524,15 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
         onClose();
         return;
       }
+
+      const action = isAddMode ? "Save" : "Update";
+      const ok = await confirm({
+        title: `${action} Opening Stock `,
+        message: `Are you sure you want to ${action.toLowerCase()} this Opening Stock ?`,
+        confirmText: action,
+        variant: "success",
+      });
+      if (!ok) return;
 
       const { qty1, totprodval, itemdtl } = calculateTotals(data.itemdtl || []);
 
@@ -684,7 +695,7 @@ export function GoodReceivedNoteForm({ visible, onClose, formGoodReceivedNoteId,
                 <label className="block text-gray-700 font-medium mb-1">PO No. & Date <span className="text-red-500 text-sm"> * </span> </label>
                 <input
                   type="text"
-                  value={orderno ? `${orderno} - ${formatDate(orderdt)}` : ""}
+                  value={orderno ? `${orderno} - ${formatDateForInput(orderdt)}` : ""}
                   disabled={isReadOnly}
                   readOnly
                   ref={(e) => {

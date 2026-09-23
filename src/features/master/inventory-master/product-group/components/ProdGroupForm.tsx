@@ -78,6 +78,8 @@ export function ProdGroupForm({ visible, onClose, ProdGroupId, mode, returnAfter
         const ok = await confirm({
           title: "Delete product group",
           message: "Are you sure you want to delete this product group?",
+          confirmText: "Delete",
+          variant: "danger",
         });
 
         if (!ok) return;

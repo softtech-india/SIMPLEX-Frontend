@@ -82,6 +82,8 @@ export function UserGroupForm({ visible, onClose, UserGroupId, mode }: UserGroup
         const ok = await confirm({
           title: "Delete User Group",
           message: "Are you sure you want to delete this user group?",
+          confirmText: "Delete",
+          variant: "danger",
         });
 
         if (!ok) return;
@@ -98,7 +100,7 @@ export function UserGroupForm({ visible, onClose, UserGroupId, mode }: UserGroup
       if (isAddMode) {
         await createMutation.mutateAsync(payload);
         reset({});
-       // onClose();
+        // onClose();
         defaultFocusRef.current?.focus();
         return;
       }
