@@ -328,7 +328,7 @@ export default function ProductModule() {
   return (
     <div className="User-Product-module">
 
-      <div className="bg-white rounded-xl shadow-sm border my-2">
+      <div className="bg-white rounded-xl shadow-sm border my-1">
         <MasterToolbar
           title="User Unit Master"
           permissions={permissions}

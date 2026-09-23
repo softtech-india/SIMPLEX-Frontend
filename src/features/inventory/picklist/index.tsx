@@ -139,7 +139,7 @@ export default function PickListModule() {
     <>
       <div className="Sale-order-module ">
 
-        <div className="bg-white rounded-xl shadow-sm border mt-1">
+        <div className="bg-white rounded-xl shadow-sm border my-1">
 
           <TransactionToolbar
             title="Pick Lists"
@@ -194,9 +194,7 @@ export default function PickListModule() {
         </div>
 
         {!isMobile && (
-          <div className={` ${sidebarState === '1' ? 'w-358' : 'w-294'} transition-all duration-300 ease-in-out 
-           bg-white rounded-xl shadow-sm border border-gray-200 p-1 overflow-x-auto my-1 `}
-          >
+                  <div className={`${sidebarState === '1' ? 'w-362' : 'w-294'} transition-all duration-300 ease-in-out rounded-xl shadow-sm border border-gray-200 p-1 overflow-x-auto `} >
             <PickListDataGrid
               dataSource={PickListList}
               onSelectionChanged={handleSelectionChanged}
