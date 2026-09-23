@@ -948,7 +948,7 @@ export function DirectSaleForm(
                       <label className="block text-gray-700 font-medium mb-1">So No. & Date <span className="text-red-500 text-sm"> * </span> </label>
                       <input
                         type="text"
-                        value={orderno ? `${orderno} - ${formatDate(orderdt)}` : ""}
+                        value={orderno ? `${orderno} - ${formatDateForInput(orderdt)}` : ""}
                         disabled={isReadOnly}
                         readOnly
                         {...bindLookup(LOOKUP_KEYS.orderno)}
