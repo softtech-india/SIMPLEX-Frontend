@@ -245,7 +245,7 @@ export const GoodReceivedNoteItems: React.FC<GoodReceivedNoteItemsProps> = ({
         <>
           <div className="w-20">
             <label className="block text-gray-700 text-sm font-medium mb-1">
-              Bal. Qty.
+              Order Qty.
             </label>
             <input
               type="number"
