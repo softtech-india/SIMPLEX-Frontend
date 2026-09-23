@@ -1,13 +1,23 @@
 export interface Product {
   id: number;
+
   productcode?: string;
   productname: string;
-  categorynm?: string;
+
   aliasname: string;
+
   productcategoryid: number;
+  categorynm?: string;
+
   productclassid: number;
+  classnm?: string;
+
   productsubclassid: number;
+  subclassnm?: string;
+
   unitid: number;
+  unit?: string;
+
   producttype: string;
   minimumlevel: number;
   reorderlevel: number;
@@ -18,7 +28,11 @@ export interface Product {
   alterunitfactortype: string;
   alterunitmethod: string;
   mrp: number;
+
   hsnid: number;
+  hsnNo?: string;
+  hsn?: string;
+
   gstid: number;
   closedtag: string;
   purchaserateon: number;

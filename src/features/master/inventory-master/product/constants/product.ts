@@ -10,7 +10,7 @@ export const ProductDefaultValues: ProductFormSchema = {
   productclassid: 0,
   productsubclassid: 0,
 
-  unitid: 0,
+  unitid: 1,
   producttype: "FG",
 
   minimumlevel: 0,
@@ -19,7 +19,7 @@ export const ProductDefaultValues: ProductFormSchema = {
   valuationtype: "A",
   batchrequire: "N",
 
-  alterunitid: 0,
+  alterunitid: 1,
   alterunitfactor: 0,
   alterunitfactortype: "M",
   alterunitmethod: "A",

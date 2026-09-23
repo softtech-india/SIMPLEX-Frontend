@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Popup } from "devextreme-react/popup";
 import LoadPanel from "devextreme-react/load-panel";
 
-import { useProdGroups } from "../hooks/prodGroup";
 import { useCreateProdGroup, useUpdateProdGroup, useDeleteProdGroup, useProdGroup } from "../hooks/prodGroup";
 
 import { ProdGroup, OperationMode, ProdGroupFormData } from "../types/prodGroup.types";
@@ -17,9 +16,11 @@ interface ProdGroupFormProps {
   onClose: () => void;
   ProdGroupId: number;
   mode: OperationMode;
+  returnAfterSave?: boolean;
+  onSuccess?: (product: any) => void;
 }
 
-export function ProdGroupForm({ visible, onClose, ProdGroupId, mode }: ProdGroupFormProps) {
+export function ProdGroupForm({ visible, onClose, ProdGroupId, mode, returnAfterSave, onSuccess }: ProdGroupFormProps) {
 
   const confirm = useConfirm();
   const defaultFocusRef = useRef<HTMLInputElement>(null);
@@ -91,9 +92,14 @@ export function ProdGroupForm({ visible, onClose, ProdGroupId, mode }: ProdGroup
       };
 
       if (isAddMode) {
-        await createMutation.mutateAsync(payload);
+        const result = await createMutation.mutateAsync(payload);
         reset(prodGroupDefaultValues);
-       // onClose();
+        if (returnAfterSave) {
+          onSuccess?.(result);
+          onClose();
+          return;
+        }
+        // onClose();
         defaultFocusRef.current?.focus();
         return;
       }

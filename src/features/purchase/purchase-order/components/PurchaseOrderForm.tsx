@@ -248,7 +248,6 @@ export function PurchaseOrderForm({ visible, onClose, formPurchaseOrderId, mode,
     setVendorFormOpen(false);
     requestAnimationFrame(() => {
       proFormaRef.current?.focus();
-
     });
   };
 

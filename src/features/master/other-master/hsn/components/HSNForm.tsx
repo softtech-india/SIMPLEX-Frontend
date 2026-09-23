@@ -3,8 +3,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Popup } from "devextreme-react/popup";
 import LoadPanel from "devextreme-react/load-panel";
-
-import { useHSNs } from "../hooks/hsn";
 import { useCreateHSN, useUpdateHSN, useDeleteHSN, useHSN } from "../hooks/hsn";
 
 import { HSN, OperationMode, HSNFormData } from "../types/hsn.types";
@@ -13,22 +11,26 @@ import { HSNDefaultValues } from "../constants/hsn"
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { FormSelect } from "@/common/components/FormSelect";
 import { useQuery } from "@tanstack/react-query";
-import { getStorageItem } from "@/common/utility/storage";
 import { hSNService } from "../services/hsn";
 import { goodsServiceType } from "@/common/utility/data";
+import useUserStore from "@/store/userStore";
 
 interface HSNFormProps {
   visible: boolean;
   onClose: () => void;
   HSNId: number;
   mode: OperationMode;
+  returnAfterSave?: boolean;
+  onSuccess?: (product: any) => void;
 }
 
 type Option = { value: number | string; label: string };
 
 
-export function HSNForm({ visible, onClose, HSNId, mode }: HSNFormProps) {
-  const userId = getStorageItem("userId");
+export function HSNForm({ visible, onClose, HSNId, mode, returnAfterSave, onSuccess }: HSNFormProps) {
+
+  // Hooks
+  const { userId, companyId, branchId, finid, } = useUserStore();
   const confirm = useConfirm();
   const defaultFocusRef = useRef<HTMLInputElement>(null);
 
@@ -121,9 +123,14 @@ export function HSNForm({ visible, onClose, HSNId, mode }: HSNFormProps) {
       };
 
       if (isAddMode) {
-        await createMutation.mutateAsync(payload);
+        const result = await createMutation.mutateAsync(payload);
         reset(HSNDefaultValues);
-       // onClose();
+        if (returnAfterSave) {
+          onSuccess?.(result);
+          onClose();
+          return;
+        }
+        // onClose();
         defaultFocusRef.current?.focus();
         return;
       }

@@ -1,21 +1,21 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Popup } from "devextreme-react/popup";
-import LoadPanel from "devextreme-react/load-panel";
-
-import { useHSNs } from "../hooks/product";
 import { useCreateProduct, useUpdateProduct, useDeleteProduct, useProduct } from "../hooks/product";
-
 import { HSN, OperationMode, ProductFormData, ProdUnit } from "../types/product.types";
 import { ProductSchema, ProductFormSchema } from "../schemas/product.schema";
 import { ProductDefaultValues } from "../constants/product"
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { FormSelect } from "@/common/components/FormSelect";
 import { useQuery } from "@tanstack/react-query";
-import { getStorageItem } from "@/common/utility/storage";
 import { productService } from "../services/product";
-import { batchRequire, goodsServiceType, productStatus, productType, purchaseRateOn, salesRateOn, unitFactorType, unitMethod, valuationType } from "@/common/utility/data";
+import { productStatus, productType } from "@/common/utility/data";
+import { useMasterModal } from "@/hooks/useMasterModal";
+import useUserStore from "@/store/userStore";
+import SearchModal from "@/common/components/SearchModal";
+import Loader from "@/common/components/Loader";
+import focusNext from "@/helpers/focusNext";
 
 interface ProdFormProps {
   visible: boolean;
@@ -30,32 +30,129 @@ type Option = { value: number | string; label: string };
 
 
 export function ProductForm({ visible, onClose, ProductId, mode, returnAfterSave, onSuccess }: ProdFormProps) {
-  const userId = getStorageItem("userId");
+
+  // Hooks
+  const { userId, companyId, branchId, finid, } = useUserStore();
+  const { open } = useMasterModal();
   const confirm = useConfirm();
+
+  // state
+  const [categoryFormOpen, setCategoryFormOpen] = useState(false);
+  const [classFormOpen, setClassFormOpen] = useState(false);
+  const [groupFormOpen, setGroupFormOpen] = useState(false);
+  const [hsnFormOpen, setHsnFormOpen] = useState(false);
+  const [showFilterRow, setShowFilterRow] = useState(false);
+
+  const mrpInputRef = useRef<HTMLInputElement>(null);
+
+  // ---- Refs for focus chaining ----
+  const categoryRef = useRef<HTMLInputElement>(null);
+  const classRef = useRef<HTMLInputElement>(null);
+  const groupRef = useRef<HTMLInputElement>(null);
+  const hsnRef = useRef<HTMLInputElement>(null);
+  const gstRef = useRef<HTMLInputElement | null>(null);
+
   const defaultFocusRef = useRef<HTMLInputElement>(null);
+
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
   const isDeleteMode = mode === "Delete";
   const isReadOnly = mode === "View" || mode === "Print";
+
+  // Query
   const { data: Productlist, isLoading: isLoadingProduct } = useProduct(ProductId);
   const createMutation = useCreateProduct();
   const updateMutation = useUpdateProduct();
   const deleteMutation = useDeleteProduct();
   const isSubmitting = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
+  // React Hooks Form
   const {
-    control,
-    register,
-    handleSubmit,
-    setFocus,
-    setValue,
-    reset,
-    watch,
-    formState: { errors },
+    control, register, handleSubmit, setFocus, setValue, reset, watch, formState: { errors },
   } = useForm<ProductFormSchema>({
     resolver: zodResolver(ProductSchema),
     defaultValues: ProductDefaultValues,
   });
+
+  // ---- Display values ----
+  const categoryName = watch("categorynm");
+  const className = watch("classnm");
+  const groupName = watch("subclassnm");
+  const hsnName = watch("hsn");
+  const selectedCategoryId = watch("productcategoryid");
+  const selectedClassId = watch("productclassid");
+
+  // ---- Create-new handlers ----
+  const handleCreateProdcategory = async () => { await open("prodcategory"); };
+  const handleCreateProdclass = async () => { await open("prodclass"); };
+  const handleCreateProdgroup = async () => { await open("prodgroup"); };
+  const handleCreateHsn = async () => { await open("hsn"); };
+
+  // ---- Shared config ----
+  const baseParams = { userid: userId, compid: companyId };
+  const nameColumns = [{ key: "name", label: "Name" }];
+  const nameFields = [{ value: "name", label: "Name" }];
+
+
+  // ---- Category ----
+  const handleCategorySelect = (row: any) => {
+    if (row.id !== selectedCategoryId) {
+      // parent changed -> clear children
+      setValue("productclassid", 0);
+      setValue("classnm", "");
+      setValue("productsubclassid", 0);
+      setValue("subclassnm", "");
+    }
+    setValue("productcategoryid", row.id, { shouldValidate: true });
+    setValue("categorynm", row.name);
+    setCategoryFormOpen(false);
+    focusNext(classRef);
+  };
+
+  // ---- Class (filtered by category) ----
+  const baseClassParams = { ...baseParams, categoryid: selectedCategoryId };
+
+  const handleClassSelect = (row: any) => {
+    if (row.id !== selectedClassId) {
+      setValue("productsubclassid", 0);
+      setValue("subclassnm", "");
+    }
+    setValue("productclassid", row.id, { shouldValidate: true });
+    setValue("classnm", row.name);
+    setClassFormOpen(false);
+    focusNext(groupRef);
+  };
+
+  // ---- Product Group (filtered by class) ----
+  const baseGroupParams = { ...baseParams, classid: selectedClassId };
+
+  const handleGroupSelect = (row: any) => {
+    setValue("productsubclassid", row.id, { shouldValidate: true });
+    setValue("subclassnm", row.name);
+    setGroupFormOpen(false);
+    focusNext(hsnRef);
+  };
+
+  // ---- HSN ----
+  const searchHsnColumns = [
+    { key: "hsn", label: "HSN Code" },
+    { key: "description", label: "Description" },
+  ];
+  const searchHsnFields = [
+    { value: "hsn", label: "HSN Code" },
+    { value: "description", label: "Description" },
+  ];
+
+  const handleHsnSelect = (row: any) => {
+    console.log('HSN :', row)
+    setValue("hsnid", row.id, { shouldValidate: true });
+    setValue("hsn", row.hsn);
+    handleHsnChange(row); // keep your existing tax/GST logic
+    setHsnFormOpen(false);
+    requestAnimationFrame(() => {
+      mrpInputRef.current?.focus();
+    });
+  };
 
   const { data: gsts = [] } = useQuery({
     queryKey: ["gsts", userId],
@@ -73,29 +170,6 @@ export function ProductForm({ visible, onClose, ProductId, mode, returnAfterSave
     refetchOnWindowFocus: false,
   });
 
-  const { data: categories = [] } = useQuery({
-    queryKey: ["categories", userId],
-    queryFn: () => productService.getAllCategories(),
-    staleTime: 0,
-    retry: 1,
-    refetchOnWindowFocus: false,
-  });
-
-  const { data: prodClasses = [] } = useQuery({
-    queryKey: ["prodClasses", userId],
-    queryFn: () => productService.getAllProdClasses(),
-    staleTime: 0,
-    retry: 1,
-    refetchOnWindowFocus: false,
-  });
-
-  const { data: prodGroups = [] } = useQuery({
-    queryKey: ["prodGroups", userId],
-    queryFn: () => productService.getAllProdGroups(),
-    staleTime: 0,
-    retry: 1,
-    refetchOnWindowFocus: false,
-  });
 
   const { data: prodUnits = [] } = useQuery({
     queryKey: ["prodUnits", userId],
@@ -105,32 +179,6 @@ export function ProductForm({ visible, onClose, ProductId, mode, returnAfterSave
     refetchOnWindowFocus: false,
   });
 
-  const categoryOptions: Option[] = useMemo(
-    () =>
-      categories.map((c: any) => ({
-        value: c.id,
-        label: c.name,
-      })),
-    [categories]
-  );
-
-  const classOptions: Option[] = useMemo(
-    () =>
-      prodClasses.map((c: any) => ({
-        value: c.id,
-        label: c.name,
-      })),
-    [prodClasses]
-  );
-
-  const groupOptions: Option[] = useMemo(
-    () =>
-      prodGroups.map((c: any) => ({
-        value: c.id,
-        label: c.name,
-      })),
-    [prodGroups]
-  );
 
   const unitOptions: Option[] = useMemo(
     () =>
@@ -141,14 +189,6 @@ export function ProductForm({ visible, onClose, ProductId, mode, returnAfterSave
     [prodUnits]
   );
 
-  const hsnOptions: Option[] = useMemo(
-    () =>
-      hsns.map((c: any) => ({
-        value: c.id,
-        label: c.hsn,
-      })),
-    [hsns]
-  );
 
   const gstOptions: Option[] = useMemo(
     () =>
@@ -159,46 +199,11 @@ export function ProductForm({ visible, onClose, ProductId, mode, returnAfterSave
     [gsts]
   );
 
-  const GoodServiceOptions: Option[] = useMemo(
-    () => goodsServiceType.map((s) => ({ value: s.id, label: s.name })),
-    []
-  );
 
   const productTypeOptions: Option[] = useMemo(
     () => productType.map((s) => ({ value: s.id, label: s.name })),
     []
   );
-
-  const valuationTypeOptions: Option[] = useMemo(
-    () => valuationType.map((s) => ({ value: s.id, label: s.name })),
-    []
-  );
-
-  const batchRequireOptions: Option[] = useMemo(
-    () => batchRequire.map((s) => ({ value: s.id, label: s.name })),
-    []
-  );
-
-  const unitFactorTypeOptions: Option[] = useMemo(
-    () => unitFactorType.map((s) => ({ value: s.id, label: s.name })),
-    []
-  );
-
-  const unitMethodOptions: Option[] = useMemo(
-    () => unitMethod.map((s) => ({ value: s.id, label: s.name })),
-    []
-  );
-
-  const purchaseRateONOptions: Option[] = useMemo(
-    () => purchaseRateOn.map((s) => ({ value: s.id, label: s.name })),
-    []
-  );
-
-  const saleRateONOptions: Option[] = useMemo(
-    () => salesRateOn.map((s) => ({ value: s.id, label: s.name })),
-    []
-  );
-
   const productStatusOption: Option[] = useMemo(
     () => productStatus.map((s) => ({ value: s.id, label: s.name })),
     []
@@ -216,15 +221,13 @@ export function ProductForm({ visible, onClose, ProductId, mode, returnAfterSave
       return;
     }
 
-
     if (Productlist) {
       reset({
         ...Productlist,
-
-
       });
     }
   }, [Productlist, gsts.length, mode, visible]);
+
   // Submit handler
   const handleFormSubmit = async (data: ProductFormSchema) => {
     try {
@@ -300,6 +303,30 @@ export function ProductForm({ visible, onClose, ProductId, mode, returnAfterSave
     }
   };
 
+  useEffect(() => {
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        setShowFilterRow(prev => !prev);
+      }
+      if (e.key === 'Escape') {
+        setShowFilterRow(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+
+  }, []);
+  const handleKeyOpen = (e: React.KeyboardEvent, openFn: () => void) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openFn();
+    }
+  };
+
   // Debug validation issues 
   const onError = (err: any) => {
     console.error("Validation errors:", err);
@@ -311,7 +338,7 @@ export function ProductForm({ visible, onClose, ProductId, mode, returnAfterSave
       onHiding={onClose}
       title={`${mode} Product`}
       width="95vw"
-      height="90vh"
+      height="50vh"
       dragEnabled
       showTitle
       showCloseButton={false}
@@ -320,275 +347,213 @@ export function ProductForm({ visible, onClose, ProductId, mode, returnAfterSave
         onSubmit={handleSubmit(handleFormSubmit, onError)}
         className="flex flex-col h-full"
       >
-        <div className="flex-1 overflow-y-auto p-2 space-y-2">
+        <div className="flex-1 overflow-y-auto p-1">
+          <section className="border rounded-md p-1 shadow-sm bg-white">
 
-          {/* Product Information */}
-          <section className="border rounded-md p-2  shadow-sm bg-white space-y-2">
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
+            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-2 bg-blue-50 mb-4">
               Product Information
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-1 gap-2 mb-4">
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pb-4 border-b-3 border-[#7f7db0]">
-                {/* Product Code */}
-                <div>
-                  <label className="block text-gray-700 font-medium mb-1">Product Code</label>
-                  <input
-                    type="text"
-                    {...register("productcode")}
-                    disabled={isReadOnly || true}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">
+                  Product Code
+                </label>
+                <input
+                  type="text"
+                  {...register("productcode")}
+                  disabled={isReadOnly || true}
+                  className={`inputField w-full border${errors.productcode ? "border-red-500" : "border-gray-300"}`}
+                  placeholder="Enter product code"
+                />
 
-                    className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.productcode ? "border-red-500" : "border-gray-300"}`}
-                    placeholder="Enter productcode"
-                  />
-                  {errors.productcode && <p className="text-red-500 mt-1 text-sm">{errors.productcode.message}</p>}
-                </div>
+              </div>
 
-                {/* Product Name */}
-                <div>
-                  <label className="block text-gray-700 font-medium mb-1">Product Name <strong className="text-red-500 text-sm"> * </strong> </label>
-                  <input
-                    type="text"
-                    {...register("productname")}
-                    disabled={isReadOnly}
-                    className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.productname ? "border-red-500" : "border-gray-300"}`}
-                    placeholder="Enter product description"
-                  />
-                  {errors.productname && <p className="text-red-500 mt-1 text-sm">{errors.productname.message}</p>}
-                </div>
-                {/* Print Name */}
-                <div>
-                  <label className="block text-gray-700 font-medium mb-1">Print Name <strong className="text-red-500 text-sm"> * </strong> </label>
-                  <input
-                    type="text"
-                    {...register("aliasname")}
-                    disabled={isReadOnly}
-                    className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.aliasname ? "border-red-500" : "border-gray-300"}`}
-                    placeholder="Enter product print name"
-                  />
-                  {errors.aliasname && <p className="text-red-500 mt-1 text-sm">{errors.aliasname.message}</p>}
-                </div>
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">
+                  Product Name <strong className="text-red-500">*</strong>
+                </label>
+                <input
+                  type="text"
+                  {...register("productname")}
+                  disabled={isReadOnly}
+                  className={`inputField w-full border${errors.productname ? "border-red-500" : "border-gray-300"}`}
+                  placeholder="Enter product description"
+                />
+
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">
+                  Print Name <strong className="text-red-500">*</strong>
+                </label>
+                <input
+                  type="text"
+                  {...register("aliasname")}
+                  disabled={isReadOnly}
+                  className={`inputField w-full border${errors.aliasname ? "border-red-500" : "border-gray-300"}`}
+                  placeholder="Enter product print name"
+                />
+
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">
+                  Category <strong className="text-red-500">*</strong>
+                </label>
+                <input
+                  ref={categoryRef}
+                  type="text"
+                  value={categoryName || ""}
+                  disabled={isReadOnly}
+                  readOnly
+                  onKeyDown={(e) => handleKeyOpen(e, () => setCategoryFormOpen(true))}
+                  onClick={() => setCategoryFormOpen(true)}
+                  className={`inputField w-full border
+                    ${errors.productcategoryid && !categoryName ? "border-red-500" : "border-gray-300"} 
+                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}
+                  `}
+                  placeholder="Select Category"
+                />
+
+              </div>
+
+              {/* Class */}
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">
+                  Class <strong className="text-red-500">*</strong>
+                </label>
+                <input
+                  ref={classRef}
+                  type="text"
+                  value={className || ""}
+                  disabled={isReadOnly || !selectedCategoryId}
+                  readOnly
+                  onKeyDown={(e) => handleKeyOpen(e, () => setClassFormOpen(true))}
+                  onClick={() => selectedCategoryId && setClassFormOpen(true)}
+                  className={`inputField w-full border
+                    ${errors.productclassid && !className ? "border-red-500" : "border-gray-300"} 
+                    ${isReadOnly || !selectedCategoryId ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}
+                  `}
+                  placeholder={
+                    selectedCategoryId ? "Select Class" : "Select Category first"
+                  }
+                />
+
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">
+                  Product Group <strong className="text-red-500">*</strong>
+                </label>
+                <input
+                  ref={groupRef}
+                  type="text"
+                  value={groupName || ""}
+                  disabled={isReadOnly || !selectedClassId}
+                  readOnly
+                  onKeyDown={(e) => handleKeyOpen(e, () => setGroupFormOpen(true))}
+                  onClick={() => selectedClassId && setGroupFormOpen(true)}
+                  className={`inputField w-full border
+                    ${errors.productsubclassid && !groupName ? "border-red-500" : "border-gray-300"} 
+                    ${isReadOnly || !selectedClassId ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}
+                  `}
+                  placeholder={selectedClassId ? "Select Product Group" : "Select Class first"}
+                />
+
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">
+                  HSN <strong className="text-red-500">*</strong>
+                </label>
+                <input
+                  ref={hsnRef}
+                  type="text"
+                  value={hsnName || ""}
+                  disabled={isReadOnly}
+                  readOnly
+                  onKeyDown={(e) => handleKeyOpen(e, () => setHsnFormOpen(true))}
+                  onClick={() => setHsnFormOpen(true)}
+                  className={`inputField w-full border
+                    ${errors.hsnid && !hsnName ? "border-red-500" : "border-gray-300"}
+                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}
+                  `}
+                  placeholder="Select HSN"
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">
+                  Base Unit <strong className="text-red-500">*</strong>
+                </label>
+                <FormSelect
+                  name="unitid"
+                  control={control}
+                  options={unitOptions}
+                  onChange={handleUnitChange}
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">
+                  Product Type <strong className="text-red-500">*</strong>
+                </label>
+                <FormSelect
+                  name="producttype"
+                  control={control}
+                  options={productTypeOptions}
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">
+                  MRP <strong className="text-red-500">*</strong>
+                </label>
+                <input
+                  type="text"
+                  {...register("mrp", { valueAsNumber: true })}
+                  autoComplete="off"
+                  // ref={(e) => { mrpInputRef.current = e; }}
+                  disabled={isReadOnly}
+                  className={`inputField w-full border
+                    ${errors.mrp ? "border-red-500" : "border-gray-300"}
+                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}
+                  `}
+                  placeholder="Enter MRP"
+
+                />
+                {errors.mrp && <p className="text-red-500 mt-1 text-sm">{errors.mrp.message}</p>}
               </div>
 
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">
+                  GST <strong className="text-red-500">*</strong>
+                </label>
+                <FormSelect
+                  name="gstid"
+                  control={control}
+                  options={gstOptions}
+                />
+              </div>
 
-                <div className="pr-2 border-r-3">
-                  {/* Category */}
-                  <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Category <strong className="text-red-500 text-sm"> * </strong> </label>
-                    <FormSelect
-                      name="productcategoryid"
-                      control={control}
-                      options={categoryOptions}
-                    />
-                  </div>
-
-                  {/* Class */}
-                  <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Class <strong className="text-red-500 text-sm"> * </strong></label>
-                    <FormSelect
-                      name="productclassid"
-                      control={control}
-                      options={classOptions}
-                    />
-                  </div>
-
-                  {/* Product Group */}
-                  <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Product Group <strong className="text-red-500 text-sm"> * </strong></label>
-                    <FormSelect
-                      name="productsubclassid"
-                      control={control}
-                      options={groupOptions}
-                    />
-                  </div>
-
-                  {/* Base Unit */}
-                  <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Base Unit <strong className="text-red-500 text-sm"> * </strong></label>
-                    <FormSelect
-                      name="unitid"
-                      control={control}
-                      options={unitOptions}
-                      onChange={handleUnitChange}
-                    />
-                  </div>
-
-                  {/* Product Type */}
-                  <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Product Type <strong className="text-red-500 text-sm"> * </strong></label>
-                    <FormSelect
-                      name="producttype"
-                      control={control}
-                      options={productTypeOptions}
-                    />
-                  </div>
-                </div>
-
-                <div className="pr-2 border-r-3">
-
-                  {/* Minimum Level */}
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-1">Minimum Level <strong className="text-red-500 text-sm"> * </strong> </label>
-                    <input
-                      type="text"
-                      {...register("minimumlevel", { valueAsNumber: true })}
-                      disabled={isReadOnly}
-                      className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.minimumlevel ? "border-red-500" : "border-gray-300"}`}
-                      placeholder="Enter minimum level"
-                    />
-                    {errors.minimumlevel && <p className="text-red-500 mt-1 text-sm">{errors.minimumlevel.message}</p>}
-                  </div>
-
-                  {/* Reorder Level */}
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-1">Reorder Level <strong className="text-red-500 text-sm"> * </strong> </label>
-                    <input
-                      type="text"
-                      {...register("reorderlevel", { valueAsNumber: true })}
-                      disabled={isReadOnly}
-                      className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.reorderlevel ? "border-red-500" : "border-gray-300"}`}
-                      placeholder="Enter reorder level"
-                    />
-                    {errors.reorderlevel && <p className="text-red-500 mt-1 text-sm">{errors.reorderlevel.message}</p>}
-                  </div>
-
-                  {/* Valuation Type */}
-                  <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Valuation Type <strong className="text-red-500 text-sm"> * </strong> </label>
-                    <FormSelect
-                      name="valuationtype"
-                      control={control}
-                      options={valuationTypeOptions}
-                    />
-                  </div>
-
-                  {/* Batch Require */}
-                  <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Batch Require <strong className="text-red-500 text-sm"> * </strong></label>
-                    <FormSelect
-                      name="batchrequire"
-                      control={control}
-                      options={batchRequireOptions}
-                    />
-                  </div>
-                </div>
-                <div className="pr-2 border-r-3">
-
-                  {/* Alter Unit */}
-
-                  <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Alter Unit <strong className="text-red-500 text-sm"> * </strong></label>
-                    <FormSelect
-                      name="alterunitid"
-                      control={control}
-                      options={unitOptions}
-                    />
-                  </div>
-
-                  {/* Alter Unit Factor */}
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-1">Alter Unit Factor <strong className="text-red-500 text-sm"> * </strong></label>
-                    <input
-                      type="number"
-                      {...register("alterunitfactor", { valueAsNumber: true })}
-                      disabled={isReadOnly}
-                      className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.alterunitfactor ? "border-red-500" : "border-gray-300"}`}
-                      placeholder="Enter alter unit factor"
-                    />
-                    {errors.alterunitfactor && <p className="text-red-500 mt-1 text-sm">{errors.alterunitfactor.message}</p>}
-                  </div>
-
-                  {/* Alter Unit Factor Type */}
-                  <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Alter Unit Factor Type <strong className="text-red-500 text-sm"> * </strong></label>
-                    <FormSelect
-                      name="alterunitfactortype"
-                      control={control}
-                      options={unitFactorTypeOptions}
-                    />
-                  </div>
-                  {/* Alter Unit Method */}
-                  <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Alter Unit Method <strong className="text-red-500 text-sm"> * </strong></label>
-                    <FormSelect
-                      name="alterunitmethod"
-                      control={control}
-                      options={unitMethodOptions}
-                    />
-                  </div>
-                  {/* Purchase Rate On */}
-                  <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Purchase Rate On <strong className="text-red-500 text-sm"> * </strong></label>
-                    <FormSelect
-                      name="purchaserateon"
-                      control={control}
-                      options={purchaseRateONOptions}
-                    />
-                  </div>
-
-                  {/* Sale Rate On */}
-
-                  <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Sale Rate On <strong className="text-red-500 text-sm"> * </strong></label>
-                    <FormSelect
-                      name="salerateon"
-                      control={control}
-                      options={saleRateONOptions}
-                    />
-                  </div>
-                </div>
-                <div>
-                  {/* MRP */}
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-1">MRP <strong className="text-red-500 text-sm"> * </strong></label>
-                    <input
-                      type="number"
-                      {...register("mrp", { valueAsNumber: true })}
-                      disabled={isReadOnly}
-                      className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.mrp ? "border-red-500" : "border-gray-300"}`}
-                      placeholder="Enter minimum level"
-                    />
-                    {errors.mrp && <p className="text-red-500 mt-1 text-sm">{errors.mrp.message}</p>}
-                  </div>
-
-                  {/* HSN */}
-                  <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">HSN <strong className="text-red-500 text-sm"> * </strong></label>
-                    <FormSelect
-                      name="hsnid"
-                      control={control}
-                      options={hsnOptions}
-                      onChange={handleHsnChange}
-                    />
-                  </div>
-                  {/* GST */}
-                  <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">GST <strong className="text-red-500 text-sm"> * </strong></label>
-                    <FormSelect
-                      name="gstid"
-                      control={control}
-                      options={gstOptions}
-                    />
-                  </div>
-
-                  {/* Status */}
-                  <div className="">
-                    <label className="block text-gray-700 font-medium mb-1">Status <strong className="text-red-500 text-sm"> * </strong></label>
-                    <FormSelect
-                      name="closedtag"
-                      control={control}
-                      options={productStatusOption}
-                    />
-                  </div>
-                </div>
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">
+                  Status <strong className="text-red-500">*</strong>
+                </label>
+                <FormSelect
+                  name="closedtag"
+                  control={control}
+                  options={productStatusOption}
+                />
               </div>
             </div>
+
           </section>
-
-
         </div>
+
 
         {/* Footer delete-btn */}
         <div className="border-t p-2 flex justify-end gap-4 bg-gray-50">
@@ -614,8 +579,56 @@ export function ProductForm({ visible, onClose, ProductId, mode, returnAfterSave
           </button>
         </div>
 
-        <LoadPanel shadingColor="rgba(0,0,0,0.4)" visible={isSubmitting || isLoadingProduct} showIndicator />
+
+        {isSubmitting || isLoadingProduct && <Loader />}
+
       </form>
+
+      {/* ---------- Search Modals ---------- */}
+      <SearchModal
+        open={categoryFormOpen}
+        onClose={() => setCategoryFormOpen(false)}
+        endpoint="category"
+        baseParams={baseParams}
+        columns={nameColumns}
+        searchFields={nameFields}
+        onSelect={handleCategorySelect}
+        createNewConfig={{ enabled: true, label: "Create New Category", onCreateNew: handleCreateProdcategory }}
+      />
+
+      <SearchModal
+        open={classFormOpen}
+        onClose={() => setClassFormOpen(false)}
+        endpoint="class"
+        baseParams={baseClassParams}
+        columns={nameColumns}
+        searchFields={nameFields}
+        onSelect={handleClassSelect}
+        createNewConfig={{ enabled: true, label: "Create New Class", onCreateNew: handleCreateProdclass }}
+      />
+
+      <SearchModal
+        open={groupFormOpen}
+        onClose={() => setGroupFormOpen(false)}
+        endpoint="productsubclass"
+        baseParams={baseGroupParams}
+        columns={nameColumns}
+        searchFields={nameFields}
+        onSelect={handleGroupSelect}
+        createNewConfig={{ enabled: true, label: "Create New Product Group", onCreateNew: handleCreateProdgroup }}
+      />
+
+      <SearchModal
+        open={hsnFormOpen}
+        onClose={() => setHsnFormOpen(false)}
+        endpoint="hsn"
+        baseParams={baseParams}
+        columns={searchHsnColumns}
+        searchFields={searchHsnFields}
+        onSelect={handleHsnSelect}
+        createNewConfig={{ enabled: true, label: "Create New HSN", onCreateNew: handleCreateHsn }}
+      />
+
     </Popup>
   );
 }

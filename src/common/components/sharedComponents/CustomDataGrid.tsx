@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 import {
   DataGrid,
   Column,
+  HeaderFilter,
   Selection,
   Scrolling,
   Paging,
@@ -86,7 +87,6 @@ interface CustomDataGridProps {
 
   pagerPageSizes?: (number | "all")[];
 
-  showFilterRow?: boolean;
   showColumnChooser?: boolean;
 
   scrollingMode?: "standard" | "virtual" | "infinite";
@@ -99,6 +99,9 @@ interface CustomDataGridProps {
   showSearchPanel?: boolean;
   searchPlaceholder?: string;
   searchExpr?: string | string[];
+
+  showFilterRow?: boolean;
+  showHeaderFilter?: boolean;
 
 }
 
@@ -134,7 +137,6 @@ const CustomDataGrid: React.FC<CustomDataGridProps> = ({
 
   pagerPageSizes = [15, 30, 50, 100, 150, "all"],
 
-  showFilterRow = false,
   showColumnChooser = false,
 
   scrollingMode = "virtual",
@@ -435,6 +437,26 @@ const CustomDataGrid: React.FC<CustomDataGridProps> = ({
     e.cancel = true;
   };
 
+  const [showFilterRow, setShowFilterRow] = useState(false);
+
+  useEffect(() => {
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        setShowFilterRow(prev => !prev);
+      }
+      if (e.key === 'Escape') {
+        setShowFilterRow(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+
+  }, []);
+
   return (
     <DataGrid
       dataSource={dataSource || []}
@@ -474,6 +496,10 @@ const CustomDataGrid: React.FC<CustomDataGridProps> = ({
 
       {/* Filter Row */}
       {showFilterRow && <FilterRow visible />}
+      {showFilterRow && <HeaderFilter visible={true} />}
+
+      {/* Selection */}
+      <Selection mode={selectionMode} />
 
       {/* Column Chooser */}
       {showColumnChooser && (
@@ -491,14 +517,14 @@ const CustomDataGrid: React.FC<CustomDataGridProps> = ({
       <Scrolling mode={scrollingMode} />
 
       {/* Search Panel - only with valid props */}
-      {showSearchPanel && (
+      {/* {showSearchPanel && (
         <SearchPanel
           visible={true}
           width={250}
           placeholder={searchPlaceholder}
           highlightSearchText={true}
         />
-      )}
+      )} */}
 
       {/* Paging */}
       <Paging defaultPageSize={50} />

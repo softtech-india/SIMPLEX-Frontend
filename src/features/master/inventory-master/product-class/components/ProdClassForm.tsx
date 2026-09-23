@@ -17,9 +17,11 @@ interface ProdClassFormProps {
   onClose: () => void;
   ProdClassId: number;
   mode: OperationMode;
+  returnAfterSave?: boolean;
+  onSuccess?: (product: any) => void;
 }
 
-export function ProdClassForm({ visible, onClose, ProdClassId, mode }: ProdClassFormProps) {
+export function ProdClassForm({ visible, onClose, ProdClassId, mode, returnAfterSave, onSuccess }: ProdClassFormProps) {
 
   const confirm = useConfirm();
   const defaultFocusRef = useRef<HTMLInputElement>(null);
@@ -91,9 +93,14 @@ export function ProdClassForm({ visible, onClose, ProdClassId, mode }: ProdClass
       };
 
       if (isAddMode) {
-        await createMutation.mutateAsync(payload);
+        const result = await createMutation.mutateAsync(payload);
         reset(prodClassDefaultValues);
-       // onClose();
+        if (returnAfterSave) {
+          onSuccess?.(result);
+          onClose();
+          return;
+        }
+        // onClose();
         defaultFocusRef.current?.focus();
         return;
       }

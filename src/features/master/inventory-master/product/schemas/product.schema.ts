@@ -4,11 +4,13 @@ export const ProductSchema = z.object({
   productcode: z.string().optional(),
   productname: z.string().min(1, " "),
   aliasname: z.string().min(1, " "),
-  categorynm: z.string().optional(),
 
   productcategoryid: z.number().min(1, " "),
+  categorynm: z.string().optional(),
   productclassid: z.number().min(1, " "),
+  classnm: z.string().optional(),
   productsubclassid: z.number().min(1, " "),
+  subclassnm: z.string().optional(),
 
   unitid: z.number().min(1, " "),
   producttype: z.string().min(1, " "),
@@ -27,6 +29,8 @@ export const ProductSchema = z.object({
   mrp: z.number().min(0, " "),
 
   hsnid: z.number().min(1, " "),
+  hsnNo: z.string().optional(),
+  hsn: z.string().optional(),
   gstid: z.number().min(1, " "),
 
   closedtag: z.string().min(1, " "),

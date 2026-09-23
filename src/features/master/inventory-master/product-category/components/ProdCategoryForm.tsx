@@ -11,15 +11,18 @@ import { ProdCategory, OperationMode, ProdCategoryFormData } from "../types/prod
 import { prodCategorySchema, prodCategoryFormSchema } from "../schemas/prodCategory.schema";
 import { prodCategoryDefaultValues } from "../constants/prodCategoryFormDefaults"
 import { useConfirm } from "@/common/hooks/useConfirm";
+import SearchModal from "@/common/components/SearchModal";
 
 interface ProdCategoryFormProps {
   visible: boolean;
   onClose: () => void;
   ProdCategoryId: number;
   mode: OperationMode;
+  returnAfterSave?: boolean;
+  onSuccess?: (product: any) => void;
 }
 
-export function ProdCategoryForm({ visible, onClose, ProdCategoryId, mode }: ProdCategoryFormProps) {
+export function ProdCategoryForm({ visible, onClose, ProdCategoryId, mode, returnAfterSave, onSuccess }: ProdCategoryFormProps) {
 
   const confirm = useConfirm();
   const defaultFocusRef = useRef<HTMLInputElement>(null);
@@ -91,8 +94,13 @@ export function ProdCategoryForm({ visible, onClose, ProdCategoryId, mode }: Pro
       };
 
       if (isAddMode) {
-        await createMutation.mutateAsync(payload);
+        const result = await createMutation.mutateAsync(payload);
         reset(prodCategoryDefaultValues);
+        if (returnAfterSave) {
+          onSuccess?.(result);
+          onClose();
+          return;
+        }
         //onClose();
         defaultFocusRef.current?.focus();
         return;
@@ -183,6 +191,9 @@ export function ProdCategoryForm({ visible, onClose, ProdCategoryId, mode }: Pro
 
         <LoadPanel shadingColor="rgba(0,0,0,0.4)" visible={isSubmitting || isLoadingProdCategory} showIndicator />
       </form>
+
+
+
     </Popup>
   );
 }
