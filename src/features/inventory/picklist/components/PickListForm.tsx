@@ -23,6 +23,7 @@ import SearchModal from "@/common/components/SearchModal";
 import Loader from "@/common/components/Loader";
 import { useLookupShortcuts } from "@/common/hooks/useLookupShortcuts";
 import { LOOKUP_KEYS } from "@/common/constants/lookupKeys";
+import { useMasterModal } from "@/hooks/useMasterModal";
 
 interface PickListFormProps {
   visible: boolean;
@@ -36,11 +37,9 @@ interface PickListFormProps {
 
 export function PickListForm({ visible, onClose, formPickListId, mode, formSelectedBranch, toolbarBranchId }: PickListFormProps) {
 
-  const {
-    userId, companyId, branchId, finid,
-  } = useUserStore();
-
+  const { userId, companyId, branchId, finid, } = useUserStore();
   const confirm = useConfirm();
+  const { open } = useMasterModal();
 
   const formRef = useRef<HTMLFormElement>(null);
   const brandInputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -48,7 +47,10 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
   const [selectedTbills, setSelectedTbills] = useState<any[]>([]);
   const [godownModalOpen, setGodownModalOpen] = useState(false);
   const tBillRef = useRef<HTMLInputElement>(null);
+  const [transporterModalOpen, setTransporterModalOpen] = useState(false);
 
+  // Create new handlers 
+  const handleCreateTransporter = async () => { await open("transporter"); };
 
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
@@ -118,6 +120,10 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
 
         godownid: PickList.godownid ?? 0,
         godownnm: PickList.godownnm ?? "",
+        transporterid: PickList.transporterid ?? 0,
+        transporternm: PickList.transporternm ?? "",
+        
+        mobilenumber: PickList.mobilenumber ?? "",
 
         tbillid,
         tbillname: PickList.tbillname ?? "",
@@ -215,6 +221,31 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
     });
   };
   const GodownName = watch("godownnm")
+
+  // Model Search Transporter Modal Handlers
+  const baseTransporterParams = {
+    userid: userId,
+    compid: companyId,
+  };
+
+  const searchTransporterColumns = [
+    { key: "name", label: "name." },
+  ];
+
+  const searchTransporterFields = [
+    { value: "name", label: "Ledger Name" },
+  ];
+
+  const handleTransporterSelect = (row: any) => {
+    setValue("transporterid", row.id);
+    setValue("transporternm", row.name);
+    setTransporterModalOpen(false);
+    requestAnimationFrame(() => {
+      setFocus("vehicleno");
+    });
+  };
+
+  const transporternm = watch("transporternm")
 
   // Model Search Tbill Modal Handlers
   const today = new Date();
@@ -429,7 +460,7 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
       onHiding={onClose}
       title={`${mode} Pick List`}
       width="90vw"
-      height="90vh"
+      height="80vh"
       dragEnabled
       showTitle
       showCloseButton={false}
@@ -491,14 +522,31 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
                 />
               </div>
 
-              <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Transporter Name</label>
+              <div className="w-64">
+                <label className="block text-gray-700 font-medium mb-1">Transporter <strong className="text-red-500 text-sm"> * </strong></label>
                 <input
                   type="text"
-                  {...register("transportername")}
+                  value={transporternm || ''}
                   disabled={isReadOnly}
-                  className={` inputField  ${errors.transportername ? "" : "border-gray-400"}  `}
-                  placeholder="Enter transporter"
+                  readOnly
+                  onKeyDown={(e) => handleKeyOpen(e, () => setTransporterModalOpen(true))}
+                  onClick={() => setTransporterModalOpen(true)}
+                  className={`inputField w-full border
+                    ${errors.transporterid && !transporternm ? "border-red-500" : "border-gray-400"}
+                    ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}
+                  `}
+                  placeholder="Select transporter "
+                />
+              </div>
+
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">Mobile No</label>
+                <input
+                  type="text"
+                  {...register("mobilenumber")}
+                  disabled={isReadOnly}
+                  className={` inputField  ${errors.mobilenumber ? "" : "border-gray-400"}  `}
+                  placeholder="Enter mobile no."
                 />
               </div>
 
@@ -647,6 +695,17 @@ export function PickListForm({ visible, onClose, formPickListId, mode, formSelec
         columns={searchGodownColumns}
         searchFields={searchGodownFields}
         onSelect={handleGodownSelect}
+      />
+
+      <SearchModal
+        open={transporterModalOpen}
+        onClose={() => setTransporterModalOpen(false)}
+        endpoint="transporter"
+        baseParams={baseTransporterParams}
+        columns={searchTransporterColumns}
+        searchFields={searchTransporterFields}
+        onSelect={handleTransporterSelect}
+        createNewConfig={{ enabled: true, label: "Create New Transporter", onCreateNew: handleCreateTransporter }}
       />
 
       <MultipleSearchModal

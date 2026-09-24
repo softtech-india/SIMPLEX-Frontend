@@ -23,6 +23,7 @@ import Loader from "@/common/components/Loader";
 import { toast } from "sonner";
 import { useLookupShortcuts } from "@/common/hooks/useLookupShortcuts";
 import { LOOKUP_KEYS } from "@/common/constants/lookupKeys";
+import { useMasterModal } from "@/hooks/useMasterModal";
 
 interface DeliveryChallanFormProps {
   visible: boolean;
@@ -39,9 +40,9 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
   // Hooks
   const { userId, companyId, branchId, finid, } = useUserStore();
   const confirm = useConfirm();
+  const { open } = useMasterModal();
 
-  const { mutate: printDeliveryChallan, isPending: isPrinting } = usePrintDeliveryChallan();
-
+  // State
   const formRef = useRef<HTMLFormElement>(null);
   const [godownModalOpen, setGodownModalOpen] = useState(false);
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
@@ -52,6 +53,8 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
   const godownRef = useRef<HTMLInputElement>(null);
   const pickListRef = useRef<HTMLInputElement>(null);
 
+  // Create new handlers 
+  const handleCreateTransporter = async () => { await open("transporter"); };
 
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
@@ -67,6 +70,9 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
     },
     visible
   );
+
+  // Query
+  const { mutate: printDeliveryChallan, isPending: isPrinting } = usePrintDeliveryChallan();
 
   const { data: DeliveryChallan, isLoading: isLoadingDeliveryChallan } =
     useDeliveryChallanById({
@@ -117,7 +123,7 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
 
         godownid: DeliveryChallan.godownid ?? 0,
         godownnm: DeliveryChallan.godownnm ?? "",
-
+        mobilenumber: DeliveryChallan.mobilenumber ?? "",
         orderid: DeliveryChallan.orderid ?? 0,
         picklistid: DeliveryChallan.picklistid ?? 0,
         picklistno: DeliveryChallan.picklistno ?? "",
@@ -547,7 +553,7 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
               </div>
 
               <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Transporter <strong className="text-red-500 text-sm"> * </strong></label>
+                <label className="block text-gray-700 font-medium mb-1">Destination <strong className="text-red-500 text-sm"> * </strong></label>
                 <input
                   type="text"
                   value={transporterName || ''}
@@ -563,19 +569,20 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
                     ${errors.transporterid && !transporterName ? "border-red-500" : "border-gray-400"}
                     ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}
                   `}
-                  placeholder="Select transporter "
+                  placeholder="Select destination "
                 />
               </div>
-              {/* <div className="w-48">
-                <label className="block text-gray-700 font-medium mb-1">Transporter Name</label>
+
+              <div className="w-48">
+                <label className="block text-gray-700 font-medium mb-1">Mobile No</label>
                 <input
                   type="text"
-                  {...register("transportername")}
+                  {...register("mobilenumber")}
                   disabled={isReadOnly}
-                  className={` inputField  ${errors.transportername ? "" : "border-gray-400"}  `}
-                  placeholder="Enter transporter"
+                  className={` inputField  ${errors.mobilenumber ? "" : "border-gray-400"}  `}
+                  placeholder="Enter mobile no."
                 />
-              </div> */}
+              </div>
 
               <div className="w-48">
                 <label className="block text-gray-700 font-medium mb-1">Vehicle No</label>
@@ -638,7 +645,6 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
                     godownRef.current = e;
                   }}
                   onKeyDown={(e) => handleKeyOpen(e, () => setGodownModalOpen(true))}
-
                   onClick={() => setGodownModalOpen(true)}
                   className={`inputField w-full border border-gray-300 
                     ${errors.godownid && !GodownName ? "border-red-500" : "border-gray-400"}
@@ -730,6 +736,7 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
         columns={searchTransporterColumns}
         searchFields={searchTransporterFields}
         onSelect={handleTransporterSelect}
+        createNewConfig={{ enabled: true, label: "Create New Transporter", onCreateNew: handleCreateTransporter }}
       />
 
       <SearchModal

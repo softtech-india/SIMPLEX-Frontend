@@ -1,80 +1,45 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Popup } from "devextreme-react/popup";
-import LoadPanel from "devextreme-react/load-panel";
-
-import {
-  useCreateTransporter,
-  useUpdateTransporter,
-  useDeleteTransporter,
-  useTransporter,
-} from "../hooks/transporter";
-
-import {
-  Transporter,
-  OperationMode,
-  TransporterFormData,
-} from "../types/transporter";
-
-import {
-  TransporterSchema,
-  TransporterFormSchema,
-} from "../schemas/transporter.schema";
-
+import { useCreateTransporter, useUpdateTransporter, useDeleteTransporter, useTransporter, } from "../hooks/transporter";
+import { OperationMode, TransporterFormData, } from "../types/transporter";
+import { TransporterSchema, TransporterFormSchema, } from "../schemas/transporter.schema";
 import { TransporterDefaultValues } from "../constants/transporter";
 import { useConfirm } from "@/common/hooks/useConfirm";
-import { useQuery } from "@tanstack/react-query";
-import { getStorageItem } from "@/common/utility/storage";
-import { FormSelect } from "@/common/components/FormSelect";
-import { transporterService } from "../services/transporter";
+import Loader from "@/common/components/Loader";
 
 interface TransporterFormProps {
   visible: boolean;
   onClose: () => void;
   transporterId: number;
   mode: OperationMode;
+  returnAfterSave?: boolean;
+  onSuccess?: (product: any) => void;
 }
 
-type Option = { value: number | string; label: string };
 
+export function TransporterForm({ visible, onClose, transporterId, mode, returnAfterSave, onSuccess }: TransporterFormProps) {
 
-
-export function TransporterForm({
-  visible,
-  onClose,
-  transporterId,
-  mode,
-}: TransporterFormProps) {
   const confirm = useConfirm();
-  const userId = getStorageItem("userId");
+
   const defaultFocusRef = useRef<HTMLInputElement>(null);
+
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
   const isDeleteMode = mode === "Delete";
   const isReadOnly = mode === "View" || mode === "Print";
 
-  const {
-    data: transporterData,
-    isLoading: isLoadingTransporter,
-  } = useTransporter(transporterId);
+  const { data: transporterData, isLoading: isLoadingTransporter, } = useTransporter(transporterId);
 
   const createMutation = useCreateTransporter();
   const updateMutation = useUpdateTransporter();
   const deleteMutation = useDeleteTransporter();
 
-  const isSubmitting =
-    createMutation.isPending ||
-    updateMutation.isPending ||
-    deleteMutation.isPending;
+  const isSubmitting = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   const {
-    register,
-    handleSubmit,
-    setFocus,
-    reset,
-    control,
-    formState: { errors },
+    register, handleSubmit, setFocus, reset, control, formState: { errors },
   } = useForm<TransporterFormSchema>({
     resolver: zodResolver(TransporterSchema),
     defaultValues: {
@@ -87,7 +52,7 @@ export function TransporterForm({
 
     setTimeout(() => {
       setFocus("name");
-    }, 500);
+    }, 1000);
 
     if (mode === "Add") {
       reset({
@@ -137,6 +102,11 @@ export function TransporterForm({
           reset(TransporterDefaultValues);
           defaultFocusRef.current?.focus();
         }
+        if (returnAfterSave) {
+          onSuccess?.(response);
+          onClose();
+          return;
+        }
         return;
       }
 
@@ -154,7 +124,6 @@ export function TransporterForm({
       console.error("Submit error:", error);
     }
   };
-
 
 
   const onError = (err: any) => {
@@ -311,8 +280,7 @@ export function TransporterForm({
               {/* Mobile */}
               <div>
                 <label className="block text-gray-700 font-medium mb-1">
-                  Mobile No
-                  <span className="text-red-500">*</span>
+                  Mobile No <span className="text-red-500">*</span>
                 </label>
 
                 <input
@@ -419,12 +387,8 @@ export function TransporterForm({
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               {isSubmitting
-                ? isDeleteMode
-                  ? "Deleting..."
-                  : "Saving..."
-                : isDeleteMode
-                  ? "Delete"
-                  : "Save"}
+                ? isDeleteMode ? "Deleting..." : "Saving..."
+                : isDeleteMode ? "Delete" : "Save"}
             </button>
           )}
 
@@ -438,11 +402,8 @@ export function TransporterForm({
           </button>
         </div>
 
-        <LoadPanel
-          shadingColor="rgba(0,0,0,0.4)"
-          visible={isSubmitting || isLoadingTransporter}
-          showIndicator
-        />
+        {isSubmitting || isLoadingTransporter && <Loader />}
+
       </form>
     </Popup>
   );

@@ -27,13 +27,16 @@ export interface PickList {
   godownid: number;
   godownnm?: string;
 
+  transporterid: number;
+  transporternm?: string;
+
   tbillid?: number[];
   tbillname?: string;
 
   picklistdt?: string;
   picklistno?: string;
 
-  transportername?: string;
+  mobilenumber?: string;
   vehicleno?: string;
   narration?: string;
 

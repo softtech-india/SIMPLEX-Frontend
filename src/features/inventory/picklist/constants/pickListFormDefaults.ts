@@ -30,13 +30,15 @@ export const PickListFormDefaults: PickListFormSchema = {
   godownid: 0,
   godownnm: "",
 
+  transporterid: 0,
+  transporternm: "",
+
   tbillid: [],
   tbillname: '',
 
   picklistdt: today,
   picklistno: "",
 
-  transportername: "",
   vehicleno: "",
   narration: "",
 

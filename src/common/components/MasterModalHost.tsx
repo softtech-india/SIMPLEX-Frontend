@@ -5,6 +5,7 @@ import { ProdClassForm } from "@/features/master/inventory-master/product-class/
 import { ProdGroupForm } from "@/features/master/inventory-master/product-group/components/ProdGroupForm";
 import { ProductForm } from "@/features/master/inventory-master/product/components/ProductForm";
 import { HSNForm } from "@/features/master/other-master/hsn/components/HSNForm";
+import { TransporterForm } from "@/features/master/other-master/transporter/components/Transporter";
 
 import { useMasterModal } from "@/hooks/useMasterModal";
 
@@ -93,6 +94,18 @@ export function MasterModalHost() {
           visible
           mode="Add"
           HSNId={0}
+          returnAfterSave={true}
+          onClose={close}
+          onSuccess={(data) => resolve(data)}
+        />
+      );
+
+    case "transporter":
+      return (
+        <TransporterForm
+          visible
+          mode="Add"
+          transporterId={0}
           returnAfterSave={true}
           onClose={close}
           onSuccess={(data) => resolve(data)}

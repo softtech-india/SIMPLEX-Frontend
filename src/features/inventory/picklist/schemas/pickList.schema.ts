@@ -29,13 +29,16 @@ export const PickListBaseSchema = z.object({
   godownid: z.number().min(1, " "),
   godownnm: z.string().optional(),
 
+  transporterid: z.number().min(1, " "),
+  transporternm: z.string().optional(),
+  mobilenumber: z.string().optional(),
+  
   tbillid: z.array(z.number()).min(1, "Please select at least one Tbill"),
   tbillname: z.string().optional(),
 
   picklistdt: z.string().optional(),
   picklistno: z.string().optional(),
 
-  transportername: z.string().optional(),
   vehicleno: z.string().optional(),
   narration: z.string().optional(),
 

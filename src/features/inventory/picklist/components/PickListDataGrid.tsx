@@ -19,7 +19,7 @@ export const PickListDataGrid = forwardRef<any, PickListDataGridProps>(
     const columns = [ // 
       { dataField: "picklistno", caption: "Pick List No.", width: 150, headerFilter: true },
       { dataField: "picklistdt", caption: "Pick List Date", dataType: "date", format: "dd-MM-yyyy", width: 120, },
-      { dataField: "transportername", caption: "Transporter", width: 200, headerFilter: true },
+      { dataField: "transporternm", caption: "Transporter", width: 200, headerFilter: true },
       { dataField: "vehicleno", caption: "Vehicle No", width: 100, headerFilter: true },
       { dataField: "qty", caption: "Quantity", width: 80, headerFilter: true },
       { dataField: "narration", caption: "Narration", width: 200, headerFilter: true },

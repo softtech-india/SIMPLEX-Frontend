@@ -22,6 +22,7 @@ import { SHORTCUTS } from "@/common/constants/shortcuts";
 import { useSaleQrScanner } from "@/hooks/useSaleQrScanner";
 import Loader from "@/common/components/Loader";
 import { toast } from "sonner";
+import { useMasterModal } from "@/hooks/useMasterModal";
 
 interface SaleOrderFormProps {
   visible: boolean;
@@ -37,7 +38,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
 
   // Hooks
   const { userId, companyId, branchId, finid, } = useUserStore();
-
+  const { open } = useMasterModal();
   const confirm = useConfirm();
   const { mutate: printTbill, isPending: isPrinting } = usePrintTbill();
 
@@ -54,6 +55,9 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
   const isDeleteMode = mode === "Delete";
   const isApproveMode = mode === "Approve";
   const isReadOnly = mode === "View" || mode === "Print";
+
+  // Create new handlers 
+  const handleCreateCustomer = async () => { await open("customer"); };
 
   // handle Sortcuts 
   useKeyboardShortcuts(
@@ -842,6 +846,7 @@ export function SaleOrderForm({ visible, onClose, formSaleOrderId, mode, formSel
         columns={searchCustomerColumns}
         searchFields={searchCustomerFields}
         onSelect={handleCustomerSelect}
+        createNewConfig={{ enabled: true, label: "Create New Customer", onCreateNew: handleCreateCustomer }}
       />
 
       <SearchModal

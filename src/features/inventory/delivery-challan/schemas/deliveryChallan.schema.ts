@@ -29,7 +29,7 @@ export const DeliveryChallanBaseSchema = z.object({
 
   godownid: z.number().min(1, "Please select a godown"),
   godownnm: z.string().optional(),
-
+  mobilenumber: z.string().optional(),
   orderid: z.number().min(1, "Please select an order"),
 
   picklistid: z.number().min(1, "Please select a pick list"),

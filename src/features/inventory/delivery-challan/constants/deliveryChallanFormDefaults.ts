@@ -31,11 +31,12 @@ export const DeliveryChallanFormDefaults: DeliveryChallanFormSchema = {
   godownid: 0,
   godownnm: "",
 
+  transporterid: 0,
+
   orderid: 0,
   picklistid: 0,
   picklistno: "",
 
-  transporterid: 0,
   vehicleno: "",
   narration: "",
 

@@ -29,7 +29,7 @@ export interface DeliveryChallan {
 
   godownid: number;
   godownnm?: string;
-
+  mobilenumber?: string;
   orderid: number;
   picklistid: number;
   picklistno: string;
