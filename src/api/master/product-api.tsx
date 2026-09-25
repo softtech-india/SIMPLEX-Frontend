@@ -406,3 +406,43 @@ export const fetchGstList = async (userId: string | number | null) => {
     return [];
   }
 };
+
+
+export interface ProductSearchItem {
+  id: number;
+  productcode: string;
+  productname: string;
+  unit: string;
+}
+
+interface ProductSearchResponse {
+  success: boolean;
+  message: string;
+  totalcount: number;
+  data: ProductSearchItem[];
+}
+
+export async function searchProducts(
+  userId: number | string,
+  companyId: number | string,
+  searchText: string
+): Promise<ProductSearchItem[]> {
+  if (!searchText || !searchText.trim()) return [];
+
+  const response: any = await apiCall.get(
+    `${process.env.NEXT_PUBLIC_PROJECT_API_ENDPOINT}product`,
+    {
+      userid: userId,
+      compid: companyId,
+      skip: 0,
+      take: 50000,
+      searchtext: searchText.trim(),
+    }
+  );
+
+  if (response?.error) {
+    notify(response.error, "error", 3000);
+    return [];
+  }
+  return response?.data ?? [];
+}

@@ -109,41 +109,11 @@ export const StockLedgersModal: React.FC<StockLedgersModalProps> = ({
         { dataField: "refno", caption: "Reference No", width: 150 },
         { dataField: "ledgernm", caption: "Ledger Name", width: 150 },
         { dataField: "trtype", caption: "Type", width: 100 },
-        {
-            dataField: "recvqty",
-            caption: "Received",
-            width: 100,
-            format: "fixedPoint",
-            precision: 2
-        },
-        {
-            dataField: "issuqty",
-            caption: "Issued",
-            width: 100,
-            format: "fixedPoint",
-            precision: 2
-        },
-        {
-            dataField: "clqty",
-            caption: "Closing Qty",
-            width: 120,
-            format: "fixedPoint",
-            precision: 2
-        },
-        {
-            dataField: "clrate",
-            caption: "Rate",
-            width: 100,
-            format: "fixedPoint",
-            precision: 2
-        },
-        {
-            dataField: "clval",
-            caption: "Value",
-            width: 120,
-            format: "fixedPoint",
-            precision: 2
-        },
+        { dataField: "recvqty", caption: "Received", width: 100, format: "fixedPoint", precision: 2 },
+        { dataField: "issuqty", caption: "Issued", width: 100, format: "fixedPoint", precision: 2 },
+        { dataField: "clqty", caption: "Closing Qty", width: 120, format: "fixedPoint", precision: 2 },
+        { dataField: "clrate", caption: "Rate", width: 100, format: "fixedPoint", precision: 2 },
+        { dataField: "clval", caption: "Value", width: 120, format: "fixedPoint", precision: 2 },
         { dataField: "unit", caption: "Unit", width: 80 }
     ];
 
