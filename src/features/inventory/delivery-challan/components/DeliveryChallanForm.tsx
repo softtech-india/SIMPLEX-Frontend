@@ -218,7 +218,6 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
   ];
 
   const handleTransporterSelect = (row: any) => {
-    console.log('transportername :', row)
     setValue("transporterid", row.id);
     setValue("transportername", row.name);
     setTransporterModalOpen(false);
@@ -694,6 +693,7 @@ export function DeliveryChallanForm({ visible, onClose, formDeliveryChallanId, m
                 items={watchedItems}
                 errors={errors}
                 register={register}
+                setValue={setValue}
               />
 
             </div>

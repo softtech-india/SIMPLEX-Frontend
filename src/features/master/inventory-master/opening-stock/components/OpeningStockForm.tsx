@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Popup } from "devextreme-react/popup";
-import LoadPanel from "devextreme-react/load-panel";
 import { useFieldArray } from "react-hook-form";
 import useUserStore from "@/store/userStore";
 import { useWatch } from "react-hook-form";
@@ -16,6 +15,8 @@ import SearchModal from "@/common/components/SearchModal";
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
 import { SHORTCUTS } from "@/common/constants/shortcuts";
+import { useMasterModal } from "@/hooks/useMasterModal";
+import Loader from "@/common/components/Loader";
 
 interface OpeningStockFormProps {
   visible: boolean;
@@ -28,19 +29,16 @@ interface OpeningStockFormProps {
 
 export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, formSelectedBranch, toolbarBranchId }: OpeningStockFormProps) {
 
-  const {
-    userId,
-    companyId,
-    branchId,
-    finid,
-  } = useUserStore();
-
+  const { userId, companyId, branchId, finid, } = useUserStore();
+  const { open } = useMasterModal();
   const confirm = useConfirm();
 
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
   const isDeleteMode = mode === "Delete";
   const isReadOnly = mode === "View" || mode === "Print";
+
+  const handleCreateProduct = async () => { await open("product"); };
 
   useKeyboardShortcuts(
     {
@@ -68,19 +66,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
   const productRef = useRef<HTMLInputElement>(null);
   const godownInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-
-
-  const {
-    control,
-    register,
-    handleSubmit,
-    setFocus,
-    reset,
-    watch,
-    setValue,
-    trigger,
-    formState: { errors },
-  } = useOpeningStockForm();
+  const { control, register, handleSubmit, setFocus, reset, watch, setValue, trigger, formState: { errors }, } = useOpeningStockForm();
 
   const productname = watch('productname');
   const categorynm = watch("categorynm");
@@ -346,16 +332,16 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
         onSubmit={handleSubmit(handleFormSubmit, onError)}
         className="flex flex-col h-full"
       >
-        <div className="flex-1 overflow-y-auto p-2 space-y-2">
+        <div className="flex-1 overflow-y-auto p-1 space-y-1">
 
           {/* Opening Stock Order Info */}
-          <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
+          <section className="border rounded-md p-1 shadow-sm bg-white space-y-3">
 
             <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
               Opening Stock Information
             </h2>
 
-            <div className="flex flex-wrap gap-4 items-end">
+            <div className="flex flex-wrap gap-1 items-end">
 
               <div className="w-120">
                 <label className="block text-gray-700 text-sm font-medium mb-1">
@@ -439,7 +425,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
           </section>
 
           {/* Item Details */}
-          <section className="border rounded-md p-3 shadow-sm bg-white space-y-3">
+          <section className="border rounded-md p-1 shadow-sm bg-white space-y-3">
 
             <div className="flex justify-between items-center">
               <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
@@ -468,7 +454,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1">
               {fields.map((field, index) => (
                 <OpeningStockItems
                   key={field.id}
@@ -559,11 +545,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
           </button>
         </div>
 
-        <LoadPanel
-          shadingColor="rgba(0,0,0,0.4)"
-          visible={isSubmitting || isLoadingOpeningStock}
-          showIndicator
-        />
+        {isSubmitting || isLoadingOpeningStock && <Loader />}
       </form>
 
       <SearchModal
@@ -574,6 +556,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
         columns={searchProductColumns}
         searchFields={searchProductFields}
         onSelect={handleProductSelect}
+        createNewConfig={{ enabled: true, label: "Create New Category", onCreateNew: handleCreateProduct }}
       />
 
     </Popup>
