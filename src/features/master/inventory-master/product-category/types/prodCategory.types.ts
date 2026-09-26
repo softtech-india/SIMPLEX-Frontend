@@ -1,7 +1,7 @@
 export interface ProdCategory {
   id: number;
   name: string;
-
+  code: string;
   entryby?: string;
   entrydt?: string;
   updateby?: string;

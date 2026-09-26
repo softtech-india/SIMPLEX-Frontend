@@ -17,7 +17,8 @@ export const ProdCategoryDataGrid = forwardRef<any, ProdCategoryDataGridProps>(
   ({ dataSource, onSelectionChanged, onExporting, height = 600 }, ref) => {
 
     const columns = useMemo(() => [
-      { dataField: 'name', caption: 'Name', width: 600, headerFilter: true },
+      { dataField: 'name', caption: 'Name', width: 400, headerFilter: true },
+      { dataField: 'code', caption: 'Code', width: 200, headerFilter: true },
       { dataField: 'entryby', caption: 'Entry User', width: 140 },
       { dataField: 'entrydt', caption: 'Entry Date', width: 160, dataType: 'date' },
       { dataField: 'updateby', caption: 'Update User', width: 140 },

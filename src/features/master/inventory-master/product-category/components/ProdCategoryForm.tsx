@@ -1,17 +1,15 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Popup } from "devextreme-react/popup";
-import LoadPanel from "devextreme-react/load-panel";
-
 import { useProdCategory } from "../hooks/prodCategory";
 import { useCreateProdCategory, useUpdateProdCategory, useDeleteProdCategory } from "../hooks/prodCategory";
-
-import { ProdCategory, OperationMode, ProdCategoryFormData } from "../types/prodCategory.types";
+import { OperationMode, ProdCategoryFormData } from "../types/prodCategory.types";
 import { prodCategorySchema, prodCategoryFormSchema } from "../schemas/prodCategory.schema";
 import { prodCategoryDefaultValues } from "../constants/prodCategoryFormDefaults"
 import { useConfirm } from "@/common/hooks/useConfirm";
-import SearchModal from "@/common/components/SearchModal";
+import useUserStore from "@/store/userStore";
+import Loader from "@/common/components/Loader";
 
 interface ProdCategoryFormProps {
   visible: boolean;
@@ -24,6 +22,7 @@ interface ProdCategoryFormProps {
 
 export function ProdCategoryForm({ visible, onClose, ProdCategoryId, mode, returnAfterSave, onSuccess }: ProdCategoryFormProps) {
 
+  const { userId, companyId } = useUserStore();
   const confirm = useConfirm();
   const defaultFocusRef = useRef<HTMLInputElement>(null);
 
@@ -39,11 +38,7 @@ export function ProdCategoryForm({ visible, onClose, ProdCategoryId, mode, retur
   const isSubmitting = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   const {
-    register,
-    handleSubmit,
-    setFocus,
-    reset,
-    formState: { errors },
+    register, handleSubmit, setFocus, reset, formState: { errors },
   } = useForm<prodCategoryFormSchema>({
     resolver: zodResolver(prodCategorySchema),
     defaultValues: prodCategoryDefaultValues,
@@ -71,53 +66,75 @@ export function ProdCategoryForm({ visible, onClose, ProdCategoryId, mode, retur
   }, [prodCategorylist, mode, visible, reset, setFocus]);
 
 
-
   // Submit handler
   const handleFormSubmit = async (data: prodCategoryFormSchema) => {
-    try {
 
-      if (isDeleteMode) {
-        const ok = await confirm({
-          title: "Delete product category",
-          message: "Are you sure you want to delete this product category?",
-          confirmText: "Delete",
-          variant: "danger",
-        });
+    if (isDeleteMode) {
 
-        if (!ok) return;
+      const ok = await confirm({
+        title: "Delete product category",
+        message: "Are you sure you want to delete this product category?",
+        confirmText: "Delete",
+        variant: "danger",
+      });
 
-        await deleteMutation.mutateAsync(ProdCategoryId);
+      if (!ok) return;
+
+      deleteMutation.mutate(
+        {
+          id: ProdCategoryId,
+          userid: Number(userId),
+          compid: Number(companyId),
+        },
+        {
+          onSuccess: (data) => {
+            if (!data?.success) {
+              return;
+            }
+            onClose();
+          },
+        }
+      );
+
+      return;
+    }
+
+    const payload: ProdCategoryFormData = {
+      ...data,
+    };
+
+    if (isAddMode) {
+
+      const result = createMutation.mutate(payload, {
+        onSuccess: (data) => {
+          if (!data?.success) {
+            return;
+          }
+          reset(prodCategoryDefaultValues);
+          //onClose();
+        },
+      });
+
+      if (returnAfterSave) {
+        onSuccess?.(result);
         onClose();
         return;
       }
 
-      const payload: ProdCategoryFormData = {
-        ...data,
-      };
+      defaultFocusRef.current?.focus();
+      return;
+    }
 
-      if (isAddMode) {
-        const result = await createMutation.mutateAsync(payload);
-        reset(prodCategoryDefaultValues);
-        if (returnAfterSave) {
-          onSuccess?.(result);
-          onClose();
-          return;
-        }
-        //onClose();
-        defaultFocusRef.current?.focus();
-        return;
-      }
-
-      if (isEditMode) {
-        await updateMutation.mutateAsync({
+    if (isEditMode) {
+      updateMutation.mutate(
+        {
           id: ProdCategoryId,
           data: payload,
-        });
-        onClose();
-      }
-    } catch (error) {
-      console.error("Submit error:", error);
+        },
+      );
+      onClose();
     }
+
   };
 
   // Debug validation issues 
@@ -129,45 +146,49 @@ export function ProdCategoryForm({ visible, onClose, ProdCategoryId, mode, retur
     <Popup
       visible={visible}
       onHiding={onClose}
-      title={`${mode} product category`}
+      title={`${mode} Product Category`}
       width="40vw"
       height="auto"
       dragEnabled
       showTitle
       showCloseButton={false}
     >
-      <form
-        onSubmit={handleSubmit(handleFormSubmit, onError)}
-        className="flex flex-col h-full"
-      >
-        <div className="flex-1 overflow-y-auto p-2 space-y-2">
+      <form onSubmit={handleSubmit(handleFormSubmit, onError)} className="flex flex-col h-full" >
+        <div className="flex-1 overflow-y-auto p-1 space-y-1">
 
-          {/* Product Category Information */}
-          <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
+          <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
+            {/* <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
               Product Category Information
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-1 gap-2">
+            </h2> */}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <div>
-                <label className="block text-gray-700 font-medium mb-1">Product Category Name <span className="text-red-500">*</span></label>
+                <label className="block text-gray-700 font-medium mb-1">Name <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   {...register("name")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.name ? "border-red-500" : "border-gray-300"}`}
-                  placeholder="Enter product category name"
+                  className={`inputField w-full ${errors.name ? "border-red-500" : "border-gray-300"}`}
+                  placeholder="Enter name"
                 />
-                {errors.name && <p className="text-red-500 mt-1 text-sm">{errors.name.message}</p>}
               </div>
 
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">Code <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  {...register("code")}
+                  disabled={isReadOnly}
+                  className={`inputField w-full ${errors.code ? "border-red-500" : "border-gray-300"}`}
+                  placeholder="Enter code"
+                />
+              </div>
 
             </div>
           </section>
 
-
         </div>
 
-        {/* Footer delete-btn */}
         <div className="border-t p-2 flex justify-end gap-4 bg-gray-50">
           {(mode !== "View" && mode !== "Print") && (
             <button
@@ -191,10 +212,9 @@ export function ProdCategoryForm({ visible, onClose, ProdCategoryId, mode, retur
           </button>
         </div>
 
-        <LoadPanel shadingColor="rgba(0,0,0,0.4)" visible={isSubmitting || isLoadingProdCategory} showIndicator />
+        {isSubmitting || isLoadingProdCategory && <Loader />}
+
       </form>
-
-
 
     </Popup>
   );

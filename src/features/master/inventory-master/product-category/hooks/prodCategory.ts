@@ -32,7 +32,7 @@ export function useProdCategory(id: number) {
   return useQuery({
     queryKey: PROD_CATEGORY_KEYS.detail(id),
     queryFn: () => prodCategoryService.getProdCategoryById(id),
-    
+
     enabled: !!id,
 
     staleTime: 0,
@@ -49,15 +49,18 @@ export function useCreateProdCategory() {
   return useMutation({
     mutationFn: (data: ProdCategoryFormData) => prodCategoryService.createProdCategory(data),
     onSuccess: (data) => {
-      if (data.success) {
-        queryClient.invalidateQueries({ queryKey: PROD_CATEGORY_KEYS.list() });
-        toast.success(data.message);
-      } else {
-        toast.error(data.message || "Failed to create user group");
+
+      if (!data.success) {
+        toast.error(data.message);
+        return;
       }
+
+      toast.success(data.message);
+      queryClient.invalidateQueries({ queryKey: PROD_CATEGORY_KEYS.list(), });
+
     },
     onError: (err: Error) => {
-      toast.error(err.message || String(err));
+      toast.error(err.message || "Failed to create product category ");
     },
   });
 }
@@ -70,18 +73,19 @@ export function useUpdateProdCategory() {
       prodCategoryService.updateProdCategory(id, data),
 
     onSuccess: (data) => {
-      if (data.success) {
-        queryClient.invalidateQueries({ queryKey: PROD_CATEGORY_KEYS.list() });
-        queryClient.invalidateQueries({ queryKey: PROD_CATEGORY_KEYS.details() });
-
-        toast.success(data.message);
-      } else {
-        toast.error(data.message || "Failed to update user group");
+      if (!data?.success) {
+        toast.error(data?.message || "Failed to update product category");
+        return;
       }
+
+      toast.success(data.message);
+      queryClient.invalidateQueries({ queryKey: PROD_CATEGORY_KEYS.list(), });
+      queryClient.invalidateQueries({ queryKey: PROD_CATEGORY_KEYS.details(), });
+
     },
 
     onError: (err: Error) => {
-      toast.error(err.message || "Failed to update user group");
+      toast.error(err.message || "Failed to update product category ");
     },
   });
 }
@@ -91,15 +95,25 @@ export function useDeleteProdCategory() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => prodCategoryService.deleteProdCategory(id),
+    mutationFn: (params: {
+      id: number;
+      userid: number;
+      compid: number;
+    }) => prodCategoryService.deleteProdCategory(params),
 
     onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: PROD_CATEGORY_KEYS.list() });
-      toast.success(data?.message);
+
+      if (!data?.success) {
+        toast.error(data?.message || "Failed to Delete product category");
+        return;
+      }
+      toast.success(data?.message || "Deleted successfully");
+      queryClient.invalidateQueries({ queryKey: PROD_CATEGORY_KEYS.list(), });
+
     },
 
     onError: (err: Error) => {
-      toast.error(err.message || "Failed to delete branch");
+      toast.error(err.message || "Failed to delete product category");
     },
   });
 }

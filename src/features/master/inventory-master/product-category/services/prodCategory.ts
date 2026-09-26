@@ -1,7 +1,7 @@
 import { apiCall } from "@/utils/apiClient";
 import { ProdCategory, ProdCategoryFormData, ProdCategoryApiResponse } from '../types/prodCategory.types';
-import { toast } from "sonner";
 import { storageService } from "@/common/utility/storageService";
+import { getErrorMessage } from "@/helpers/getErrorMessage";
 
 class ProdCategoryService {
 
@@ -14,19 +14,18 @@ class ProdCategoryService {
   private getUserId = (): string => this.getFromStorage("userId");
   private getCompanyId = (): string => this.getFromStorage("companyId");
 
-  private handleError(response: ProdCategoryApiResponse): boolean {
-    if (!response) {
-      toast.error("No response from server");
-      return false;
-    }
-    if (!response.success) {
-      const message = response.message || "Something went wrong";
-      toast.error(message);
-      return false;
-    }
-    return true;
-  }
+  private validateResponse(response: ProdCategoryApiResponse): ProdCategoryApiResponse {
 
+    if (!response) {
+      return {
+        success: false,
+        message: "No response from server",
+        data: [],
+      };
+    }
+
+    return response;
+  }
 
   async getAllProdCategories(): Promise<ProdCategory[]> {
     try {
@@ -35,13 +34,11 @@ class ProdCategoryService {
         { userid: this.getUserId(), compid: this.getCompanyId() }
       );
 
-      //this.handleError(response);
       return response.data || [];
 
     } catch (error: any) {
       console.error("Error fetching companies:", error);
-      //toast.error(error.message || "Failed to fetch companies");
-      throw error;
+      throw new Error(getErrorMessage(error));
     }
   }
 
@@ -52,17 +49,25 @@ class ProdCategoryService {
         { userid: this.getUserId(), compid: this.getCompanyId(), id }
       );
 
-      this.handleError(response);
+      this.validateResponse(response);
 
-      const category = response.data?.[0];
-      if (!category) throw new Error("ProdCategory not found");
+      const handledResponse = this.validateResponse(response);
+
+      if (!handledResponse.success) {
+        throw new Error(handledResponse.message || "Failed to fetch entry");
+      }
+
+      const category = handledResponse.data?.[0];
+
+      if (!category) {
+        throw new Error("Product Category not found");
+      }
 
       return category;
 
     } catch (error: any) {
-      const message = error instanceof Error ? error.message : String(error);
-      toast.error(`Error fetching category with id ${id}: ${message}`);
-      throw new Error(message);
+      console.error("Error fetching Product Category by id:", error);
+      throw new Error(getErrorMessage(error));
     }
   }
 
@@ -74,14 +79,11 @@ class ProdCategoryService {
         { userid: this.getUserId(), compid: this.getCompanyId() }
       );
 
-      this.handleError(response);
-
       return response;
 
     } catch (error: any) {
       console.error("Error creating category:", error);
-      toast.error(error.message || "Failed to create category");
-      throw error;
+      throw new Error(getErrorMessage(error));
     }
   }
 
@@ -93,34 +95,30 @@ class ProdCategoryService {
         { userid: this.getUserId(), compid: this.getCompanyId() }
       );
 
-      this.handleError(response);
-
-      if (!response) throw new Error("response not found at updateProdCategory");
-
-      return response;
+      return this.validateResponse(response);
 
     } catch (error: any) {
       console.error(`Error updating category with id ${id}:`, error);
-      toast.error(error.message || "Failed to update category");
-      throw error;
+      throw new Error(getErrorMessage(error));
     }
   }
 
-  async deleteProdCategory(id: number): Promise<ProdCategoryApiResponse> {
+  async deleteProdCategory(params: {
+    id: number;
+    userid: number;
+    compid: number;
+  }): Promise<ProdCategoryApiResponse> {
     try {
+      const { id, userid, compid, } = params;
       const response = await apiCall.delete<ProdCategoryApiResponse>(
         `${this.baseUrl}category`,
-        { userid: this.getUserId(), compid: this.getCompanyId(), id }
+        { id, userid, compid }
       );
-
-      this.handleError(response); // ✅ run before return
-
-      return response; // ✅ return full response
+      return this.validateResponse(response);
 
     } catch (error: any) {
-      console.error(`Error deleting category with id ${id}:`, error);
-      toast.error(error.message || "Failed to delete category");
-      throw error;
+      console.error(`Error deleting IMR entry with id ${params.id}:`, error);
+      throw new Error(getErrorMessage(error));
     }
   }
 }
