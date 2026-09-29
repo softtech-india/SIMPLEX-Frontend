@@ -78,7 +78,7 @@ export function ProductForm({ visible, onClose, ProductId, mode, returnAfterSave
   const categoryName = watch("categorynm");
   const className = watch("classnm");
   const groupName = watch("subclassnm");
-  const hsnName = watch("hsn");
+  const hsnName = watch("hsn") || watch('hsnNo');
   const selectedCategoryId = watch("productcategoryid");
   const selectedClassId = watch("productclassid");
 
