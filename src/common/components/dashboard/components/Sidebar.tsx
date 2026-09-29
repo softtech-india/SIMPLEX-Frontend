@@ -1,11 +1,14 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/router';
 import {
   ChevronDown, ChevronRight, Home, FileText, BarChart2, Users, Briefcase, Key,
   MapPin, Settings, Shield, Search, Star, Boxes, Database, FolderTree, Layers3,
   Package, Receipt, Ruler, Shapes, Warehouse, ClipboardList, PackageCheck,
-  ShoppingCart, BadgeDollarSign, FileCheck, ShoppingBag,
-  X
+  ShoppingCart, BadgeDollarSign, FileCheck, ShoppingBag, Circle,
+  X,
+  Wallet,
+  FileBarChart,
+  Wrench
 } from 'lucide-react';
 
 import useIsMobile from '@/common/hooks/useIsMobile';
@@ -44,6 +47,8 @@ interface MenuItemProps {
   searchQuery: string;
   togglePin: (id: number) => void;
   pinnedMenus: number[];
+  sectionColor?: string;
+  onExpandRequest?: (menu: MenuItem, target: HTMLElement) => void;
 }
 
 /* =========================
@@ -53,46 +58,39 @@ const ICONS: Record<string, any> = {
   Dashboard: Home,
   Admin: Settings,
   Configuration: Settings,
-  "Financial Year": FileText,
-  "User Wise Branch Mapping": MapPin,
-  "Company Financial Year Mapping": BarChart2,
-  "User Management": Users,
-  "User Group": Key,
-  User: Users,
-  Company: Briefcase,
-  Branch: MapPin,
-  "User Priviledge": Shield,
-
-  Master: Settings,
-  "Inventory Master": Boxes,
-  Category: FolderTree,
-  Class: Shapes,
-  "Sub Class": Layers3,
-  Unit: Ruler,
-  Product: Package,
-  "Opening Stock": Warehouse,
-  "Accounts Master": Receipt,
-  "Other Master": Database,
-
+  Master: Database,
   Purchase: ShoppingCart,
-  "Purchase Order": ClipboardList,
-  GRN: PackageCheck,
-
   Sale: ShoppingBag,
-  "Sales Order": ClipboardList,
-  "Sale (Direct)": BadgeDollarSign,
-  "Sale (Order Based)": FileCheck,
+  Accounts: Wallet,
+  Reports: FileBarChart,
+  Utility: Wrench,
+};
+
+/* =========================
+   SECTION COLOURS
+========================= */
+// curated, muted palette — assigned deterministically per top-level section name
+// so the same section always gets the same colour, and children inherit it
+const SECTION_PALETTE = ['#4f46e5', '#0891b2', '#d97706', '#059669', '#7c3aed', '#2563eb', '#be185d'];
+
+const getSectionColor = (name: string) => {
+  if (/admin|config|setting|privilege|priviledge/i.test(name)) return '#64748b'; // neutral for settings-type sections
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return SECTION_PALETTE[Math.abs(hash) % SECTION_PALETTE.length];
 };
 
 /* =========================
    HELPERS
 ========================= */
+const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 const highlightText = (text: string, query: string) => {
   if (!query) return text;
-  const parts = text.split(new RegExp(`(${query})`, 'gi'));
+  const parts = text.split(new RegExp(`(${escapeRegExp(query)})`, 'gi'));
   return parts.map((part, i) =>
     part.toLowerCase() === query.toLowerCase()
-      ? <span key={i} className="bg-yellow-300 px-1 rounded">{part}</span>
+      ? <span key={i} className="bg-amber-200/70 text-slate-900 rounded-[3px]">{part}</span>
       : part
   );
 };
@@ -105,26 +103,29 @@ const getMenuKey = (menu: MenuItem, parentPath?: string) => {
    FILTER
 ========================= */
 const filterMenus = (menus: MenuItem[], query: string) => {
-  if (!query) return { filtered: menus, expandedIds: [] };
+  if (!query) return { filtered: menus, expandedKeys: [] as string[] };
 
   const q = query.toLowerCase();
-  const expandedIds: number[] = [];
+  const expandedKeys: string[] = [];
 
-  const recursive = (items: MenuItem[]): MenuItem[] =>
+  // build keys in the SAME "parentKey/menuid" format used by getMenuKey,
+  // so the auto-expand set actually matches what MenuItemComponent looks up
+  const recursive = (items: MenuItem[], parentPath?: string): MenuItem[] =>
     items
       .map((item: MenuItem) => {
-        const children = item.items ? recursive(item.items) : [];
+        const key = parentPath ? `${parentPath}/${item.menuid}` : `${item.menuid}`;
+        const children = item.items ? recursive(item.items, key) : [];
         const isMatch = item.menuname.toLowerCase().includes(q);
 
         if (isMatch || children.length > 0) {
-          if (children.length > 0) expandedIds.push(item.menuid);
+          if (children.length > 0) expandedKeys.push(key);
           return { ...item, items: children };
         }
         return null;
       })
       .filter(Boolean) as MenuItem[];
 
-  return { filtered: recursive(menus), expandedIds };
+  return { filtered: recursive(menus), expandedKeys };
 };
 
 /* =========================
@@ -142,101 +143,148 @@ const MenuItemComponent: React.FC<MenuItemProps> = ({
   searchQuery,
   togglePin,
   pinnedMenus,
+  sectionColor,
+  onExpandRequest,
 }) => {
   const hasSubMenus = !!menu.items?.length;
 
   const menuKey = getMenuKey(menu, parentKey);
   const isExpanded = !!expandedMenus[menuKey];
 
-  const Icon = ICONS[menu.text] || FileText;
   const isActive = menu.path === routerPath;
   const isPinned = pinnedMenus.includes(menu.menuid);
+  const isTopLevel = level === 0;
+
+  // top-level categories are fixed, so they get a meaningful icon from the map;
+  // submenu names come from the database and can be anything, so every
+  // submenu shares one consistent icon instead of trying to match each name
+  const Icon = isTopLevel ? (ICONS[menu.text] || FileText) : Circle;
+
+  // resolved once per top-level branch, then passed down unchanged so a whole
+  // section (parent + all descendants) shares one colour family
+  const resolvedColor = sectionColor || getSectionColor(menu.menuname);
+  const iconOpacity = isTopLevel ? 1 : isActive ? 0.95 : 0.62;
+
+  // fixed row padding — nesting depth is handled once by the parent wrapper below,
+  // not compounded here, so children don't drift far right
+  const indent = isTopLevel ? 8 : 6;
+  const collapsedTop = collapsed && isTopLevel;
+
+  const rowBase =
+    'group relative w-full flex items-center rounded-md transition-colors duration-150';
+  const rowJustify = collapsedTop ? 'justify-center' : 'justify-between';
+  const rowSpacing = isTopLevel ? 'py-[7px] pr-2' : 'py-[5px] pr-2';
+  const rowText = isTopLevel
+    ? 'text-[13px] font-medium'
+    : 'text-[12.5px] font-normal';
+  const rowColor = isActive
+    ? 'text-indigo-700'
+    : isTopLevel
+      ? 'text-slate-700 hover:text-slate-900'
+      : 'text-slate-500 hover:text-slate-800';
+  const rowBg = isActive ? 'bg-indigo-50' : 'hover:bg-slate-100/80';
+
+  const content = (
+    <>
+      <span className="flex items-center gap-2 min-w-0">
+        <span className={`flex items-center justify-center shrink-0 ${isTopLevel ? 'w-[16px] h-[16px]' : 'w-[14px] h-[14px]'}`}>
+          <Icon
+            className={isTopLevel ? 'w-[16px] h-[16px]' : 'w-[6px] h-[6px]'}
+            color={resolvedColor}
+            fill={isTopLevel ? 'none' : resolvedColor}
+            style={{ opacity: iconOpacity }}
+            strokeWidth={isTopLevel ? 2 : 1.75}
+          />
+        </span>
+        {!collapsed && (
+          <span className="truncate">{highlightText(menu.menuname, searchQuery)}</span>
+        )}
+      </span>
+
+      {!collapsed && (
+        <span className="flex items-center gap-1.5 shrink-0">
+          <Star
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              togglePin(menu.menuid);
+            }}
+            className={`w-[13px] h-[13px] transition-opacity ${isPinned
+                ? 'text-amber-400 fill-amber-400 opacity-100'
+                : 'text-slate-300 opacity-0 group-hover:opacity-100 hover:text-slate-400'
+              }`}
+          />
+          {hasSubMenus &&
+            (isExpanded ? (
+              <ChevronDown size={14} className="text-slate-400" />
+            ) : (
+              <ChevronRight size={14} className="text-slate-400" />
+            ))}
+        </span>
+      )}
+    </>
+  );
 
   return (
-    <div className="space-y-1">
+    <div className="relative">
+      {isActive && !collapsed && (
+        <span
+          className="absolute left-0 top-1/2 -translate-y-1/2 h-[16px] w-[3px] rounded-r-full"
+          style={{ backgroundColor: resolvedColor }}
+        />
+      )}
 
       {!hasSubMenus ? (
-        <>
-          <Link
-            href={menu.path || "#"}
-            onClick={() => handleNavigation()}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium
-            ${isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'}
-          `}
-            style={{ paddingLeft: `${level * 12 + 12}px` }}
-          >
-            <span className="flex items-center gap-3">
-              <Icon className="w-5 h-5 text-gray-500" />
-              {!collapsed && (
-                <span>{highlightText(menu.menuname, searchQuery)}</span>
-              )}
-            </span>
-
-            {!collapsed && (
-              <Star
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  togglePin(menu.menuid);
-                }}
-                className={`w-4 h-4 ${isPinned ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
-              />
-            )}
-          </Link>
-        </>
+        <Link
+          href={menu.path || '#'}
+          onClick={() => handleNavigation(menu.path)}
+          className={`${rowBase} ${rowJustify} ${rowSpacing} ${rowText} ${rowColor} ${rowBg}`}
+          style={{ paddingLeft: collapsedTop ? 0 : `${indent}px` }}
+          title={collapsedTop ? menu.menuname : undefined}
+        >
+          {content}
+        </Link>
       ) : (
         <button
-          onClick={() => toggleMenu(menuKey, parentKey)}
-          className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium
-          ${isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'}`}
-          style={{ paddingLeft: `${level * 12 + 12}px` }}
+          onClick={(e) => {
+            // collapsed top-level items have nowhere to show an inline
+            // expansion, so open a flyout panel next to the icon instead
+            if (collapsedTop && onExpandRequest) {
+              onExpandRequest(menu, e.currentTarget);
+            } else {
+              toggleMenu(menuKey, parentKey);
+            }
+          }}
+          className={`${rowBase} ${rowJustify} ${rowSpacing} ${rowText} ${rowColor} ${rowBg}`}
+          style={{ paddingLeft: collapsedTop ? 0 : `${indent}px` }}
+          title={collapsedTop ? menu.menuname : undefined}
         >
-          <span className="flex items-center gap-3">
-            <Icon className="w-5 h-5 text-gray-500" />
-            {!collapsed && <span>{highlightText(menu.menuname, searchQuery)}</span>}
-          </span>
-
-          {!collapsed && (
-            <div className="flex items-center gap-2">
-              <Star
-                onClick={(e) => {
-                  e.stopPropagation();
-                  togglePin(menu.menuid);
-                }}
-                className={`w-4 h-4 ${isPinned ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'
-                  }`}
-              />
-
-              {hasSubMenus &&
-                (isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />)}
-            </div>
-          )}
+          {content}
         </button>
       )}
 
-      {
-        hasSubMenus && isExpanded && !collapsed && (
-          <div className="ml-4 border-l pl-4 space-y-1">
-            {menu.items!.map((child: MenuItem) => (
-              <MenuItemComponent
-                key={child.menuid}
-                menu={child}
-                parentKey={menuKey}
-                level={level + 1}
-                collapsed={collapsed}
-                expandedMenus={expandedMenus}
-                toggleMenu={toggleMenu}
-                handleNavigation={handleNavigation}
-                routerPath={routerPath}
-                searchQuery={searchQuery}
-                togglePin={togglePin}
-                pinnedMenus={pinnedMenus}
-              />
-            ))}
-          </div>
-        )
-      }
-    </div >
+      {hasSubMenus && isExpanded && !collapsed && (
+        <div className="mt-0.5 space-y-0.5 ml-[10px] pl-[10px] border-l border-slate-200">
+          {menu.items!.map((child: MenuItem) => (
+            <MenuItemComponent
+              key={child.menuid}
+              menu={child}
+              parentKey={menuKey}
+              level={level + 1}
+              collapsed={collapsed}
+              expandedMenus={expandedMenus}
+              toggleMenu={toggleMenu}
+              handleNavigation={handleNavigation}
+              routerPath={routerPath}
+              searchQuery={searchQuery}
+              togglePin={togglePin}
+              pinnedMenus={pinnedMenus}
+              sectionColor={resolvedColor}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -254,10 +302,44 @@ export default function Sidebar({
   const router = useRouter();
   const isMobile = useIsMobile();
 
+  useEffect(() => {
+    if (router.pathname === '/dashboard') {
+      setCollapsed(false);
+    }
+  }, [router.pathname, setCollapsed]);
+
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [pinnedMenus, setPinnedMenus] = useState<number[]>([]);
+
+  // flyout shown next to a top-level icon when the sidebar is collapsed and
+  // that item has children (there's no room to expand inline in the icon rail)
+  const [flyoutMenu, setFlyoutMenu] = useState<MenuItem | null>(null);
+  const [flyoutTop, setFlyoutTop] = useState(0);
+  const flyoutRef = useRef<HTMLDivElement | null>(null);
+
+  const handleExpandRequest = (menu: MenuItem, target: HTMLElement) => {
+    const rect = target.getBoundingClientRect();
+    setFlyoutMenu(prev => (prev?.menuid === menu.menuid ? null : menu));
+    setFlyoutTop(Math.min(rect.top, window.innerHeight - 320));
+  };
+
+  // close the flyout on outside click, or automatically if the sidebar expands
+  useEffect(() => {
+    if (!flyoutMenu) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (flyoutRef.current && !flyoutRef.current.contains(e.target as Node)) {
+        setFlyoutMenu(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [flyoutMenu]);
+
+  useEffect(() => {
+    if (!collapsed) setFlyoutMenu(null);
+  }, [collapsed]);
 
   /* debounce */
   useEffect(() => {
@@ -267,22 +349,23 @@ export default function Sidebar({
 
   const activeMenus = menus.filter(m => m.isactive);
 
-  const { filtered: filteredMenus, expandedIds } = useMemo(
+  const { filtered: filteredMenus, expandedKeys } = useMemo(
     () => filterMenus(activeMenus, debouncedQuery),
     [activeMenus, debouncedQuery]
   );
 
-  /* auto expand on search - using string keys to match the expandedMenus format */
+  /* auto expand on search - keys already match the "parentKey/menuid" format
+     that MenuItemComponent uses to look up expandedMenus */
   useEffect(() => {
     if (!debouncedQuery) return;
 
     const newExpanded: Record<string, boolean> = {};
-    expandedIds.forEach(id => (newExpanded[String(id)] = true));
+    expandedKeys.forEach(key => (newExpanded[key] = true));
 
     setExpandedMenus(prev =>
       JSON.stringify(prev) === JSON.stringify(newExpanded) ? prev : newExpanded
     );
-  }, [debouncedQuery, expandedIds]);
+  }, [debouncedQuery, expandedKeys]);
 
   /* ACCORDION TOGGLE */
   const toggleMenu = (menuKey: string, parentPath?: string) => {
@@ -311,13 +394,15 @@ export default function Sidebar({
     });
   };
 
-  const handleNavigation = () => {
-    // if (path) {
-    //   router.push(path).then(() => {
-    //     setCollapsed(true)
-    //   });
-    // }
-    setCollapsed(true);
+  const handleNavigation = (path?: string) => {
+    if (path === '/dashboard') {
+      // Always open sidebar on Dashboard
+      setCollapsed(false);
+    } else {
+      // Collapse sidebar on other pages
+      setCollapsed(true);
+    }
+
     if (isMobile) onClose();
   };
 
@@ -355,51 +440,90 @@ export default function Sidebar({
     <>
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/40 z-20 md:hidden h-[50vh]"
+          className="fixed inset-0 bg-slate-900/40 z-20 md:hidden h-[50vh]"
           onClick={onClose}
         />
       )}
 
       <aside
         className={`
-          fixed top-16 left-0 bottom-0 bg-white border-r z-30
-          transition-all duration-300 ease-in-out overflow-y-hidden
-          ${collapsed ? 'md:w-16' : 'md:w-80'} w-80
+          fixed top-16 left-0 bottom-0 bg-white border-r border-slate-200 z-30
+          transition-all duration-300 ease-in-out
+          ${collapsed ? 'md:w-16' : 'md:w-[272px]'} w-[272px]
           ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
+          flex flex-col overflow-hidden
         `}
       >
         {/* Search */}
         {!collapsed && (
-          <div className="p-3">
+          <div className="shrink-0 px-2 pt-2.5 pb-2">
             <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-[14px] h-[14px] text-slate-400" />
               <input
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search..."
-                name='search'
-                className="w-full pl-10 pr-3 py-2 border rounded-lg text-sm"
+                placeholder="Search menu"
+                name="search"
+                className="w-full pl-7 pr-7 py-[6px] bg-slate-50 border border-slate-200 rounded-md text-[12.5px] text-slate-700 placeholder:text-slate-400
+                           focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300 transition-colors"
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-[13px] h-[13px]" />
                 </button>
               )}
             </div>
           </div>
         )}
 
-        {/* Pinned */}
-        {!collapsed && pinnedItems.length > 0 && (
-          <div className="px-3">
-            <div className="text-xs text-gray-400 mb-2">Pinned</div>
-            {pinnedItems.map(menu => (
+        {/* Scroll area holds pinned + main menu together -> single scrollbar */}
+        <nav className="flex-1 overflow-y-auto px-2 pb-4 space-y-0.5
+                         [&::-webkit-scrollbar]:w-1.5
+                         [&::-webkit-scrollbar-track]:bg-transparent
+                         [&::-webkit-scrollbar-thumb]:bg-slate-200
+                         [&::-webkit-scrollbar-thumb]:rounded-full">
+
+          {/* Pinned */}
+          {!collapsed && pinnedItems.length > 0 && (
+            <div className="pb-2 mb-2 border-b border-slate-100">
+              <div className="px-1.5 pb-1.5 text-[11px] font-medium text-slate-400">
+                Pinned
+              </div>
+              <div className="space-y-0.5">
+                {pinnedItems.map(menu => (
+                  <MenuItemComponent
+                    key={`pinned-${menu.menuid}`}
+                    menu={menu}
+                    collapsed={collapsed}
+                    expandedMenus={expandedMenus}
+                    toggleMenu={toggleMenu}
+                    handleNavigation={handleNavigation}
+                    routerPath={router.pathname}
+                    searchQuery={debouncedQuery}
+                    togglePin={togglePin}
+                    pinnedMenus={pinnedMenus}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* No results */}
+          {filteredMenus.length === 0 && (
+            <div className="px-1.5 py-2 text-[12.5px] text-slate-400">No results found</div>
+          )}
+
+          {/* Main menu */}
+          <div className="space-y-0.5">
+            {filteredMenus.map(menu => (
               <MenuItemComponent
                 key={menu.menuid}
                 menu={menu}
+                parentKey={undefined}
+                level={0}
                 collapsed={collapsed}
                 expandedMenus={expandedMenus}
                 toggleMenu={toggleMenu}
@@ -408,37 +532,52 @@ export default function Sidebar({
                 searchQuery={debouncedQuery}
                 togglePin={togglePin}
                 pinnedMenus={pinnedMenus}
+                onExpandRequest={handleExpandRequest}
               />
             ))}
-            <div className="border-b my-2" />
           </div>
-        )}
-
-        {/* No results */}
-        {filteredMenus.length === 0 && (
-          <div className="px-3 text-sm text-gray-500">No results found</div>
-        )}
-
-        {/* MENU */}
-        <nav className="p-3 space-y-1">
-          {filteredMenus.map(menu => (
-            <MenuItemComponent
-              key={menu.menuid}
-              menu={menu}
-              parentKey={undefined}
-              level={0}
-              collapsed={collapsed}
-              expandedMenus={expandedMenus}
-              toggleMenu={toggleMenu}
-              handleNavigation={handleNavigation}
-              routerPath={router.pathname}
-              searchQuery={debouncedQuery}
-              togglePin={togglePin}
-              pinnedMenus={pinnedMenus}
-            />
-          ))}
         </nav>
       </aside>
+
+      {/* Flyout: shows a collapsed top-level item's children next to the icon rail */}
+      {collapsed && flyoutMenu && (
+        <div
+          ref={flyoutRef}
+          className="hidden md:block fixed z-40 w-[240px] max-h-[70vh] overflow-y-auto
+                     bg-white border border-slate-200 rounded-lg shadow-lg py-2 px-2
+                     [&::-webkit-scrollbar]:w-1.5
+                     [&::-webkit-scrollbar-track]:bg-transparent
+                     [&::-webkit-scrollbar-thumb]:bg-slate-200
+                     [&::-webkit-scrollbar-thumb]:rounded-full"
+          style={{ left: '72px', top: `${Math.max(flyoutTop, 72)}px` }}
+        >
+          <div className="px-1.5 pb-1.5 mb-1 text-[12.5px] font-medium text-slate-700 border-b border-slate-100">
+            {flyoutMenu.menuname}
+          </div>
+          <div className="space-y-0.5">
+            {(flyoutMenu.items || []).map(child => (
+              <MenuItemComponent
+                key={child.menuid}
+                menu={child}
+                parentKey={undefined}
+                level={1}
+                collapsed={false}
+                expandedMenus={expandedMenus}
+                toggleMenu={toggleMenu}
+                handleNavigation={(path) => {
+                  handleNavigation(path);
+                  setFlyoutMenu(null);
+                }}
+                routerPath={router.pathname}
+                searchQuery=""
+                togglePin={togglePin}
+                pinnedMenus={pinnedMenus}
+                sectionColor={getSectionColor(flyoutMenu.menuname)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </>
   );
 }

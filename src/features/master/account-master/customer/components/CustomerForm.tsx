@@ -2,12 +2,11 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Popup } from "devextreme-react/popup";
-import LoadPanel from "devextreme-react/load-panel";
 import { useQuery } from "@tanstack/react-query";
 import { useCustomerById, useCreateCustomer, useUpdateCustomer, useDeleteCustomer } from "../hooks/useCustomer";
-import { fetchLedgerGroupList, fetchStateList, fetchCityList } from "@/api/master/ledger-api";
-import { allowNegetive, companyStatus, costcenterApplicable, deducteeTypeTags, gstregType, interestMethod, isCardeWallet, isMainLedger, isTdsApplicable, ledgerStatus, maintainBillwise, salaryDeducTtype, stockEffect, taxNature } from "@/common/utility/data";
-import { Customer, OperationMode, CustomerFormData, SubLedgerType } from "../types/customer.types";
+import { fetchStateList, fetchCityList } from "@/api/master/ledger-api";
+import { gstregType, ledgerStatus } from "@/common/utility/data";
+import { OperationMode, CustomerFormData, SubLedgerType } from "../types/customer.types";
 import { CustomerFormSchema } from "../schemas/customer.schema";
 import { FormSelect } from "@/common/components/FormSelect";
 import { customerFormDefaults } from "../constants/customerFormDefaults";
@@ -15,6 +14,10 @@ import { useCustomerForm } from "../hooks/useCustomerForm";
 import { useAppStorage } from "@/hooks/useAuthStorage";
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { customerService } from "../services/customerService";
+import Loader from "@/common/components/Loader";
+import { Save, XCircle } from "lucide-react";
+import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
+import { SHORTCUTS } from "@/common/constants/shortcuts";
 
 type Option = { value: number | string; label: string };
 
@@ -30,6 +33,7 @@ interface CustomerFormProps {
 export function CustomerForm({ visible, onClose, formCustomerId, mode, returnAfterSave, onSuccess }: CustomerFormProps) {
   const { userId, companyId } = useAppStorage();
 
+  const formRef = useRef<HTMLFormElement>(null);
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
   const isDeleteMode = mode === "Delete";
@@ -43,16 +47,17 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode, returnAft
   const [ledgerGrouName, setLedgerGroupName] = useState("Sundry Creditors")
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
-  const {
-    control,
-    register,
-    handleSubmit,
-    setFocus,
-    setValue,
-    reset,
-    watch,
-    formState: { errors },
-  } = useCustomerForm(customerFormDefaults);
+  const { control, register, handleSubmit, setFocus, setValue, reset, watch, formState: { errors }, } = useCustomerForm(customerFormDefaults);
+
+  // handle Sortcuts 
+  useKeyboardShortcuts(
+    {
+      [SHORTCUTS.SAVE]: () => { formRef.current?.requestSubmit(); },
+      [SHORTCUTS.EXIT]: () => { onClose(); },
+    },
+    visible
+  );
+
 
   // Reset logic
   useEffect(() => {
@@ -81,7 +86,7 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode, returnAft
         nl: Customer.nl ?? "",
         pin: Customer.pin ?? "",
         phone: Customer.phone ?? "",
-        mobile: Customer.mobile ?? "",  // REMOVED the undefined override
+        mobile: Customer.mobile ?? "",
         email: Customer.email ?? "",
         pan: Customer.pan ?? "",
         crdays: Customer.crdays ?? 0,
@@ -92,21 +97,6 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode, returnAft
       });
     }
   }, [Customer, isAddMode, reset, visible, setFocus]);
-
-  // Fetch dropdown options for ledger group
-  const { data: ledgergroupOptions = [] } = useQuery({
-    queryKey: ["ledgerGroupList", userId, companyId],
-    queryFn: () => fetchLedgerGroupList(userId, companyId),
-    staleTime: 0,
-    enabled: !!companyId,
-    retry: 1,
-    refetchOnWindowFocus: false,
-    select: (data) =>
-      (data ?? []).map((s: any) => ({
-        value: s.id,
-        label: s.ledgergroup,
-      })),
-  });
 
   // Fetch dropdown options for state
   const { data: stateOptions = [] } = useQuery({
@@ -216,6 +206,16 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode, returnAft
     }
   }, []);
 
+  const getButtonLabel = () => {
+    if (isSubmitting) {
+      if (isDeleteMode) return "Deleting...";
+      return "Saving...";
+    }
+
+    if (isDeleteMode) return "Delete";
+    return "Save";
+  };
+
   const handleFormSubmit = async (data: CustomerFormSchema) => {
     console.log("Form data before submit:", {
       fullData: data
@@ -291,26 +291,50 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode, returnAft
     <Popup
       visible={visible}
       onHiding={onClose}
-      title={`${mode} Customer`}
+      title={`Customer`}
       width="90vw"
-      height="90vh"
-      dragEnabled
-      showTitle
+      height="60vh"
+      dragEnabled={false}
+      showTitle={false}
       showCloseButton={false}
     >
       <form
+        ref={formRef}
         onSubmit={handleSubmit(handleFormSubmit, onError)}
         className="flex flex-col h-full"
       >
-        <div className="flex-1 overflow-y-auto p-2 space-y-2">
+        <div className="flex-1 overflow-y-auto p-1 space-y-1">
+
+          <div className="flex-none border-b rounded border-gray-300 p-2 flex items-center justify-between text-white bg-[#0f1c7f]">
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-semibold ">Customer</h1>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium">Mode:</span>
+              <span className="text-xs font-semibold text-[#05045f] bg-blue-50 border border-blue-100 rounded px-2 py-1">
+                {mode}
+              </span>
+            </div>
+          </div>
+
           {/* Customer Information */}
-          <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
-              Customer Information
-            </h2>
+          {/* <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+
+            </div>
+          </section> */}
+
+          {/* Address & Contact */}
+          <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
+            {/* <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
+              Address & Contact
+            </h2> */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+
               <div>
-                <label className="block text-gray-700 font-medium mb-1">Sub Ledger Type <span className="text-red-500 font-bold"> * </span> </label>
+                <label className="block text-gray-700 font-medium mb-1">Sub Ledger Type <strong className="text-red-500"> * </strong> </label>
                 <FormSelect<CustomerFormSchema>
                   name="subledgertypeid"
                   control={control}
@@ -322,7 +346,7 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode, returnAft
               </div>
 
               <div>
-                <label className="block text-gray-700 font-medium mb-1">Ledger Group <span className="text-red-500">*</span></label>
+                <label className="block text-gray-700 font-medium mb-1">Ledger Group <strong className="text-red-500"> * </strong> </label>
                 <input
                   type="text"
                   disabled={true}
@@ -334,7 +358,7 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode, returnAft
               </div>
 
               <div>
-                <label className="block text-gray-700 font-medium mb-1">Customer Name <span className="text-red-500">*</span></label>
+                <label className="block text-gray-700 font-medium mb-1">Customer Name <strong className="text-red-500"> * </strong></label>
                 <input
                   type="text"
                   {...register("name")}
@@ -345,17 +369,8 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode, returnAft
                 {errors.name && <p className="text-red-500 mt-1 text-sm">{errors.name.message}</p>}
               </div>
 
-            </div>
-          </section>
-
-          {/* Address & Contact */}
-          <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
-              Address & Contact
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               <div>
-                <label className="block text-gray-700 font-medium mb-1">Address Line 1<span className="text-red-500">*</span></label>
+                <label className="block text-gray-700 font-medium mb-1">Address Line 1 <strong className="text-red-500"> * </strong> </label>
                 <input
                   type="text"
                   {...register("addr1")}
@@ -403,7 +418,7 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode, returnAft
               </div>
 
               <div>
-                <label className="block text-gray-700 font-medium mb-1">State</label>
+                <label className="block text-gray-700 font-medium mb-1">State <strong className="text-red-500"> * </strong> </label>
                 <FormSelect<CustomerFormSchema>
                   name="stateid"
                   control={control}
@@ -413,7 +428,7 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode, returnAft
               </div>
 
               <div>
-                <label className="block text-gray-700 font-medium mb-1">City</label>
+                <label className="block text-gray-700 font-medium mb-1">City <strong className="text-red-500"> * </strong> </label>
                 <FormSelect<CustomerFormSchema>
                   name="cityid"
                   control={control}
@@ -473,10 +488,56 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode, returnAft
                 />
                 {errors.email && <p className="text-red-500 mt-1 text-sm">{errors.email.message}</p>}
               </div>
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">GST Registration Type</label>
+                <FormSelect<CustomerFormSchema>
+                  name="gstregtype"
+                  control={control}
+                  options={gstregTypeOption}
+                  isDisabled={isReadOnly}
+                />
+              </div>
+
+              {gstRegType !== 'U' && (
+                <div>
+                  <label className="block text-gray-700 font-medium mb-1">GSTIN</label>
+                  <input
+                    type="text"
+                    {...register("gstin")}
+                    disabled={isReadOnly}
+                    className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.gstin ? "border-red-500" : "border-gray-300"}`}
+                    placeholder="Enter GSTIN"
+                  />
+                  {errors.gstin && <p className="text-red-500 mt-1 text-sm">{errors.gstin.message}</p>}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">Pan</label>
+                <input
+                  type="text"
+                  {...register("pan")}
+                  disabled={isReadOnly}
+                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.pan ? "border-red-500" : "border-gray-300"}`}
+                  placeholder="Enter PAN"
+                />
+                {errors.pan && <p className="text-red-500 mt-1 text-sm">{errors.pan.message}</p>}
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">Status</label>
+                <FormSelect<CustomerFormSchema>
+                  name="status"
+                  control={control}
+                  options={ledgerStatusOption}
+                  isDisabled={isReadOnly}
+                />
+              </div>
             </div>
           </section>
 
-          <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
+          {/* <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
             <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
               Statutory Details
             </h2>
@@ -520,12 +581,10 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode, returnAft
               </div>
 
             </div>
-          </section>
-
-
+          </section> */}
 
           {/* Statutory Details */}
-          <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
+          {/* <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
             <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
               Statutory Details
             </h2>
@@ -544,34 +603,33 @@ export function CustomerForm({ visible, onClose, formCustomerId, mode, returnAft
                 </div>
               </div>
             </div>
-          </section>
+          </section> */}
         </div>
 
         {/* Footer */}
-        <div className="border-t p-2 flex justify-end gap-4 bg-gray-50">
+        <div className="border-t border-gray-300 p-2 flex justify-end gap-4 bg-white">
           {(mode !== "View" && mode !== "Print") && (
             <button
               type="submit"
               disabled={isSubmitting}
-              className="primary-btn disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`${isDeleteMode ? 'delete-btn' : 'primary-btn'} flex items-center gap-1.5 p-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              {isSubmitting
-                ? isDeleteMode ? "Deleting..." : "Saving..."
-                : isDeleteMode ? "Delete" : "Save"
-              }
+              <Save size={15} /> {isSubmitting ? "Saving..." : getButtonLabel()}
             </button>
           )}
           <button
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="secondary-btn disabled:opacity-50 disabled:cursor-not-allowed"
+            className="secondary-btn flex items-center gap-1.5 p-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Exit
+            <XCircle size={15} />  Exit
           </button>
+
         </div>
 
-        <LoadPanel shadingColor="rgba(0,0,0,0.4)" visible={isSubmitting || isLoadingCustomer} showIndicator />
+        {(isSubmitting || isLoadingCustomer) && <Loader />}
+
       </form>
     </Popup>
   );

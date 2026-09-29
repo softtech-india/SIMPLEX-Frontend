@@ -8,6 +8,9 @@ import { TransporterSchema, TransporterFormSchema, } from "../schemas/transporte
 import { TransporterDefaultValues } from "../constants/transporter";
 import { useConfirm } from "@/common/hooks/useConfirm";
 import Loader from "@/common/components/Loader";
+import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
+import { SHORTCUTS } from "@/common/constants/shortcuts";
+import { Save, XCircle } from "lucide-react";
 
 interface TransporterFormProps {
   visible: boolean;
@@ -24,7 +27,7 @@ export function TransporterForm({ visible, onClose, transporterId, mode, returnA
   const confirm = useConfirm();
 
   const defaultFocusRef = useRef<HTMLInputElement>(null);
-
+  const formRef = useRef<HTMLFormElement>(null);
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
   const isDeleteMode = mode === "Delete";
@@ -47,6 +50,16 @@ export function TransporterForm({ visible, onClose, transporterId, mode, returnA
     },
   });
 
+  // handle Sortcuts 
+  useKeyboardShortcuts(
+    {
+      [SHORTCUTS.SAVE]: () => { formRef.current?.requestSubmit(); },
+      [SHORTCUTS.EXIT]: () => { onClose(); },
+    },
+    visible
+  );
+
+
   useEffect(() => {
     if (!visible) return;
 
@@ -67,6 +80,17 @@ export function TransporterForm({ visible, onClose, transporterId, mode, returnA
       });
     }
   }, [transporterData, mode, visible, setFocus, reset]);
+
+  const getButtonLabel = () => {
+    if (isSubmitting) {
+      if (isDeleteMode) return "Deleting...";
+      return "Saving...";
+    }
+
+    if (isDeleteMode) return "Delete";
+    return "Save";
+  };
+
 
   const handleFormSubmit = async (data: TransporterFormSchema) => {
     try {
@@ -134,31 +158,40 @@ export function TransporterForm({ visible, onClose, transporterId, mode, returnA
     <Popup
       visible={visible}
       onHiding={onClose}
-      title={`${mode} Transporter`}
-      width="50vw"
-      height="75vh"
-      dragEnabled
-      showTitle
+      title={`Transporter`}
+      width="90vw"
+      height="50vh"
+      dragEnabled={false}
+      showTitle={false}
       showCloseButton={false}
     >
       <form
+        ref={formRef}
         onSubmit={handleSubmit(handleFormSubmit, onError)}
         className="flex flex-col h-full"
       >
-        <div className="flex-1 overflow-y-auto p-2 space-y-2">
-          <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
-              Transporter Information
-            </h2>
+        <div className="flex-1 overflow-y-auto p-1 space-y-1">
 
-            <div className="grid grid-cols-1 gap-3">
-              {/* Name */}
+          <div className="flex-none border-b rounded border-gray-300 p-2 flex items-center justify-between text-white bg-[#0f1c7f]">
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-semibold ">Transporter</h1>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium">Mode:</span>
+              <span className="text-xs font-semibold text-[#05045f] bg-blue-50 border border-blue-100 rounded px-2 py-1">
+                {mode}
+              </span>
+            </div>
+          </div>
+
+          <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
+
+            <div className="grid grid-cols-3 gap-1">
               <div>
                 <label className="block text-gray-700 font-medium mb-1">
-                  Name
-                  <span className="text-red-500">*</span>
+                  Name <strong className="text-red-500"> * </strong>
                 </label>
-
                 <input
                   type="text"
                   {...register("name")}
@@ -169,237 +202,133 @@ export function TransporterForm({ visible, onClose, transporterId, mode, returnA
                       defaultFocusRef.current = e;
                     }
                   }}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.name ? "border-red-500" : "border-gray-300"
-                    }`}
+                  className={`inputField w-full border ${errors.name ? "border-red-500" : "border-gray-300"}`}
                   placeholder="Enter Name"
                 />
-
-                {errors.name && (
-                  <p className="text-red-500 mt-1 text-sm">
-                    {errors.name.message}
-                  </p>
-                )}
+                {errors.name && (<p className="text-red-500 mt-1 text-sm"> {errors.name.message} </p>)}
               </div>
 
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              {/* Address 1 */}
               <div>
-                <label className="block text-gray-700 font-medium mb-1">
-                  Address 1
-                  <span className="text-red-500">*</span>
-                </label>
-
+                <label className="block text-gray-700 font-medium mb-1"> Address 1  </label>
                 <input
                   type="text"
                   {...register("addr1")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.addr1 ? "border-red-500" : "border-gray-300"
-                    }`}
-                  placeholder="Enter addr1"
+                  className={`inputField w-full border ${errors.addr1 ? "border-red-500" : "border-gray-300"}`}
+                  placeholder="Enter address 1"
                 />
-
-                {errors.addr1 && (
-                  <p className="text-red-500 mt-1 text-sm">
-                    {errors.addr1.message}
-                  </p>
-                )}
+                {errors.addr1 && (<p className="text-red-500 mt-1 text-sm"> {errors.addr1.message} </p>)}
               </div>
 
-              {/* Address 2 */}
               <div>
-                <label className="block text-gray-700 font-medium mb-1">
-                  Address 2
-                  <span className="text-red-500">*</span>
-                </label>
-
+                <label className="block text-gray-700 font-medium mb-1"> Address 2  </label>
                 <input
                   type="text"
                   {...register("addr2")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.addr2 ? "border-red-500" : "border-gray-300"
-                    }`}
+                  className={`inputField w-full border ${errors.addr2 ? "border-red-500" : "border-gray-300"}`}
                   placeholder="Enter addr2"
                 />
-
-                {errors.addr2 && (
-                  <p className="text-red-500 mt-1 text-sm">
-                    {errors.addr2.message}
-                  </p>
-                )}
+                {errors.addr2 && (<p className="text-red-500 mt-1 text-sm">{errors.addr2.message}</p>)}
               </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
 
-              {/* Address 3 */}
               <div>
-                <label className="block text-gray-700 font-medium mb-1">
-                  Address 3
-                  <span className="text-red-500">*</span>
-                </label>
-
+                <label className="block text-gray-700 font-medium mb-1">  Address 3   </label>
                 <input
                   type="text"
                   {...register("addr3")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.addr3 ? "border-red-500" : "border-gray-300"
-                    }`}
+                  className={`inputField w-full border ${errors.addr3 ? "border-red-500" : "border-gray-300"}`}
                   placeholder="Enter addr3"
                 />
-
-                {errors.addr3 && (
-                  <p className="text-red-500 mt-1 text-sm">
-                    {errors.addr3.message}
-                  </p>
-                )}
+                {errors.addr3 && (<p className="text-red-500 mt-1 text-sm"> {errors.addr3.message} </p>)}
               </div>
 
-              {/* GST */}
               <div>
-                <label className="block text-gray-700 font-medium mb-1">
-                  GST
-                </label>
-
+                <label className="block text-gray-700 font-medium mb-1">  GST </label>
                 <input
                   type="text"
                   {...register("gstin")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.contperson ? "border-red-500" : "border-gray-300"
-                    }`}
+                  className={`inputField w-full border ${errors.contperson ? "border-red-500" : "border-gray-300"}`}
                   placeholder="Enter gstin"
                 />
-
-                {errors.gstin && (
-                  <p className="text-red-500 mt-1 text-sm">
-                    {errors.gstin.message}
-                  </p>
-                )}
+                {errors.gstin && (<p className="text-red-500 mt-1 text-sm">  {errors.gstin.message}   </p>)}
               </div>
 
-              {/* Mobile */}
               <div>
-                <label className="block text-gray-700 font-medium mb-1">
-                  Mobile No <span className="text-red-500">*</span>
-                </label>
-
+                <label className="block text-gray-700 font-medium mb-1"> Mobile No  </label>
                 <input
                   type="text"
                   {...register("mobno")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.mobno ? "border-red-500" : "border-gray-300"
-                    }`}
+                  className={`inputField w-full border ${errors.mobno ? "border-red-500" : "border-gray-300"}`}
                   placeholder="Enter mobno"
                 />
-
-                {errors.mobno && (
-                  <p className="text-red-500 mt-1 text-sm">
-                    {errors.mobno.message}
-                  </p>
-                )}
+                {errors.mobno && (<p className="text-red-500 mt-1 text-sm">  {errors.mobno.message}  </p>)}
               </div>
 
-
-            </div>
-
-            <div className="grid grid-cols-1 gap-3">
-
-              {/* Phone */}
               <div>
-                <label className="block text-gray-700 font-medium mb-1">
-                  Phone No.
-                  <span className="text-red-500">*</span>
-                </label>
-
+                <label className="block text-gray-700 font-medium mb-1"> Phone No.  </label>
                 <input
                   type="text"
                   {...register("phno")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.phno ? "border-red-500" : "border-gray-300"
-                    }`}
+                  className={`inputField w-full border ${errors.phno ? "border-red-500" : "border-gray-300"}`}
                   placeholder="Enter phno"
                 />
-
-                {errors.phno && (
-                  <p className="text-red-500 mt-1 text-sm">
-                    {errors.phno.message}
-                  </p>
-                )}
+                {errors.phno && (<p className="text-red-500 mt-1 text-sm">  {errors.phno.message}  </p>)}
               </div>
-              {/* email */}
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">
-                  Email
-                  <span className="text-red-500">*</span>
-                </label>
 
+              <div>
+                <label className="block text-gray-700 font-medium mb-1"> Email </label>
                 <input
                   type="text"
                   {...register("email")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.email ? "border-red-500" : "border-gray-300"
-                    }`}
+                  className={`inputField w-full border ${errors.email ? "border-red-500" : "border-gray-300"}`}
                   placeholder="Enter email"
                 />
-
-                {errors.email && (
-                  <p className="text-red-500 mt-1 text-sm">
-                    {errors.email.message}
-                  </p>
-                )}
+                {errors.email && (<p className="text-red-500 mt-1 text-sm">  {errors.email.message}  </p>)}
               </div>
-            </div>
 
-            <div>
-              {/* Contact Person */}
               <div>
-                <label className="block text-gray-700 font-medium mb-1">
-                  Contact Person
-                </label>
-
+                <label className="block text-gray-700 font-medium mb-1"> Contact Person</label>
                 <input
                   type="text"
                   {...register("contperson")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.gstin ? "border-red-500" : "border-gray-300"
-                    }`}
+                  className={`inputField w-full border ${errors.gstin ? "border-red-500" : "border-gray-300"}`}
                   placeholder="Enter contperson"
                 />
-
-                {errors.contperson && (
-                  <p className="text-red-500 mt-1 text-sm">
-                    {errors.contperson.message}
-                  </p>
-                )}
+                {errors.contperson && (<p className="text-red-500 mt-1 text-sm">  {errors.contperson.message}  </p>)}
               </div>
 
             </div>
+
           </section>
         </div>
 
         {/* Footer */}
-        <div className="border-t p-2 flex justify-end gap-4 bg-gray-50">
-          {mode !== "View" && mode !== "Print" && (
+        <div className="border-t border-gray-300 p-2 flex justify-end gap-4 bg-white">
+          {(mode !== "View" && mode !== "Print") && (
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`${isDeleteMode ? "delete-btn" : "primary-btn"
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`${isDeleteMode ? 'delete-btn' : 'primary-btn'} flex items-center gap-1.5 p-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              {isSubmitting
-                ? isDeleteMode ? "Deleting..." : "Saving..."
-                : isDeleteMode ? "Delete" : "Save"}
+              <Save size={15} /> {isSubmitting ? "Saving..." : getButtonLabel()}
             </button>
           )}
-
           <button
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="secondary-btn disabled:opacity-50 disabled:cursor-not-allowed"
+            className="secondary-btn flex items-center gap-1.5 p-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Exit
+            <XCircle size={15} />  Exit
           </button>
+
         </div>
 
         {isSubmitting || isLoadingTransporter && <Loader />}

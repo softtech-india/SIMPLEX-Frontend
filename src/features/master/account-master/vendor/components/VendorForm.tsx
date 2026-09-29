@@ -6,8 +6,8 @@ import LoadPanel from "devextreme-react/load-panel";
 import { useQuery } from "@tanstack/react-query";
 import { useVendorById, useCreateVendor, useUpdateVendor, useDeleteVendor } from "../hooks/useVendor";
 import { fetchLedgerGroupList, fetchStateList, fetchCityList } from "@/api/master/ledger-api";
-import { deducteeTypeTags, gstregType, interestMethod, isCardeWallet, isMainLedger, isTdsApplicable, ledgerStatus, maintainBillwise, salaryDeducTtype, stockEffect, taxNature } from "@/common/utility/data";
-import { Vendor, OperationMode, VendorFormData, SubLedgerType, TDS } from "../types/vendor.types";
+import { deducteeTypeTags, gstregType, interestMethod, isMainLedger, isTdsApplicable, ledgerStatus, maintainBillwise } from "@/common/utility/data";
+import { OperationMode, VendorFormData, SubLedgerType, TDS } from "../types/vendor.types";
 import { VendorFormSchema } from "../schemas/vendor.schema";
 import { FormSelect } from "@/common/components/FormSelect";
 import { vendorFormDefaults } from "../constants/vendorFormDefaults";
@@ -15,6 +15,10 @@ import { useVendorForm } from "../hooks/useVendorForm";
 import { useAppStorage } from "@/hooks/useAuthStorage";
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { vendorService } from "../services/vendorService";
+import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
+import { SHORTCUTS } from "@/common/constants/shortcuts";
+import Loader from "@/common/components/Loader";
+import { Save, XCircle } from "lucide-react";
 
 type Option = { value: number | string; label: string };
 
@@ -30,6 +34,7 @@ interface VendorFormProps {
 export function VendorForm({ visible, onClose, formVendorId, mode, returnAfterSave, onSuccess }: VendorFormProps) {
   const { userId, companyId } = useAppStorage();
 
+  const formRef = useRef<HTMLFormElement>(null);
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
   const isDeleteMode = mode === "Delete";
@@ -43,16 +48,18 @@ export function VendorForm({ visible, onClose, formVendorId, mode, returnAfterSa
   const [ledgerGrouName, setLedgerGroupName] = useState("Sundry Creditors")
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
-  const {
-    control,
-    register,
-    handleSubmit,
-    setFocus,
-    setValue,
-    reset,
-    watch,
-    formState: { errors },
-  } = useVendorForm(vendorFormDefaults);
+  const { control, register, handleSubmit, setFocus, setValue, reset, watch, formState: { errors }, } = useVendorForm(vendorFormDefaults);
+
+
+  // handle Sortcuts 
+  useKeyboardShortcuts(
+    {
+      [SHORTCUTS.SAVE]: () => { formRef.current?.requestSubmit(); },
+      [SHORTCUTS.EXIT]: () => { onClose(); },
+    },
+    visible
+  );
+
 
   // Reset logic
   useEffect(() => {
@@ -298,6 +305,17 @@ export function VendorForm({ visible, onClose, formVendorId, mode, returnAfterSa
     }
   }, []);
 
+  const getButtonLabel = () => {
+    if (isSubmitting) {
+      if (isDeleteMode) return "Deleting...";
+      return "Saving...";
+    }
+
+    if (isDeleteMode) return "Delete";
+    return "Save";
+  };
+
+
   const handleFormSubmit = async (data: VendorFormSchema) => {
     console.log("Form data before submit:", {
       corpgrpid: data.corpgrpid,
@@ -393,23 +411,35 @@ export function VendorForm({ visible, onClose, formVendorId, mode, returnAfterSa
       title={`${mode} Vendor`}
       width="90vw"
       height="90vh"
-      dragEnabled
-      showTitle
+      dragEnabled={false}
+      showTitle={false}
       showCloseButton={false}
     >
       <form
+        ref={formRef}
         onSubmit={handleSubmit(handleFormSubmit, onError)}
         className="flex flex-col h-full"
       >
-        <div className="flex-1 overflow-y-auto p-2 space-y-2">
-          {/* Vendor Information */}
-          <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
-              Vendor Information
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+        <div className="flex-1 overflow-y-auto p-1 space-y-1">
+
+          <div className="flex-none border-b rounded border-gray-300 p-2 flex items-center justify-between text-white bg-[#0f1c7f]">
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-semibold ">Vendor </h1>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium">Mode:</span>
+              <span className="text-xs font-semibold text-[#05045f] bg-blue-50 border border-blue-100 rounded px-2 py-1">
+                {mode}
+              </span>
+            </div>
+          </div>
+
+          {/* <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-1">
               <div>
-                <label className="block text-gray-700 font-medium mb-1">Sub Ledger Type<span className="text-red-500">*</span></label>
+                <label className="block text-gray-700 font-medium mb-1">Sub Ledger Type <strong className="text-red-500">*</strong> </label>
                 <FormSelect<VendorFormSchema>
                   name="subledgertypeid"
                   control={control}
@@ -422,7 +452,7 @@ export function VendorForm({ visible, onClose, formVendorId, mode, returnAfterSa
 
               {Vendor && (
                 <div>
-                  <label className="block text-gray-700 font-medium mb-1">Code<span className="text-red-500">*</span></label>
+                  <label className="block text-gray-700 font-medium mb-1">Code <strong className="text-red-500">*</strong></label>
                   <input
                     type="text"
                     defaultValue={Vendor?.code}
@@ -433,9 +463,8 @@ export function VendorForm({ visible, onClose, formVendorId, mode, returnAfterSa
                 </div>
               )}
 
-
               <div>
-                <label className="block text-gray-700 font-medium mb-1">Ledger Group <span className="text-red-500">*</span></label>
+                <label className="block text-gray-700 font-medium mb-1">Ledger Group <strong className="text-red-500">*</strong></label>
                 <input
                   type="text"
                   disabled={true}
@@ -459,16 +488,65 @@ export function VendorForm({ visible, onClose, formVendorId, mode, returnAfterSa
               </div>
 
             </div>
-          </section>
+          </section> */}
 
           {/* Address & Contact */}
-          <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
+          <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
+            {/* <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
               Address & Contact
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            </h2> */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-1">
+
               <div>
-                <label className="block text-gray-700 font-medium mb-1">Address Line 1<span className="text-red-500">*</span></label>
+                <label className="block text-gray-700 font-medium mb-1">Sub Ledger Type <strong className="text-red-500"> * </strong> </label>
+                <FormSelect<VendorFormSchema>
+                  name="subledgertypeid"
+                  control={control}
+                  options={subledgertypeOptions}
+                  placeholder="Select sub ledger type"
+                  isDisabled={isReadOnly}
+                  onChange={handlesubLedgerTypeChange}
+                />
+              </div>
+
+              {Vendor && (
+                <div>
+                  <label className="block text-gray-700 font-medium mb-1">Code <strong className="text-red-500"> * </strong></label>
+                  <input
+                    type="text"
+                    defaultValue={Vendor?.code}
+                    disabled={true}
+                    className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition border-gray-300`}
+                    placeholder="Enter company id"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">Ledger Group <strong className="text-red-500"> * </strong></label>
+                <input
+                  type="text"
+                  disabled={true}
+                  defaultValue={"Sundry Creditors"}
+                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.ledgergroupid ? "border-red-500" : "border-gray-300"}`}
+                  placeholder="Enter Vendor name"
+                />
+                {errors.ledgergroupid && <p className="text-red-500 mt-1 text-sm">{errors.ledgergroupid.message}</p>}
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">Vendor Name <strong className="text-red-500"> * </strong></label>
+                <input
+                  type="text"
+                  {...register("name")}
+                  disabled={isReadOnly}
+                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.name ? "border-red-500" : "border-gray-300"}`}
+                  placeholder="Enter Vendor name"
+                />
+                {errors.name && <p className="text-red-500 mt-1 text-sm">{errors.name.message}</p>}
+              </div>
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">Address Line 1 <strong className="text-red-500"> * </strong> </label>
                 <input
                   type="text"
                   {...register("addr1")}
@@ -516,7 +594,7 @@ export function VendorForm({ visible, onClose, formVendorId, mode, returnAfterSa
               </div>
 
               <div>
-                <label className="block text-gray-700 font-medium mb-1">State</label>
+                <label className="block text-gray-700 font-medium mb-1">State <strong className="text-red-500"> * </strong></label>
                 <FormSelect<VendorFormSchema>
                   name="stateid"
                   control={control}
@@ -526,7 +604,7 @@ export function VendorForm({ visible, onClose, formVendorId, mode, returnAfterSa
               </div>
 
               <div>
-                <label className="block text-gray-700 font-medium mb-1">City</label>
+                <label className="block text-gray-700 font-medium mb-1">City <strong className="text-red-500"> * </strong></label>
                 <FormSelect<VendorFormSchema>
                   name="cityid"
                   control={control}
@@ -586,15 +664,52 @@ export function VendorForm({ visible, onClose, formVendorId, mode, returnAfterSa
                 />
                 {errors.email && <p className="text-red-500 mt-1 text-sm">{errors.email.message}</p>}
               </div>
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">GST Registration Type</label>
+                <FormSelect<VendorFormSchema>
+                  name="gstregtype"
+                  control={control}
+                  options={gstregTypeOption}
+                  isDisabled={isReadOnly}
+                />
+              </div>
+
+              {gstRegType !== 'U' && (
+                <div>
+                  <label className="block text-gray-700 font-medium mb-1">GSTIN</label>
+                  <input
+                    type="text"
+                    {...register("gstin")}
+                    disabled={isReadOnly}
+                    className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.gstin ? "border-red-500" : "border-gray-300"}`}
+                    placeholder="Enter GSTIN"
+                  />
+                  {errors.gstin && <p className="text-red-500 mt-1 text-sm">{errors.gstin.message}</p>}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">Pan</label>
+                <input
+                  type="text"
+                  {...register("pan")}
+                  disabled={isReadOnly}
+                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.pan ? "border-red-500" : "border-gray-300"}`}
+                  placeholder="Enter PAN"
+                />
+                {errors.pan && <p className="text-red-500 mt-1 text-sm">{errors.pan.message}</p>}
+              </div>
             </div>
           </section>
 
-          <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
+          {/* <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
             <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
               Statutory Details
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
               <div className="flex gap-4">
+
                 <div className="w-1/2">
                   <label className="block text-gray-700 font-medium mb-1">GST Registration Type</label>
                   <FormSelect<VendorFormSchema>
@@ -632,19 +747,15 @@ export function VendorForm({ visible, onClose, formVendorId, mode, returnAfterSa
                 {errors.pan && <p className="text-red-500 mt-1 text-sm">{errors.pan.message}</p>}
               </div>
 
-
-
-
-
             </div>
-          </section>
+          </section> */}
 
           {/* Bank Details */}
-          <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
+          <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
+            {/* <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
               Bank Details
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+            </h2> */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-1">
               <div>
                 <label className="block text-gray-700 font-medium mb-1">Bank Branch</label>
                 <input
@@ -696,12 +807,12 @@ export function VendorForm({ visible, onClose, formVendorId, mode, returnAfterSa
           </section>
 
           {/* Statutory Details */}
-          <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
+          <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
+            {/* <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
               Statutory Details
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex gap-4">
+            </h2> */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
+              <div className="flex gap-1">
 
                 <div className="w-1/4">
                   <label className="block text-gray-700 font-medium mb-1">TDS Applicable</label>
@@ -733,10 +844,7 @@ export function VendorForm({ visible, onClose, formVendorId, mode, returnAfterSa
                 </div>
               </div>
 
-              <div className="flex gap-4">
-
-
-
+              <div className="flex gap-1">
 
                 <div className="w-1/2">
                   <label className="block text-gray-700 font-medium mb-1">Is Main Ledger</label>
@@ -761,9 +869,7 @@ export function VendorForm({ visible, onClose, formVendorId, mode, returnAfterSa
                 )}
               </div>
 
-
-
-              <div className="flex gap-4">
+              <div className="flex gap-1">
                 <div className="w-1/4">
                   <label className="block text-gray-700 font-medium mb-1">Maintain Bill Wise</label>
                   <FormSelect<VendorFormSchema>
@@ -798,7 +904,7 @@ export function VendorForm({ visible, onClose, formVendorId, mode, returnAfterSa
                 </div>
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex gap-1">
                 <div className="w-1/2">
                   <label className="block text-gray-700 font-medium mb-1">Interest Method</label>
                   <FormSelect<VendorFormSchema>
@@ -823,11 +929,10 @@ export function VendorForm({ visible, onClose, formVendorId, mode, returnAfterSa
                 </div>
               </div>
 
-              <div className="flex gap-4">
-
+              <div className="flex gap-1">
 
                 <div className="w-1/2 ">
-                  <label className="block text-gray-700 font-medium mb-1">Corporate Group</label>
+                  <label className="block text-gray-700 font-medium mb-1">Corporate Group <strong className="text-red-500"> * </strong> </label>
                   <FormSelect<VendorFormSchema>
                     name="corpgrpid"
                     control={control}
@@ -850,30 +955,30 @@ export function VendorForm({ visible, onClose, formVendorId, mode, returnAfterSa
         </div>
 
         {/* Footer */}
-        <div className="border-t p-2 flex justify-end gap-4 bg-gray-50">
+        <div className="border-t border-gray-300 p-2 flex justify-end gap-4 bg-white">
           {(mode !== "View" && mode !== "Print") && (
             <button
               type="submit"
               disabled={isSubmitting}
-              className="primary-btn disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`${isDeleteMode ? 'delete-btn' : 'primary-btn'} flex items-center gap-1.5 p-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              {isSubmitting
-                ? isDeleteMode ? "Deleting..." : "Saving..."
-                : isDeleteMode ? "Delete" : "Save"
-              }
+              <Save size={15} /> {isSubmitting ? "Saving..." : getButtonLabel()}
             </button>
           )}
           <button
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="secondary-btn disabled:opacity-50 disabled:cursor-not-allowed"
+            className="secondary-btn flex items-center gap-1.5 p-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Exit
+            <XCircle size={15} />  Exit
           </button>
+
         </div>
 
-        <LoadPanel shadingColor="rgba(0,0,0,0.4)" visible={isSubmitting || isLoadingVendor} showIndicator />
+        {(isSubmitting || isLoadingVendor) && <Loader />}
+
+
       </form>
     </Popup>
   );

@@ -17,6 +17,7 @@ import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
 import { SHORTCUTS } from "@/common/constants/shortcuts";
 import { useMasterModal } from "@/hooks/useMasterModal";
 import Loader from "@/common/components/Loader";
+import { Save, XCircle } from "lucide-react";
 
 interface OpeningStockFormProps {
   visible: boolean;
@@ -33,6 +34,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
   const { open } = useMasterModal();
   const confirm = useConfirm();
 
+  const formRef = useRef<HTMLFormElement>(null);
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
   const isDeleteMode = mode === "Delete";
@@ -40,9 +42,11 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
 
   const handleCreateProduct = async () => { await open("product"); };
 
+  // handle Sortcuts 
   useKeyboardShortcuts(
     {
-      [SHORTCUTS.ADDITEM]: () => { handleAddItem(); },
+      [SHORTCUTS.SAVE]: () => { formRef.current?.requestSubmit(); },
+      [SHORTCUTS.EXIT]: () => { onClose(); },
     },
     visible
   );
@@ -321,25 +325,39 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
     <Popup
       visible={visible}
       onHiding={onClose}
-      title={`${mode} OpeningStock`}
+      title={`Opening Stock`}
       width="90vw"
-      height="90vh"
-      dragEnabled
-      showTitle
+      height="60vh"
+      dragEnabled={false}
+      showTitle={false}
       showCloseButton={false}
     >
       <form
+        ref={formRef}
         onSubmit={handleSubmit(handleFormSubmit, onError)}
         className="flex flex-col h-full"
       >
         <div className="flex-1 overflow-y-auto p-1 space-y-1">
 
+          <div className="flex-none rounded border-b border-gray-300 p-2 flex items-center justify-between text-white bg-[#0f1c7f]">
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-semibold ">Opening Stock</h1>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium">Mode:</span>
+              <span className="text-xs font-semibold text-[#05045f] bg-blue-50 border border-blue-100 rounded px-2 py-1">
+                {mode}
+              </span>
+            </div>
+          </div>
+
           {/* Opening Stock Order Info */}
           <section className="border rounded-md p-1 shadow-sm bg-white space-y-3">
 
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
+            {/* <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
               Opening Stock Information
-            </h2>
+            </h2> */}
 
             <div className="flex flex-wrap gap-1 items-end">
 
@@ -371,9 +389,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
               </div>
 
               <div className="w-68">
-                <label className="block text-gray-700 text-sm font-medium mb-1">
-                  Category
-                </label>
+                <label className="block text-gray-700 text-sm font-medium mb-1"> Category </label>
                 <input
                   type="text"
                   value={categorynm || ""}
@@ -384,9 +400,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
               </div>
 
               <div className="w-68">
-                <label className="block text-gray-700 text-sm font-medium mb-1">
-                  Class
-                </label>
+                <label className="block text-gray-700 text-sm font-medium mb-1">  Class  </label>
                 <input
                   type="text"
                   value={classnm || ""}
@@ -397,9 +411,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
               </div>
 
               <div className="w-28">
-                <label className="block text-gray-700 text-sm font-medium mb-1">
-                  Unit
-                </label>
+                <label className="block text-gray-700 text-sm font-medium mb-1"> Unit </label>
                 <input
                   type="text"
                   value={unit || ""}
@@ -425,7 +437,7 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
           </section>
 
           {/* Item Details */}
-          <section className="border rounded-md p-1 shadow-sm bg-white space-y-3">
+          <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
 
             <div className="flex justify-between items-center">
               <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
@@ -525,27 +537,28 @@ export function OpeningStockForm({ visible, onClose, formOpeningStockId, mode, f
         </div>
 
         {/* Footer */}
-        <div className="border-t p-2 flex justify-end gap-4 bg-gray-50">
+        <div className="border-t border-gray-300 px-4 py-2.5 flex justify-end gap-4 bg-white">
           {(mode !== "View" && mode !== "Print") && (
             <button
               type="submit"
               disabled={isSubmitting}
-              className="primary-btn disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`${isDeleteMode ? 'delete-btn' : 'primary-btn'} flex items-center gap-1.5 px-4 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              {getButtonLabel()}
+              <Save size={15} /> {isSubmitting ? "Saving..." : getButtonLabel()}
             </button>
           )}
           <button
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="secondary-btn disabled:opacity-50 disabled:cursor-not-allowed"
+            className="secondary-btn flex items-center gap-1.5 px-4 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Exit
+            <XCircle size={15} />  Exit
           </button>
+
         </div>
 
-        {isSubmitting || isLoadingOpeningStock && <Loader />}
+        {(isSubmitting || isLoadingOpeningStock) && <Loader />}
       </form>
 
       <SearchModal

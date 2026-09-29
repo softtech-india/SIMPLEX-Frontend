@@ -79,7 +79,7 @@ export const OpeningStockItems: React.FC<OpeningStockItemsProps> = ({
   };
 
   return (
-    <div className="flex flex-wrap gap-4 items-end">
+    <div className="flex flex-wrap gap-1 items-end">
 
       <div className="w-68">
         <label className="block text-gray-700 text-sm font-medium mb-1">
@@ -119,9 +119,7 @@ export const OpeningStockItems: React.FC<OpeningStockItemsProps> = ({
 
       {/* RATE */}
       <div className="w-28">
-        <label className="block text-gray-700 text-sm font-medium mb-1">
-          Rate
-        </label>
+        <label className="block text-gray-700 text-sm font-medium mb-1"> Rate </label>
         <input
           type="number"
           {...register(`itemdtl.${index}.rate`)}
@@ -132,9 +130,7 @@ export const OpeningStockItems: React.FC<OpeningStockItemsProps> = ({
 
       {/* VALUE */}
       <div className="w-28">
-        <label className="block text-gray-700 text-sm font-medium mb-1">
-          Value
-        </label>
+        <label className="block text-gray-700 text-sm font-medium mb-1"> Value </label>
         <input
           type="number"
           value={value}

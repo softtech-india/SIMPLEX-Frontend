@@ -141,7 +141,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
           <div
             className={`flex flex-col flex-1 transition-all duration-300 overflow-hidden
-            ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-80'}`}
+            ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-70'}`}
           >
 
             <main className="flex-1 overflow-auto px-2 py-2">

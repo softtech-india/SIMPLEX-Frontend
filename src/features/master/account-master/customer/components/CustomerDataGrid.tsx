@@ -18,11 +18,11 @@ export const CustomerDataGrid = forwardRef<any, CustomerDataGridProps>(
 
     const columns = [
       // Core Info
-      { dataField: "code", caption: "Code", width: 110, headerFilter: true },
+      { dataField: "code", caption: "Id", width: 110, headerFilter: true },
       { dataField: "name", caption: "Name", width: 150, headerFilter: true },
-      { dataField: "subledgertypenm", caption: "Type", width: 80, headerFilter: true },
-      { dataField: "ledgergroupnm", caption: "Ledger Group", width: 130, headerFilter: true },
-      { dataField: "statusdesc", caption: "Status", width: 80, headerFilter: true },
+      // { dataField: "subledgertypenm", caption: "Type", width: 80, headerFilter: true },
+      // { dataField: "ledgergroupnm", caption: "Ledger Group", width: 130, headerFilter: true },
+
 
       // Address Info
       { dataField: "addr", caption: "Address", width: 390 },
@@ -43,10 +43,11 @@ export const CustomerDataGrid = forwardRef<any, CustomerDataGridProps>(
       { dataField: "pan", caption: "PAN", width: 130, headerFilter: true },
 
       // Credit & Compliance
-      { dataField: "crdays", caption: "Credit Days", width: 120 },
-      { dataField: "crlimit", caption: "Credit Limit", width: 130 },
-      { dataField: "tcsapplicable", caption: "TDS Applicable", width: 130 },
+      // { dataField: "crdays", caption: "Credit Days", width: 120 },
+      // { dataField: "crlimit", caption: "Credit Limit", width: 130 },
+      // { dataField: "tcsapplicable", caption: "TDS Applicable", width: 130 },
 
+      { dataField: "statusdesc", caption: "Status", width: 80, headerFilter: true },
       // Audit Trail
       { dataField: "entryby", caption: "Entry By", width: 120 },
       { dataField: "entrydt", caption: "Entry Date", width: 150 },

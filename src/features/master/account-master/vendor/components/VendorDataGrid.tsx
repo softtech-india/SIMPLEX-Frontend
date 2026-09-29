@@ -18,47 +18,47 @@ export const VendorDataGrid = forwardRef<any, VendorDataGridProps>(
 
     const columns = [
       // Core Info
-      { dataField: "code", caption: "Code", width: 120, headerFilter: true },
+      { dataField: "code", caption: "Id", width: 100, headerFilter: true },
       { dataField: "name", caption: "Name", width: 220, headerFilter: true },
-      { dataField: "subledgertypenm", caption: "Type", width: 130, headerFilter: true },
-      { dataField: "ledgergroupnm", caption: "Ledger Group", width: 160, headerFilter: true },
+      // { dataField: "subledgertypenm", caption: "Type", width: 130, headerFilter: true },
+      // { dataField: "ledgergroupnm", caption: "Ledger Group", width: 160, headerFilter: true },
       
       // Address Info
-      { dataField: "addr", caption: "Address", width: 200 },
-      { dataField: "pin", caption: "PIN Code", width: 80 },
-      { dataField: "nl", caption: "Near Location", width: 150 },
+      { dataField: "addr", caption: "Address", width: 350 },
+      { dataField: "pin", caption: "Pin Code", width: 80 },
+      // { dataField: "nl", caption: "Near Location", width: 150 },
 
       // Contact Info
-      { dataField: "mobile", caption: "Mobile", width: 120 },
-      { dataField: "phone", caption: "Phone", width: 120 },
-      { dataField: "email", caption: "Email", width: 180 },
+      { dataField: "mobile", caption: "Mobile", width: 100 },
+      { dataField: "phone", caption: "Phone", width: 100 },
+      // { dataField: "email", caption: "Email", width: 100 },
 
       // Tax Info
-      { dataField: "gstin", caption: "GSTIN", width: 160, headerFilter: true },
+      { dataField: "gstin", caption: "GSTIN", width: 120, headerFilter: true },
       { dataField: "gstregtypedesc", caption: "GST Type", width: 130, headerFilter: true },
       { dataField: "pan", caption: "PAN", width: 130, headerFilter: true },
 
       { dataField: "status", caption: "Status", width: 100, headerFilter: true },
 
       // Credit & Compliance
-      { dataField: "crdays", caption: "Credit Days", width: 120 },
-      { dataField: "crlimit", caption: "Credit Limit", width: 130 },
-      { dataField: "tdsapplicable", caption: "TDS Applicable", width: 130, headerFilter: true },
-      { dataField: "deducteetype", caption: "Deductee Type", width: 130 },
-      { dataField: "tdssecid", caption: "TDS Section", width: 120 },
+      // { dataField: "crdays", caption: "Credit Days", width: 120 },
+      // { dataField: "crlimit", caption: "Credit Limit", width: 130 },
+      // { dataField: "tdsapplicable", caption: "TDS Applicable", width: 130, headerFilter: true },
+      // { dataField: "deducteetype", caption: "Deductee Type", width: 130 },
+      // { dataField: "tdssecid", caption: "TDS Section", width: 120 },
 
       // Bank Details
-      { dataField: "banknm", caption: "Bank Name", width: 150 },
-      { dataField: "bankbranch", caption: "Branch", width: 150 },
-      { dataField: "bankifsc", caption: "IFSC", width: 130 },
-      { dataField: "bankaccno", caption: "Account No", width: 160 },
+      // { dataField: "banknm", caption: "Bank Name", width: 150 },
+      // { dataField: "bankbranch", caption: "Branch", width: 150 },
+      // { dataField: "bankifsc", caption: "IFSC", width: 130 },
+      // { dataField: "bankaccno", caption: "Account No", width: 160 },
 
       // Interest
-      { dataField: "intmethod", caption: "Interest Method", width: 130, headerFilter: true },
-      { dataField: "intpct", caption: "Interest %", width: 100 },
+      // { dataField: "intmethod", caption: "Interest Method", width: 130, headerFilter: true },
+      // { dataField: "intpct", caption: "Interest %", width: 100 },
 
       // Posting Ledger
-      { dataField: "postingledgernm", caption: "Posting Ledger", width: 200 },
+      // { dataField: "postingledgernm", caption: "Posting Ledger", width: 200 },
 
       // Audit Trail
       { dataField: "entryby", caption: "Entry By", width: 120 },

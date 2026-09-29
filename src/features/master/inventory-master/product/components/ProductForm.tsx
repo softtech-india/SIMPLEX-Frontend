@@ -16,6 +16,9 @@ import useUserStore from "@/store/userStore";
 import SearchModal from "@/common/components/SearchModal";
 import Loader from "@/common/components/Loader";
 import focusNext from "@/helpers/focusNext";
+import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
+import { SHORTCUTS } from "@/common/constants/shortcuts";
+import { Save, XCircle } from "lucide-react";
 
 interface ProdFormProps {
   visible: boolean;
@@ -37,6 +40,7 @@ export function ProductForm({ visible, onClose, ProductId, mode, returnAfterSave
   const confirm = useConfirm();
 
   // state
+  const formRef = useRef<HTMLFormElement>(null);
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
   const [classFormOpen, setClassFormOpen] = useState(false);
   const [groupFormOpen, setGroupFormOpen] = useState(false);
@@ -74,6 +78,15 @@ export function ProductForm({ visible, onClose, ProductId, mode, returnAfterSave
     defaultValues: ProductDefaultValues,
   });
 
+
+  // handle Sortcuts 
+  useKeyboardShortcuts(
+    {
+      [SHORTCUTS.SAVE]: () => { formRef.current?.requestSubmit(); },
+      [SHORTCUTS.EXIT]: () => { onClose(); },
+    },
+    visible
+  );
   // ---- Display values ----
   const categoryName = watch("categorynm");
   const className = watch("classnm");
@@ -228,6 +241,16 @@ export function ProductForm({ visible, onClose, ProductId, mode, returnAfterSave
     }
   }, [Productlist, gsts.length, mode, visible]);
 
+  const getButtonLabel = () => {
+    if (isSubmitting) {
+      if (isDeleteMode) return "Deleting...";
+      return "Saving...";
+    }
+
+    if (isDeleteMode) return "Delete";
+    return "Save";
+  };
+
   // Submit handler
   const handleFormSubmit = async (data: ProductFormSchema) => {
     try {
@@ -341,31 +364,40 @@ export function ProductForm({ visible, onClose, ProductId, mode, returnAfterSave
       title={`${mode} Product`}
       width="95vw"
       height="50vh"
-      dragEnabled
-      showTitle
+      dragEnabled={false}
+      showTitle={false}
       showCloseButton={false}
     >
       <form
+        ref={formRef}
         onSubmit={handleSubmit(handleFormSubmit, onError)}
         className="flex flex-col h-full"
       >
         <div className="flex-1 overflow-y-auto p-1">
+
+          <div className="flex-none border-b rounded border-gray-300 p-2 flex items-center justify-between text-white bg-[#0f1c7f]">
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-semibold ">Product</h1>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium">Mode:</span>
+              <span className="text-xs font-semibold text-[#05045f] bg-blue-50 border border-blue-100 rounded px-2 py-1">
+                {mode}
+              </span>
+            </div>
+          </div>
+
           <section className="border rounded-md p-1 shadow-sm bg-white">
 
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-2 bg-blue-50 mb-4">
-              Product Information
-            </h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1">
               <div>
-                <label className="block text-gray-700 font-medium mb-1">
-                  Product Code
-                </label>
+                <label className="block text-gray-700 font-medium mb-1">  Product Code </label>
                 <input
                   type="text"
                   {...register("productcode")}
                   disabled={isReadOnly || true}
-                  className={`inputField w-full border${errors.productcode ? "border-red-500" : "border-gray-300"}`}
+                  className={`inputField w-full border ${errors.productcode ? "border-red-500" : "border-gray-300"}`}
                   placeholder="Enter product code"
                 />
 
@@ -379,10 +411,9 @@ export function ProductForm({ visible, onClose, ProductId, mode, returnAfterSave
                   type="text"
                   {...register("productname")}
                   disabled={isReadOnly}
-                  className={`inputField w-full border${errors.productname ? "border-red-500" : "border-gray-300"}`}
-                  placeholder="Enter product description"
+                  className={`inputField w-full border ${errors.productname ? "border-red-500" : "border-gray-300"}`}
+                  placeholder="Enter product name"
                 />
-
               </div>
 
               <div>
@@ -393,13 +424,11 @@ export function ProductForm({ visible, onClose, ProductId, mode, returnAfterSave
                   type="text"
                   {...register("aliasname")}
                   disabled={isReadOnly}
-                  className={`inputField w-full border${errors.aliasname ? "border-red-500" : "border-gray-300"}`}
+                  className={`inputField w-full border ${errors.aliasname ? "border-red-500" : "border-gray-300"}`}
                   placeholder="Enter product print name"
                 />
-
               </div>
 
-              {/* Category */}
               <div>
                 <label className="block text-gray-700 font-medium mb-1">
                   Category <strong className="text-red-500">*</strong>
@@ -421,7 +450,6 @@ export function ProductForm({ visible, onClose, ProductId, mode, returnAfterSave
 
               </div>
 
-              {/* Class */}
               <div>
                 <label className="block text-gray-700 font-medium mb-1">
                   Class <strong className="text-red-500">*</strong>
@@ -487,9 +515,7 @@ export function ProductForm({ visible, onClose, ProductId, mode, returnAfterSave
               </div>
 
               <div>
-                <label className="block text-gray-700 font-medium mb-1">
-                  Base Unit <strong className="text-red-500">*</strong>
-                </label>
+                <label className="block text-gray-700 font-medium mb-1"> Base Unit  </label>
                 <FormSelect
                   name="unitid"
                   control={control}
@@ -499,9 +525,7 @@ export function ProductForm({ visible, onClose, ProductId, mode, returnAfterSave
               </div>
 
               <div>
-                <label className="block text-gray-700 font-medium mb-1">
-                  Product Type <strong className="text-red-500">*</strong>
-                </label>
+                <label className="block text-gray-700 font-medium mb-1"> Product Type  </label>
                 <FormSelect
                   name="producttype"
                   control={control}
@@ -510,9 +534,7 @@ export function ProductForm({ visible, onClose, ProductId, mode, returnAfterSave
               </div>
 
               <div>
-                <label className="block text-gray-700 font-medium mb-1">
-                  MRP <strong className="text-red-500">*</strong>
-                </label>
+                <label className="block text-gray-700 font-medium mb-1"> MRP </label>
                 <input
                   type="text"
                   {...register("mrp", { valueAsNumber: true })}
@@ -529,7 +551,6 @@ export function ProductForm({ visible, onClose, ProductId, mode, returnAfterSave
                 {errors.mrp && <p className="text-red-500 mt-1 text-sm">{errors.mrp.message}</p>}
               </div>
 
-
               <div>
                 <label className="block text-gray-700 font-medium mb-1">
                   GST <strong className="text-red-500">*</strong>
@@ -542,9 +563,7 @@ export function ProductForm({ visible, onClose, ProductId, mode, returnAfterSave
               </div>
 
               <div>
-                <label className="block text-gray-700 font-medium mb-1">
-                  Status <strong className="text-red-500">*</strong>
-                </label>
+                <label className="block text-gray-700 font-medium mb-1"> Status </label>
                 <FormSelect
                   name="closedtag"
                   control={control}
@@ -556,37 +575,34 @@ export function ProductForm({ visible, onClose, ProductId, mode, returnAfterSave
           </section>
         </div>
 
-
-        {/* Footer delete-btn */}
-        <div className="border-t p-2 flex justify-end gap-4 bg-gray-50">
+        {/* Footer */}
+        <div className="border-t border-gray-300 px-4 py-2.5 flex justify-end gap-4 bg-white">
           {(mode !== "View" && mode !== "Print") && (
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`${isDeleteMode ? 'delete-btn' : 'primary-btn'} disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`${isDeleteMode ? 'delete-btn' : 'primary-btn'} flex items-center gap-1.5 px-4 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              {isSubmitting
-                ? isDeleteMode ? "Deleting..." : "Saving..."
-                : isDeleteMode ? "Delete" : "Save"
-              }
+              <Save size={15} /> {isSubmitting ? "Saving..." : getButtonLabel()}
             </button>
           )}
           <button
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="secondary-btn disabled:opacity-50 disabled:cursor-not-allowed"
+            className="secondary-btn flex items-center gap-1.5 px-4 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Exit
+            <XCircle size={15} />  Exit
           </button>
+
         </div>
 
 
-        {isSubmitting || isLoadingProduct && <Loader />}
+        {(isSubmitting || isLoadingProduct) && <Loader />}
 
       </form>
 
-      {/* ---------- Search Modals ---------- */}
+
       <SearchModal
         open={categoryFormOpen}
         onClose={() => setCategoryFormOpen(false)}

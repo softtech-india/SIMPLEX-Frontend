@@ -1,15 +1,16 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Popup } from "devextreme-react/popup";
-import LoadPanel from "devextreme-react/load-panel";
-
 import { useCreateProdGroup, useUpdateProdGroup, useDeleteProdGroup, useProdGroup } from "../hooks/prodGroup";
-
-import { ProdGroup, OperationMode, ProdGroupFormData } from "../types/prodGroup.types";
+import { OperationMode, ProdGroupFormData } from "../types/prodGroup.types";
 import { prodGroupSchema, prodGroupFormSchema } from "../schemas/prodGroup.schema";
 import { prodGroupDefaultValues } from "../constants/prodGroupFormDefaults"
 import { useConfirm } from "@/common/hooks/useConfirm";
+import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
+import { SHORTCUTS } from "@/common/constants/shortcuts";
+import { Save, XCircle } from "lucide-react";
+import Loader from "@/common/components/Loader";
 
 interface ProdGroupFormProps {
   visible: boolean;
@@ -24,7 +25,7 @@ export function ProdGroupForm({ visible, onClose, ProdGroupId, mode, returnAfter
 
   const confirm = useConfirm();
   const defaultFocusRef = useRef<HTMLInputElement>(null);
-
+  const formRef = useRef<HTMLFormElement>(null);
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
   const isDeleteMode = mode === "Delete";
@@ -36,16 +37,19 @@ export function ProdGroupForm({ visible, onClose, ProdGroupId, mode, returnAfter
   const deleteMutation = useDeleteProdGroup();
   const isSubmitting = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
-  const {
-    register,
-    handleSubmit,
-    setFocus,
-    reset,
-    formState: { errors },
-  } = useForm<prodGroupFormSchema>({
+  const { register, handleSubmit, setFocus, reset, formState: { errors }, } = useForm<prodGroupFormSchema>({
     resolver: zodResolver(prodGroupSchema),
     defaultValues: prodGroupDefaultValues,
   });
+
+  // handle Sortcuts 
+  useKeyboardShortcuts(
+    {
+      [SHORTCUTS.SAVE]: () => { formRef.current?.requestSubmit(); },
+      [SHORTCUTS.EXIT]: () => { onClose(); },
+    },
+    visible
+  );
 
   // Reset form 
   useEffect(() => {
@@ -68,7 +72,15 @@ export function ProdGroupForm({ visible, onClose, ProdGroupId, mode, returnAfter
 
   }, [prodGrouplist, mode, visible, reset, setFocus]);
 
+  const getButtonLabel = () => {
+    if (isSubmitting) {
+      if (isDeleteMode) return "Deleting...";
+      return "Saving...";
+    }
 
+    if (isDeleteMode) return "Delete";
+    return "Save";
+  };
 
   // Submit handler
   const handleFormSubmit = async (data: prodGroupFormSchema) => {
@@ -77,7 +89,7 @@ export function ProdGroupForm({ visible, onClose, ProdGroupId, mode, returnAfter
       if (isDeleteMode) {
         const ok = await confirm({
           title: "Delete product group",
-          message: "Are you sure you want to delete this product group?",
+          message: "Are you sure you want to delete this product sub class?",
           confirmText: "Delete",
           variant: "danger",
         });
@@ -127,33 +139,43 @@ export function ProdGroupForm({ visible, onClose, ProdGroupId, mode, returnAfter
     <Popup
       visible={visible}
       onHiding={onClose}
-      title={`${mode} Product Group`}
+      title={`Product Group`}
       width="40vw"
       height="auto"
-      dragEnabled
-      showTitle
+      dragEnabled={false}
+      showTitle={false}
       showCloseButton={false}
     >
       <form
+        ref={formRef}
         onSubmit={handleSubmit(handleFormSubmit, onError)}
         className="flex flex-col h-full"
       >
-        <div className="flex-1 overflow-y-auto p-2 space-y-2">
+        <div className="flex-1 overflow-y-auto p-1 space-y-1">
 
-          {/* Product Group Information */}
-          <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
-              Product Sub Class Information
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-1 gap-2">
+          <div className="flex-none border-b rounded border-gray-300 p-2 flex items-center justify-between text-white bg-[#0f1c7f]">
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-semibold ">Product Sub Class</h1>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium">Mode:</span>
+              <span className="text-xs font-semibold text-[#05045f] bg-blue-50 border border-blue-100 rounded px-2 py-1">
+                {mode}
+              </span>
+            </div>
+          </div>
+
+          <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-1">
               <div>
-                <label className="block text-gray-700 font-medium mb-1">Product Subclass Name <span className="text-red-500">*</span></label>
+                <label className="block text-gray-700 font-medium mb-1">Product Sub Class Name <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   {...register("name")}
                   disabled={isReadOnly}
                   className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.name ? "border-red-500" : "border-gray-300"}`}
-                  placeholder="Enter product class name"
+                  placeholder="Enter name"
                 />
                 {errors.name && <p className="text-red-500 mt-1 text-sm">{errors.name.message}</p>}
               </div>
@@ -165,31 +187,30 @@ export function ProdGroupForm({ visible, onClose, ProdGroupId, mode, returnAfter
 
         </div>
 
-        {/* Footer delete-btn */}
-        <div className="border-t p-2 flex justify-end gap-4 bg-gray-50">
+        {/* Footer */}
+        <div className="border-t border-gray-300 p-2 flex justify-end gap-4 bg-white">
           {(mode !== "View" && mode !== "Print") && (
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`${isDeleteMode ? 'delete-btn' : 'primary-btn'} disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`${isDeleteMode ? 'delete-btn' : 'primary-btn'} flex items-center gap-1.5 p-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              {isSubmitting
-                ? isDeleteMode ? "Deleting..." : "Saving..."
-                : isDeleteMode ? "Delete" : "Save"
-              }
+              <Save size={15} /> {isSubmitting ? "Saving..." : getButtonLabel()}
             </button>
           )}
           <button
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="secondary-btn disabled:opacity-50 disabled:cursor-not-allowed"
+            className="secondary-btn flex items-center gap-1.5 p-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Exit
+            <XCircle size={15} />  Exit
           </button>
+
         </div>
 
-        <LoadPanel shadingColor="rgba(0,0,0,0.4)" visible={isSubmitting || isLoadingProdGroup} showIndicator />
+        {(isSubmitting || isLoadingProdGroup) && <Loader />}
+
       </form>
     </Popup>
   );

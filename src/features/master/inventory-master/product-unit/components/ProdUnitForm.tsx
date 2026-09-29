@@ -1,20 +1,20 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Popup } from "devextreme-react/popup";
-import LoadPanel from "devextreme-react/load-panel";
-
-import { useProdUnits } from "../hooks/prodUnit";
-import { useCreateProdUnit, useUpdateProdUnit, useDeleteProdUnit, useProdUnit, useGstUnit } from "../hooks/prodUnit";
-
-import { ProdUnit, OperationMode, ProdUnitFormData } from "../types/prodUnit.types";
+import { useCreateProdUnit, useUpdateProdUnit, useDeleteProdUnit, useProdUnit } from "../hooks/prodUnit";
+import { OperationMode, ProdUnitFormData } from "../types/prodUnit.types";
 import { prodUnitSchema, prodUnitFormSchema } from "../schemas/prodUnit.schema";
 import { prodUnitDefaultValues } from "../constants/prodUnitFormDefaults"
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { FormSelect } from "@/common/components/FormSelect";
 import { useQuery } from "@tanstack/react-query";
-import { getStorageItem } from "@/common/utility/storage";
 import { prodUnitService } from "../services/prodUnit";
+import Loader from "@/common/components/Loader";
+import { Save, XCircle } from "lucide-react";
+import { useKeyboardShortcuts } from "@/common/hooks/useKeyboardShortcuts";
+import { SHORTCUTS } from "@/common/constants/shortcuts";
+import useUserStore from "@/store/userStore";
 
 interface ProdUnitFormProps {
   visible: boolean;
@@ -27,10 +27,14 @@ type Option = { value: number | string; label: string };
 
 
 export function ProdUnitForm({ visible, onClose, ProdUnitId, mode }: ProdUnitFormProps) {
-  const userId = getStorageItem("userId");
-  const confirm = useConfirm();
-  const defaultFocusRef = useRef<HTMLInputElement>(null);
 
+  // Hooks
+  const { userId, companyId, branchId, finid, } = useUserStore();
+  const confirm = useConfirm();
+
+  // State
+  const defaultFocusRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const isEditMode = mode === "Edit";
   const isAddMode = mode === "Add";
   const isDeleteMode = mode === "Delete";
@@ -42,17 +46,19 @@ export function ProdUnitForm({ visible, onClose, ProdUnitId, mode }: ProdUnitFor
   const deleteMutation = useDeleteProdUnit();
   const isSubmitting = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
-  const {
-    control,
-    register,
-    handleSubmit,
-    setFocus,
-    reset,
-    formState: { errors },
-  } = useForm<prodUnitFormSchema>({
+  const { control, register, handleSubmit, setFocus, reset, formState: { errors }, } = useForm<prodUnitFormSchema>({
     resolver: zodResolver(prodUnitSchema),
     defaultValues: prodUnitDefaultValues,
   });
+
+  // handle Sortcuts 
+  useKeyboardShortcuts(
+    {
+      [SHORTCUTS.SAVE]: () => { formRef.current?.requestSubmit(); },
+      [SHORTCUTS.EXIT]: () => { onClose(); },
+    },
+    visible
+  );
 
   const { data: gstUnits = [] } = useQuery({
     queryKey: ["gstUnits", userId],
@@ -93,6 +99,15 @@ export function ProdUnitForm({ visible, onClose, ProdUnitId, mode }: ProdUnitFor
 
   }, [prodUnitlist, mode, visible, reset, setFocus]);
 
+  const getButtonLabel = () => {
+    if (isSubmitting) {
+      if (isDeleteMode) return "Deleting...";
+      return "Saving...";
+    }
+
+    if (isDeleteMode) return "Delete";
+    return "Save";
+  };
 
 
   // Submit handler
@@ -149,31 +164,43 @@ export function ProdUnitForm({ visible, onClose, ProdUnitId, mode }: ProdUnitFor
       onHiding={onClose}
       title={`${mode} product Unit`}
       width="60vw"
-      height="60vh"
-      dragEnabled
-      showTitle
+      height="40vh"
+      dragEnabled={false}
+      showTitle={false}
       showCloseButton={false}
     >
       <form
+        ref={formRef}
         onSubmit={handleSubmit(handleFormSubmit, onError)}
         className="flex flex-col h-full"
       >
-        <div className="flex-1 overflow-y-auto p-2 space-y-2">
+        <div className="flex-1 overflow-y-auto p-1 space-y-1">
 
-          {/* Product Unit Information */}
-          <section className="border rounded-md p-2 shadow-sm bg-white space-y-2">
-            <h2 className="text-sm font-semibold text-color border-l-4 border-[#05045f] pl-3 py-1 bg-blue-50">
-              Product Unit Information
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-1 gap-2">
+          <div className="flex-none border-b rounded border-gray-300 p-2 flex items-center justify-between text-white bg-[#0f1c7f]">
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-semibold ">Product Unit</h1>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium">Mode:</span>
+              <span className="text-xs font-semibold text-[#05045f] bg-blue-50 border border-blue-100 rounded px-2 py-1">
+                {mode}
+              </span>
+            </div>
+          </div>
+          
+          <section className="border rounded-md p-1 shadow-sm bg-white space-y-1">
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-1">
+
               <div>
                 <label className="block text-gray-700 font-medium mb-1">Product Unit Name <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   {...register("name")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.name ? "border-red-500" : "border-gray-300"}`}
-                  placeholder="Enter product unit name"
+                  className={`inputField w-full border ${errors.name ? "border-red-500" : "border-gray-300"}`}
+                  placeholder="Enter name"
                 />
                 {errors.name && <p className="text-red-500 mt-1 text-sm">{errors.name.message}</p>}
               </div>
@@ -184,19 +211,19 @@ export function ProdUnitForm({ visible, onClose, ProdUnitId, mode }: ProdUnitFor
                   type="text"
                   {...register("description")}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.description ? "border-red-500" : "border-gray-300"}`}
+                  className={`inputField w-full border ${errors.description ? "border-red-500" : "border-gray-300"}`}
                   placeholder="Enter product unit description"
                 />
                 {errors.description && <p className="text-red-500 mt-1 text-sm">{errors.description.message}</p>}
               </div>
 
               <div>
-                <label className="block text-gray-700 font-medium mb-1">Product Unit DecimalPlace <span className="text-red-500">*</span></label>
+                <label className="block text-gray-700 font-medium mb-1">Product Unit Decimal Place </label>
                 <input
                   type="number"
                   {...register("decimalplace", { valueAsNumber: true })}
                   disabled={isReadOnly}
-                  className={`w-full border rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${errors.decimalplace ? "border-red-500" : "border-gray-300"}`}
+                  className={`inputField w-full border ${errors.decimalplace ? "border-red-500" : "border-gray-300"}`}
                   placeholder="Enter decimalplace"
                 />
                 {errors.decimalplace && <p className="text-red-500 mt-1 text-sm">{errors.decimalplace.message}</p>}
@@ -219,31 +246,31 @@ export function ProdUnitForm({ visible, onClose, ProdUnitId, mode }: ProdUnitFor
 
         </div>
 
-        {/* Footer delete-btn */}
-        <div className="border-t p-2 flex justify-end gap-4 bg-gray-50">
+        {/* Footer */}
+        <div className="border-t border-gray-300 p-2 flex justify-end gap-4 bg-white">
           {(mode !== "View" && mode !== "Print") && (
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`${isDeleteMode ? 'delete-btn' : 'primary-btn'} disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`${isDeleteMode ? 'delete-btn' : 'primary-btn'} flex items-center gap-1.5 p-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              {isSubmitting
-                ? isDeleteMode ? "Deleting..." : "Saving..."
-                : isDeleteMode ? "Delete" : "Save"
-              }
+              <Save size={15} /> {isSubmitting ? "Saving..." : getButtonLabel()}
             </button>
           )}
           <button
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="secondary-btn disabled:opacity-50 disabled:cursor-not-allowed"
+            className="secondary-btn flex items-center gap-1.5 p-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Exit
+            <XCircle size={15} />  Exit
           </button>
+
         </div>
 
-        <LoadPanel shadingColor="rgba(0,0,0,0.4)" visible={isSubmitting || isLoadingProdUnit} showIndicator />
+        {(isSubmitting || isLoadingProdUnit) && <Loader />}
+
+
       </form>
     </Popup>
   );
