@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { SaleOrderDataGrid } from './components/SaleOrderDataGrid';
 import { SaleOrderForm } from './components/SaleOrderForm';
-import { usePrintTbill, useSaleOrderList } from './hooks/useSaleOrder';
+import { usePrintTbill, useSaleOrderById, useSaleOrderList } from './hooks/useSaleOrder';
 import { SaleOrder, OperationMode } from './types/saleOrder.types';
 import useIsMobile from "@/common/hooks/useIsMobile";
 import { TransactionToolbar } from '@/common/components/barmanager/TransactionToolbar';
@@ -15,6 +15,7 @@ import useUserStore from '@/store/userStore';
 import { currentDate } from '@/helpers/dateUtils';
 import { useReactiveStorage } from '@/hooks/useReactiveStorage';
 import Loader from '@/common/components/Loader';
+import { exportSaleOrderToExcel } from './utils/exportSaleOrderToExcel';
 
 
 export default function SaleOrderModule() {
@@ -102,7 +103,7 @@ export default function SaleOrderModule() {
 
   const handleDeleteClick = useCallback(() => openForm('Delete'), [openForm]);
   const handleViewClick = useCallback(() => openForm('View'), [openForm]);
-  
+
   const handlePrintClick = useCallback(() => {
     if (!selectedRow) return;
     printTbill({
@@ -143,6 +144,24 @@ export default function SaleOrderModule() {
     });
   }, [SaleOrderList]);
 
+  const { data: order, isLoading: isLoadingSaleOrder } =
+    useSaleOrderById({
+      id: selectedRow?.id,
+      userid: Number(userId),
+      compid: Number(companyId),
+      branchid: Number(toolbarBranchId) || Number(branchId),
+      finid: Number(finid),
+    });
+
+  const handleExcelExport = useCallback(async () => {
+    if (!selectedRow || !order || isLoadingSaleOrder) return;
+    try {
+      await exportSaleOrderToExcel(order);
+    } catch (err) {
+      console.error('Excel export failed', err);
+    }
+  }, [selectedRow, order, isLoadingSaleOrder]);
+
   return (
     <>
       <div className="Sale-order-module ">
@@ -161,6 +180,7 @@ export default function SaleOrderModule() {
             onView={handleViewClick}
             onPrint={handlePrintClick}
             isPrinting={isPrinting}
+            onExport={handleExcelExport}
             // isRowApproved={isRowApproved}
 
             selectFromDate={{
@@ -203,7 +223,7 @@ export default function SaleOrderModule() {
         </div>
 
         {!isMobile && (
-                  <div className={`${sidebarState === '1' ? 'w-362' : 'w-294'} transition-all duration-300 ease-in-out rounded-xl shadow-sm border border-gray-200 p-1 overflow-x-auto `} >
+          <div className={`${sidebarState === '1' ? 'w-362' : 'w-294'} transition-all duration-300 ease-in-out rounded-xl shadow-sm border border-gray-200 p-1 overflow-x-auto `} >
             <SaleOrderDataGrid
               dataSource={SaleOrderList}
               onSelectionChanged={handleSelectionChanged}

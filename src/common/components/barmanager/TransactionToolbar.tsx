@@ -233,7 +233,7 @@ export function TransactionToolbar({
             </button>
           )}
 
-          {canExport && onExport && (
+          { onExport && (
             <button onClick={onExport} className="secondary-btn">
               <File size={16} /> Export
             </button>
